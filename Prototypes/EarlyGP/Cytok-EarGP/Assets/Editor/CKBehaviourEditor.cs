@@ -32,14 +32,14 @@ using System;
 
 namespace CK
 {
-	[CustomEditor(typeof(Behaviour),true)]
+	[CustomEditor(typeof(CK.Behaviour),true)]
 	public class BehaviourEditor : UnityEditor.Editor 
 	{
 		public override void OnInspectorGUI()
 		{
 			base.OnInspectorGUI();
 
-			CK.Editor.Utility.DrawMethodGUIButton(target);
+			CK.Editor.Utils.DrawMethodGUIButton(target);
 		}
 	}
 }

@@ -46,8 +46,8 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\CKEngine\Editor\CKEditorUtility.cs" />
      <Compile Include="Assets\Editor\CKBehaviourEditor.cs" />
+     <Compile Include="Assets\Editor\TestPipeline.cs" />
      <Compile Include="Assets\Editor\WorldGridEditor.cs" />
  <Reference Include="UnityEditor.Graphs">
  <HintPath>/Applications/Unity/Unity.app/Contents/Frameworks/Managed/UnityEditor.Graphs.dll</HintPath>

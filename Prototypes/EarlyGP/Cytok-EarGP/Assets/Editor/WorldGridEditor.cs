@@ -41,7 +41,7 @@ public class WorldGridEditor : Editor
 	{
 		base.OnInspectorGUI();
 
-		CK.Editor.Utility.DrawMethodGUIButton(target);
+		CK.Editor.Utils.DrawMethodGUIButton(target);
 
 		EditorGUILayout.Space();
 

@@ -46,11 +46,20 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Attributes\GUIButtonAttribute.cs" />
      <Compile Include="Assets\CKEngine\CKBehaviour.cs" />
+     <Compile Include="Assets\CKEngine\CKCondition.cs" />
+     <Compile Include="Assets\CKEngine\CKEditor\CKEditorUtils.cs" />
+     <Compile Include="Assets\CKEngine\CKEditor\GUIButtonAttribute.cs" />
+     <Compile Include="Assets\CKEngine\CKLog.cs" />
      <Compile Include="Assets\CKEngine\CKState.cs" />
      <Compile Include="Assets\CKEngine\CKStateContext.cs" />
-     <Compile Include="Assets\CKEngine\Unity\CKUAnimatorBinding.cs" />
+     <Compile Include="Assets\CKEngine\CKTypeCondition.cs" />
+     <Compile Include="Assets\CKEngine\CKUnity\CKUAnimatorBinding.cs" />
+     <Compile Include="Assets\CKEngine\CKUnity\CKUAnimatorBindingPairDrawer.cs" />
+     <Compile Include="Assets\CKEngine\CKUnity\CKULogger.cs" />
+     <Compile Include="Assets\CKEngine\CKUnity\TestBinding.cs" />
+     <Compile Include="Assets\CKEngine\CKUtils\CKUtilsReflection.cs" />
+     <Compile Include="Assets\CKEngine\CKUtils\CKUtilsTypeWrapper.cs" />
      <Compile Include="Assets\FollowObject.cs" />
      <Compile Include="Assets\Scripts\TestSoldierController.cs" />
      <Compile Include="Assets\Scripts\WorldGrid.cs" />
@@ -58,6 +67,7 @@
      <Compile Include="Assets\SoldierAnimationPack\Code\ShadowBlob.cs" />
      <Compile Include="Assets\SoldierAnimationPack\Code\SmoothFollow.cs" />
      <Compile Include="Assets\SoldierAnimationPack\Code\SoldierController.cs" />
+     <Compile Include="Assets\TestICondition.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
