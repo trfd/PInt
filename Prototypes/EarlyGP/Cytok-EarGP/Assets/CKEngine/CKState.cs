@@ -64,12 +64,12 @@ namespace CK
 		/// <summary>
 		/// Parent Context
 		/// </summary>
-		private StateContext mContext;
+		private StateContext myContext;
 
 		/// <summary>
 		/// Hold active flag of state
 		/// </summary>
-		private bool mActive;
+		private bool myActive;
 
 		#endregion
 
@@ -79,14 +79,14 @@ namespace CK
 		/// Parent context of the state
 		/// </summary>
 		public StateContext context
-		{get{ return mContext;}}
+		{get{ return myContext;}}
 
 		/// <summary>
 		/// Gets a value indicating whether this <see cref="CK.State"/> is active.
 		/// </summary>
 		/// <value><c>true</c> if is active; otherwise, <c>false</c>.</value>
 		public bool isActive
-		{get{return mActive;}}
+		{get{return myActive;}}
 
 		#endregion
 
@@ -100,8 +100,8 @@ namespace CK
 		/// <param name="ctx">Parent StateContext</param>
 		public void Start(StateContext ctx)
 		{
-			mContext = ctx;
-			mActive = true;
+			myContext = ctx;
+			myActive = true;
 
 			OnEnter();
 
@@ -120,7 +120,7 @@ namespace CK
 		/// </summary>
 		public void Stop()
 		{
-			mActive = false;
+			myActive = false;
 
 			OnExit();
 

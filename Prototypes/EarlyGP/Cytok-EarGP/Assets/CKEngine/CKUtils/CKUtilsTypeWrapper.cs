@@ -25,12 +25,16 @@
 // THE SOFTWARE.
 
 using System;
+using System.Runtime.Serialization;
+using System.Reflection;
+using CK.TypeCondition;
 
 namespace CK
 {
 	namespace Utils
 	{
 		#region TypeWrapper
+
 		/// <summary>
 		/// This class is a simple wrapping adaptator
 		/// of .NET's System.Type to string.
@@ -41,19 +45,106 @@ namespace CK
 		/// get, the wrapper can not be a simple extension 
 		/// of System.string
 		/// </summary>
-		[System.Serializable]
-		public class TypeWrapper 
+		[Serializable]
+		public class TypeWrapper
 		{
+			#region Static
+
+			static System.Type sInvalid = typeof(InvalidType);
+
+			/// <summary>
+			/// Checks if the string matches any 
+			/// existing type.
+			/// </summary>
+			/// <returns>Whether or not a type of name <c>str</c> exists</returns>
+			/// <param name="str">String.</param>
+			public static bool Exists(string str)
+			{
+				return (FindType(str) != sInvalid);
+			}
+
+			/// <summary>
+			/// Find the type of name <c>str</c>
+			/// </summary>
+			/// <returns>The type found if any.CK.Utils.InvalidType otherwise</returns>
+			/// <param name="str">String.</param>
+			public static System.Type FindType(string str)
+			{
+				System.Type t = CurrentAssemblySearch(str);
+
+				if(t != sInvalid)
+					return t;
+
+				return AllAssembliesSearch(str);
+			}
+
+			/// <summary>
+			/// Searches a type of name <c>str</c> in the current Assembly.
+			/// </summary>
+			/// <returns>The type value found if any, CK.Utils.InvalidType otherwise</returns>
+			/// <param name="str">String name of the type.</param>
+			protected static System.Type CurrentAssemblySearch(string str)
+			{
+				try
+				{
+					System.Type t = System.Type.GetType(str);
+					
+					if(t != null)
+						return t;
+				}
+				catch(System.Exception excpt)
+				{}
+				
+				return typeof(InvalidType);
+			}
+
+			/// <summary>
+			/// Searches a type of name <c>str</c> in the all Assemblies.
+			/// </summary>
+			/// <returns>The type value found if any, CK.Utils.InvalidType otherwise</returns>
+			/// <param name="str">String name of the type.</param>
+			protected static System.Type AllAssembliesSearch(string str)
+			{
+				try
+				{
+					System.Type t;
+
+					Assembly[] asms = AppDomain.CurrentDomain.GetAssemblies();
+
+					for(int i=0 ; i<asms.Length ; i++)
+					{
+						if((t = asms[i].GetType(str)) != null)
+						{
+							return t;
+						}
+					}
+				}
+				catch(SystemException excpt)
+				{}
+
+				return sInvalid;
+			}
+
+			#endregion
+
 			#region Private Members
 			/// <summary>
 			/// String name of the type.
 			/// </summary>
-			private string mName;
+			[UnityEngine.SerializeField]
+			private string myName;
 
 			/// <summary>
 			/// Actual Type
 			/// </summary>
-			private System.Type mType;
+			private System.Type myType;
+
+			/// <summary>
+			/// Dirty flag for myType.
+			/// Used only via reflection.
+			/// </summary>
+			[UnityEngine.SerializeField]
+			public  bool myTypeDirty;
 
 			#endregion
 
@@ -71,26 +162,12 @@ namespace CK
 			{ 
 				get
 				{ 
-					return mName; 
+					return myName; 
 				}
 
 				set
 				{ 
-					try
-					{
-						mType = System.Type.GetType(value);
-						mName = value;
-					}
-					catch(System.Exception excpt)
-					{
-						CK.Log.Error("TypeWrapper string name "+value+" doesn't correspond to any type. " +
-						             "Values will be set to default ones.Exception: "+excpt.Message,
-						             null,LogContextInfo.ENGINE);
-
-						// Reset value to default
-						mName = "System.Object";
-						mType = typeof(System.Object);
-					}
+					SetType(value);
 				}
 			}
 
@@ -98,23 +175,28 @@ namespace CK
 			/// Gets or sets the actual type of TypeWrapper instance.
 			/// This is the safest way of setting both name and type values,
 			/// since setting through TypeWrapper.typeName can fail.
+			/// Type value and name are set to CK.InvalidType if
+			/// value provided doesn't match any existing type.
 			/// </summary>
 			/// <value>Type value</value>
 			public System.Type type
 			{
 				get
 				{
-					return mType;
+					if(myTypeDirty)
+						SetType(myName);
+
+					return myType;
 				}
 
 				set
 				{
 					if(value != null)
-						mType = value;
+						myType = value;
 					else
-						mType = typeof(System.Object);
+						myType = typeof(InvalidType);
 					
-					mName = mType.Name;
+					myName = myType.Name;
 				}
 			}
 
@@ -125,8 +207,8 @@ namespace CK
 			public TypeWrapper()
 			{
 				// Setting to default values
-				mType = typeof(System.Object);
-				mName = mType.Name;
+				myType = typeof(InvalidType);
+				myName = myType.Name;
 			}
 
 			public TypeWrapper(System.Type pType)
@@ -142,20 +224,77 @@ namespace CK
 			}
 		
 			#endregion
+
+			#region Private Methods
+
+			/// <summary>
+			/// Sets the type using its string name.
+			/// Type value and name are set to CK.InvalidType if
+			/// value provided doesn't match any existing type.
+			/// </summary>
+			/// <param name="value">Value.</param>
+			private void SetType(string value)
+			{
+				try
+				{
+					myType = FindType(value);
+					myName = value;
+					myTypeDirty = false;
+				}
+				catch(System.Exception excpt)
+				{
+					CK.Log.Error("TypeWrapper string name "+value+" doesn't correspond to any type. " +
+					             "Values will be set to default ones.Exception: "+excpt.Message,
+					             null,LogContextInfo.ENGINE);
+					
+					// Reset value to default
+					myType = typeof(InvalidType);
+					myName = myType.Name;
+					myTypeDirty = false;
+				}
+			}
+
+			#endregion
+
+			#region Casts
+
+			// String casts
+
+			public static implicit operator string(TypeWrapper wrap)
+			{
+				return wrap.typeName;
+			}
+
+			public static implicit operator TypeWrapper(string strName)
+			{
+				return new TypeWrapper(strName);
+			}
+
+			// System.Type cast
+
+			public static implicit operator System.Type(TypeWrapper wrap)
+			{
+				return wrap.type;
+			}
+
+			public static implicit operator TypeWrapper(System.Type sType)
+			{
+				return new TypeWrapper(sType);
+			}
+
+			#endregion
+
 		}
 
 		#endregion
 
-		#region TypeWrapperRestrictionAttribute
+		#region InvalidType
 
-
-
-		[AttributeUsage(AttributeTargets.Field)]
-		public class TypeWrapperRestrictionAttribute : Attribute
+		public class InvalidType
 		{
-
 		}
 
 		#endregion
+	
 	}
 }

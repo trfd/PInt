@@ -105,6 +105,13 @@ namespace CK
 			return false;
 		}
 
+		// Casts
+
+		public static implicit operator bool(ICondition a)
+		{
+			return a.value;
+		}
+
 		#endregion
 	}
 
@@ -118,7 +125,7 @@ namespace CK
 		/// <summary>
 		/// The ICondition on which apply the NOT.
 		/// </summary>
-		private ICondition mOperand;
+		private ICondition myOperand;
 
 		#endregion
 		
@@ -131,7 +138,7 @@ namespace CK
 		/// <param name="a">Operand.</param>
 		public ConditionNOT(ICondition a)
 		{
-			mOperand = a;
+			myOperand = a;
 		}
 		
 		#endregion
@@ -143,7 +150,7 @@ namespace CK
 		/// </summary>
 		protected override bool Evaluate()
 		{
-			return !mOperand.value;
+			return !myOperand.value;
 		}
 
 		#endregion
@@ -177,17 +184,17 @@ namespace CK
 		/// <summary>
 		/// First operand of binary operator mOperator
 		/// </summary>
-		private ICondition mOperandA;
+		private ICondition myOperandA;
 
 		/// <summary>
 		/// Second operand of binary operator mOperator
 		/// </summary>
-		private ICondition mOperandB;
+		private ICondition myOperandB;
 
 		/// <summary>
 		/// Expression's operator.
 		/// </summary>
-		private Operator mOperator;
+		private Operator myOperator;
 
 		#endregion
 
@@ -205,10 +212,10 @@ namespace CK
 		/// <param name="op">Operator.</param>
 		public ConditionBinaryExpression(ICondition a, ICondition b, Operator op)
 		{
-			mOperandA = a;
-			mOperandB = b;
+			myOperandA = a;
+			myOperandB = b;
 
-			mOperator = op;
+			myOperator = op;
 		}
 
 		#endregion
@@ -223,16 +230,16 @@ namespace CK
 		/// </summary>
 		protected override bool Evaluate()
 		{
-			switch(mOperator)
+			switch(myOperator)
 			{
 			case Operator.AND:
-				return mOperandA.value & mOperandB.value;
+				return myOperandA.value & myOperandB.value;
 			
 			case Operator.OR:
-				return mOperandA.value | mOperandB.value;
+				return myOperandA.value | myOperandB.value;
 
 			default:
-				CK.Log.Error("Unhandled operator "+mOperator.ToString()+
+				CK.Log.Error("Unhandled operator "+myOperator.ToString()+
 				             " in CK.ConditionBinaryExpression", 
 				             null,LogContextInfo.ENGINE);
 				break;

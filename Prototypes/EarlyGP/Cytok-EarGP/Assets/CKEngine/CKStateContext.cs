@@ -62,7 +62,7 @@ namespace CK
 		/// <summary>
 		/// Holds the current state of context
 		/// </summary>
-		private State mCurrState;
+		private State myCurrState;
 
 		#endregion
 
@@ -75,9 +75,9 @@ namespace CK
 		public virtual void Start(State newState)
 		{
 			// End previous state
-			if(mCurrState != null)
+			if(myCurrState != null)
 			{
-				mCurrState.Stop();
+				myCurrState.Stop();
 
 					// Unregister for current state callbacks
 				UnregisterStateCallbacks();
@@ -85,12 +85,12 @@ namespace CK
 
 			// Start the new state
 
-			mCurrState = newState;
+			myCurrState = newState;
 
 				// Register for current state
 			RegisterStateCallbacks();
 
-			mCurrState.Start(this);
+			myCurrState.Start(this);
 		}
 
 		#endregion
@@ -102,10 +102,10 @@ namespace CK
 		/// </summary>
 		void RegisterStateCallbacks()
 		{
-			mCurrState.StateWillStart += CurrentStateWillStart;
-			mCurrState.StateDidStart  += CurrentStateDidStart;
-			mCurrState.StateWillStop  += CurrentStateWillStop;
-			mCurrState.StateDidStop   += CurrentStateDidStop;
+			myCurrState.StateWillStart += CurrentStateWillStart;
+			myCurrState.StateDidStart  += CurrentStateDidStart;
+			myCurrState.StateWillStop  += CurrentStateWillStop;
+			myCurrState.StateDidStop   += CurrentStateDidStop;
 		}
 
 		/// <summary>
@@ -113,10 +113,10 @@ namespace CK
 		/// </summary>
 		void UnregisterStateCallbacks()
 		{
-			mCurrState.StateWillStart += CurrentStateWillStart;
-			mCurrState.StateDidStart  += CurrentStateDidStart;
-			mCurrState.StateWillStop  += CurrentStateWillStop;
-			mCurrState.StateDidStop   += CurrentStateDidStop;
+			myCurrState.StateWillStart += CurrentStateWillStart;
+			myCurrState.StateDidStart  += CurrentStateDidStart;
+			myCurrState.StateWillStop  += CurrentStateWillStop;
+			myCurrState.StateDidStop   += CurrentStateDidStop;
 		}
 
 		#region State Callbacks
@@ -127,7 +127,7 @@ namespace CK
 		void CurrentStateWillStart(State state)
 		{
 			// Check if state is current state:
-			if(mCurrState != state)
+			if(myCurrState != state)
 				return;
 
 			// Route callback to my delegate
@@ -141,7 +141,7 @@ namespace CK
 		void CurrentStateDidStart(State state)
 		{
 			// Check if state is current state:
-			if(mCurrState != state)
+			if(myCurrState != state)
 				return;
 			
 			// Route callback to my delegate
@@ -155,7 +155,7 @@ namespace CK
 		void CurrentStateWillStop(State state)
 		{
 			// Check if state is current state:
-			if(mCurrState != state)
+			if(myCurrState != state)
 				return;
 			
 			// Route callback to my delegate
@@ -169,7 +169,7 @@ namespace CK
 		void CurrentStateDidStop(State state)
 		{
 			// Check if state is current state:
-			if(mCurrState != state)
+			if(myCurrState != state)
 				return;
 			
 			// Route callback to my delegate

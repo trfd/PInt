@@ -185,8 +185,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 644971a1459ab4bdfb0faf0e8c7232af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  testValueA_: 1
-  testValueB_: 1
+  wrap:
+    myName: InvalidType
+    myTypeDirty: 1
 --- !u!4 &443550991
 Transform:
   m_ObjectHideFlags: 0

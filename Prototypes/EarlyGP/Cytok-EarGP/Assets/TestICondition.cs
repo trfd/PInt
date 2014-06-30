@@ -29,38 +29,6 @@ using System.Collections;
 
 public class TestICondition : CK.Behaviour 
 {
-	public bool testValueA_;
-	public bool testValueB_;
-
-	TestCondition condA;
-	TestCondition condB;
-	
-	public CK.ICondition condition;
-
-	void Start()
-	{
-		condA = new TestCondition();
-		condB = new TestCondition();
-
-		condition = condA && condB;
-	}
-
-	[GUIButton("Test")]
-	public void Test()
-	{
-		condA.value_ = testValueA_;
-		condB.value_ = testValueB_;
-
-		CK.Log.Info("Test condition: "+testValueA_+" AND "+testValueB_+" = "+condition.value);
-	}
-
-	public class TestCondition : CK.ICondition
-	{
-		public bool value_;
-
-		protected override bool Evaluate()
-		{
-			return value_;
-		}
-	}
+	//[CK.Utils.TypeRestriction( new CK.TypeCondition.Inherits<MonoBehaviour>())]
+	public CK.Utils.TypeWrapper wrap;
 }

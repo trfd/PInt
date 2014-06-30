@@ -76,7 +76,8 @@ namespace CK
 			protected override bool Evaluate()
 			{
 				if(type == null)
-					throw System.NullReferenceException;
+					throw new System.NullReferenceException();
+
 				return type.IsAssignableFrom(mParentType);
 			}
 		}
@@ -112,7 +113,8 @@ namespace CK
 			protected override bool Evaluate()
 			{
 				if(type == null)
-					throw System.NullReferenceException;
+					throw new System.NullReferenceException();
+
 				return type.Equals(mOtherType);
 			}
 		}
@@ -125,7 +127,7 @@ namespace CK
 			protected override bool Evaluate()
 			{
 				if(type == null)
-					throw System.NullReferenceException;
+					throw new System.NullReferenceException();
 				
 				return type.IsAbstract;
 			}
@@ -139,7 +141,7 @@ namespace CK
 			protected override bool Evaluate()
 			{
 				if(type == null)
-					throw System.NullReferenceException;
+					throw new System.NullReferenceException();
 				
 				return type.IsInterface;
 			}
@@ -153,7 +155,7 @@ namespace CK
 			protected override bool Evaluate()
 			{
 				if(type == null)
-					throw System.NullReferenceException;
+					throw new System.NullReferenceException();
 
 				return type.IsEnum;
 			}
@@ -167,7 +169,7 @@ namespace CK
 			protected override bool Evaluate()
 			{
 				if(type == null)
-					throw System.NullReferenceException;
+					throw new System.NullReferenceException();
 				
 				return type.IsSerializable;
 			}
@@ -204,7 +206,8 @@ namespace CK
 			protected override bool Evaluate()
 			{
 				if(type == null)
-					throw System.NullReferenceException;
+					throw new System.NullReferenceException();
+
 				return (type.GetInterface(mInterface,true) != null);
 			}
 		}
@@ -265,7 +268,7 @@ namespace CK
 			protected override bool Evaluate()
 			{
 				if(type == null)
-					throw System.NullReferenceException;
+					throw new System.NullReferenceException();
 
 				if(mArgs != null)
 					return (type.GetMethod(mMethod,mArgs) != null);
