@@ -1,5 +1,5 @@
 ﻿//
-// TestPipeline.cs
+// TestDLL.cs
 //
 // Author:
 //       Baptiste Dupy <baptiste.dupy@gmail.com>
@@ -25,58 +25,28 @@
 // THE SOFTWARE.
 
 using UnityEngine;
-using UnityEditor;
-using UnityEditor.Callbacks;
 using System.Collections;
+using System.Runtime.InteropServices;
 
-public class TestPipeline : EditorWindow
+public class TestDLL : MonoBehaviour 
 {
-	static TestPipeline mWindow;
-
-
-	static TestPipeline()
+	[DllImport ("libc.dylib")]
+	private static extern int getpid ();
+	//*
+	[DllImport("libCytokTest.dylib")]
+	private static extern void helloWorld(string c);
+	//*/
+	void Start () 
 	{
-		if(mWindow == null)
-		{
-			Debug.Log("Create Window");
+		Debug.Log("PID:"+getpid());
 
-			mWindow = EditorWindow.CreateInstance<TestPipeline>();
-		}
+		helloWorld("World");
+
+		System.Console.WriteLine("Hello");
 	}
-
-	[MenuItem ("Window/My Window")]
-	static void Test()
+	
+	void Update () 
 	{
-		mWindow = EditorWindow.CreateInstance<TestPipeline>();
+	
 	}
-
-	void OnEnable()
-	{
-		EditorApplication.playmodeStateChanged += PlayModeCallback;
-	}
-
-	[PostProcessScene]
-	public static void TestScene()
-	{
-		Debug.Log("PostProcessScene");
-	}
-
-	[PostProcessBuild]
-	public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject) 
-	{
-		Debug.Log( pathToBuiltProject );
-
-
-	}
-
-	void PlayModeCallback()
-	{
-
-	}
-
-	void OnGUI () 
-	{
-		GUILayout.Label ("Base Settings", EditorStyles.boldLabel);
-	}
-
 }
