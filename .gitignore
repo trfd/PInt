@@ -5,7 +5,10 @@ obj/
 Temp/
 UnityGenerated/
 ExportedObj/
-build/
+builds/
+cmake/
+doc/
+proto/
 
 *.app/
 *.exe

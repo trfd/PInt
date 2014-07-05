@@ -1,0 +1,113 @@
+#!/usr/bin/env ruby
+
+# Global version number
+# ^[vV]?(\d+\.)+[cC]?([a-zA-Z0-9]{8}\.)?[rR]?\d+$
+
+# Small version number
+# ^[vV]*(?:\d+\.)*\d+$
+
+#####
+# Major
+# ^[vV]?(\d+)\.*
+
+# Minor
+# ^[vV]?\d+\.(\d+)\.*
+
+# Patch
+# ^[vV]?(?:\d+\.){2}(\d+)\.*
+
+# Tweaks
+# /^[vV]?(?:\d+\.){2}\d+\.((?:(?:\.\d+)|\d+)*)\.*/
+
+#Commit hash
+# \.[cC]?(?:([a-zA-Z0-9]{8}))(?:\.[rR]?\d+)*$
+
+# Revision number 
+# \.[rR](\d+)$
+#####
+
+def getRegexCapture(rgx , idx = 0 )
+	
+	if rgx != nil && rgx.captures != nil && rgx.captures.length >= idx
+		return rgx.captures.at(idx)
+	end
+
+	return ""
+end
+	
+revisioncount=`git log --oneline | wc -l | tr -d ' '`
+projectversion=`git describe --tags --long | tr -d ' '` 
+
+projectversion = projectversion.gsub("-",".")
+projectversion = projectversion.gsub("\n","")
+
+i_vers_num = "#{projectversion}.r#{revisioncount}"
+
+puts "Input git version: #{i_vers_num}"
+
+major = getRegexCapture(i_vers_num.match(/^[vV]?(\d+)\.*/i) , 0)
+minor = getRegexCapture(i_vers_num.match(/^[vV]?\d+\.(\d+)\.*/i) , 0)
+patch = getRegexCapture(i_vers_num.match(/^[vV]?(?:\d+\.){2}(\d+)\.*/i) , 0)
+tweaks = getRegexCapture(i_vers_num.match(/^[vV]?(?:\d+\.){2}\d+\.((?:(?:\.\d+)|\d+)*)\.*/i) , 0)
+ch = getRegexCapture(i_vers_num.match(/\.[cC]?(?:([a-zA-Z0-9]{8}))(?:\.[rR]?\d+)*$/i) , 0)
+rn = getRegexCapture(i_vers_num.match(/\.[rR](\d+)$/i) , 0)
+
+version_full = major
+version_short = major
+
+if minor != ""
+	version_full += ".#{minor}"
+	version_short += ".#{minor}"
+	
+	if patch != ""	
+		version_full += ".#{patch}"
+		version_short += ".#{patch}"
+			
+		if tweaks != ""
+			version_full += ".#{tweaks}"
+			version_short += ".#{tweaks}"
+		end
+	end
+end
+
+if ch != ""
+	version_full += ".c#{ch}"
+end
+
+if rn != ""
+	version_full += ".r#{rn}"
+end
+
+puts "Major #{major}"
+puts "Minor #{minor}"
+puts "Patch #{patch}"
+puts "Tweaks #{tweaks}"
+puts "CommitHash #{ch}"
+puts "RevisionNumber #{rn}"
+puts "Version full #{version_full}"
+puts "Version short #{version_short}"
+
+files_in = ["git_config/version.hpp",
+		 	"git_config/Doxyfile"]
+
+files_out = ["cytok/include/version.hpp",
+			 "doc/Doxyfile"]
+
+files_in.each_with_index { |file , idx| 
+		
+	if !File.exists?(file)
+		puts "Version file not found at location #{filename}"
+		exit
+	end
+	
+	text = File.read(file)
+	text = text.gsub("@VERSION_MAJOR@", "#{major}")
+	text = text.gsub("@VERSION_MINOR@", "#{minor}")
+	text = text.gsub("@VERSION_PATCH@", "#{patch}")
+	text = text.gsub("@VERSION_COMMIT@", "#{ch}")
+	text = text.gsub("@VERSION_REVISION@", "#{rn}")
+	text = text.gsub("@VERSION@", "#{version_short}")
+	text = text.gsub("@VERSION_FULL@", "#{version_full}")
+	
+	File.write(files_out.at(idx),text)
+}
