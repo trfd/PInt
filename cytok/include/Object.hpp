@@ -22,17 +22,24 @@ namespace ck
     public:
 
         Object();
-
+        
         virtual ~Object(){};
         
         ID id();
         
         virtual std::string toString();
         
+    protected:
+        
+        template<typename This>
+        void fetchID(This thisObj);
+        
     private:
         
         ID myID = CK_INVALID_ID;
 	};
 }
+
+#include "Object_impl.hpp"
 
 #endif

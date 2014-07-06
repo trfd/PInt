@@ -16,9 +16,17 @@ namespace ck
 {
     Object::Object()
     {
-        myID = IDManager::get(this);
-        std::cout<<"OOO:"<<std::hex<<myID.id<<"\n";
+        if(myID == CK_INVALID_ID)
+        {
+            /// WARNING: Possible incorrect ID
+            /// If derived class forget about fetching
+            /// the ID, the ck::Object will set using this.
+            /// But this has a type of ck::Object at this
+            /// location. Thus ID will not be relevant.
+            fetchID(*this);
+        }
     }
+
     
     ID Object::id()
     {

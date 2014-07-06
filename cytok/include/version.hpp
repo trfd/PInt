@@ -1,12 +1,12 @@
 
-#define CK_MAJOR_VERSION 
-#define CK_MINOR_VERSION 
-#define CK_PATCH_VERSION 
-#define CK_COMMIT_VERSION "g7184a20"
-#define CK_REVISION_VERSION 6
+#define CK_MAJOR_VERSION 0
+#define CK_MINOR_VERSION 0
+#define CK_PATCH_VERSION 1
+#define CK_COMMIT_VERSION "g5f9804d"
+#define CK_REVISION_VERSION 7
 
-#define CK_VERSION_FULL ".cg7184a20.r6"
-#define CK_VERSION ""
+#define CK_VERSION_FULL "0.0.1.0.cg5f9804d.r7"
+#define CK_VERSION "0.0.1.0"
 
 
 
