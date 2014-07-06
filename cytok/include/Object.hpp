@@ -21,18 +21,32 @@ namespace ck
 	{
     public:
 
+        /// Static
+        
+        template<typename ObjectType , typename... Args>
+        static ObjectType* create(Args... args);
+        
+        /// Constructor/Destructor
+        
         Object();
         
         virtual ~Object(){};
+        
+        /// Accessor
         
         ID id();
         
         virtual std::string toString();
         
-        virtual const std::type_info& type();
+        
+    protected:
+        
+        /// Flow
+        
+        virtual void init(){}
         
     private:
-        
+     
         ID myID = CK_INVALID_ID;
 	};
 }

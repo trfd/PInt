@@ -24,19 +24,21 @@
 class Test : public ck::Object
 {
     int a;
+    
+public:
+    
 };
 
 
 int main(int argc, const char * argv[])
 {
 
-    Test obj1;
-    ck::Object obj2;
+    Test* obj1 = ck::Object::create<Test>();
+    ck::Object* obj2 = ck::Object::create<ck::Object>();
     
+    LOG_INFO<<"Object 2:"<<std::hex<<obj2->id().id<<LOG_END;
     
-    LOG_INFO<<"Object 2:"<<std::hex<<obj2.id().id<<LOG_END;
-    
-    LOG_INFO<<"Object 1:"<<std::hex<<obj1.id().id<<LOG_END;
+    LOG_INFO<<"Object 1:"<<std::hex<<obj1->id().id<<LOG_END;
 
 }
 
