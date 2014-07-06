@@ -30,7 +30,12 @@ namespace ck
         /// for online server.
         /// Need solid unit testing
         template<typename Type>
-        static ID get(Type obj)
+        static ID get()
+        {
+            return get(typeid(Type).hash_code());
+        }
+        
+        static ID get(size_t typeHashCode)
         {
             ID myID;
             
@@ -39,7 +44,7 @@ namespace ck
             time(&currTime);
             struct tm* currGTime = gmtime(&currTime);
             
-            myID.stamps.type = utils::hash<16>::get(typeid(Type).hash_code());
+            myID.stamps.type = utils::hash<16>::get(typeHashCode);
             myID.stamps.unique = ++mCount;
             myID.stamps.time = utils::hash<32>::get(currGTime->tm_sec-sDay0.tm_sec);
             

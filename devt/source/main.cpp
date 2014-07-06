@@ -21,27 +21,22 @@
 #include "LoggerStd.hpp"
 #include "LogMacros.hpp"
 
+class Test : public ck::Object
+{
+    int a;
+};
+
+
 int main(int argc, const char * argv[])
 {
-    //ck::Log::setLogger(new ck::LoggerStd);
-    
-    ck::Log::error("MyInfo");
-    
-    ck::LogStream stream(ck::Log::ERROR);
-    
-    stream<<"OOF"<<ck::LogStream::end;
-    stream<<"OO1"<<"OO2"<<ck::LogStream::end;
-    
-    ck::LogStream::getDefault(ck::Log::WARNING)<<"Hello";
-    
-    ck::LogStream::getDefault(ck::Log::INFO)<<"World"<<ck::LogStream::end;
-    
-    LOG_INFO<<"OhMy"<<ck::LogStream::end;
-    
-    CK_LOG_INFO_I(ck::Log::GRAPHICS)<<"OhMy"<<ck::LogStream::end;
-    
-    LOG_EXCEPT<<(new std::bad_alloc())<<LOG_END;
+
+    Test obj1;
+    ck::Object obj2;
     
     
+    LOG_INFO<<"Object 2:"<<std::hex<<obj2.id().id<<LOG_END;
+    
+    LOG_INFO<<"Object 1:"<<std::hex<<obj1.id().id<<LOG_END;
+
 }
 

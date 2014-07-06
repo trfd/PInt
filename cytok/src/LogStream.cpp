@@ -5,6 +5,7 @@
 //  Created by Baptiste Dupy on 06/07/2014.
 //
 //
+#include <iomanip>
 
 #include "LogStream.hpp"
 
@@ -22,10 +23,10 @@ namespace ck
     
     void operator << (LogStream& ls , LogStream::End end)
     {
-        Log::message(ls.mType, ls.stream.str() , ls.mInfo);
+        Log::message(ls.mType, ls.mStream.str() , ls.mInfo);
         
         // Clear content of stream
-        ls.stream.str(std::string());
+        ls.clearStream(ls.mStream);
         
         ls.mType = Log::INFO;
         ls.mInfo = Log::NONE;
@@ -36,10 +37,10 @@ namespace ck
     {
         /// Check if the default stream contains information not sent
         /// Typically user forgot to append message with end.
-        if( sDefaultStream->stream.str() != "" )
+        if( sDefaultStream->mStream.str() != "" )
         {
             /// Send message
-            Log::message(sDefaultStream->mType, sDefaultStream->stream.str() , sDefaultStream->mInfo);
+            Log::message(sDefaultStream->mType, sDefaultStream->mStream.str() , sDefaultStream->mInfo);
             
             /// Add warning to inform of delay and to recall using end at the end
             Log::warning(
@@ -47,12 +48,21 @@ namespace ck
                          'CLOG_END' at the end of the log stream",Log::ENGINE);
             
             // Clear content
-            sDefaultStream->stream.str(std::string());
+            sDefaultStream->clearStream(sDefaultStream->mStream);
         }
         
         sDefaultStream->mType = logType;
         sDefaultStream->mInfo = info;
         
         return *sDefaultStream;
+    }
+    
+    void LogStream::clearStream(std::ostringstream& stream)
+    {
+        stream.clear();
+        stream<<std::resetiosflags(std::ios::floatfield);
+        stream<<std::resetiosflags(std::ios::basefield);
+        stream<<std::resetiosflags(std::ios::adjustfield);
+        stream.str(std::string());
     }
 }

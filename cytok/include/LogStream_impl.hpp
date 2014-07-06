@@ -14,7 +14,7 @@ namespace ck
     template<typename InputType>
     LogStream& operator << (LogStream& ls , const InputType& input)
     {
-        ls.stream<<input;
+        ls.mStream<<input;
         
         return ls;
     }

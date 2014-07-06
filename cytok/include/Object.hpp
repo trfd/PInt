@@ -29,10 +29,7 @@ namespace ck
         
         virtual std::string toString();
         
-    protected:
-        
-        template<typename This>
-        void fetchID(This thisObj);
+        virtual const std::type_info& type();
         
     private:
         

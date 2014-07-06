@@ -1,13 +1,13 @@
 //
-//  IAction.hpp
+//  Action.hpp
 //  CYTOK
 //
 //  Created by Baptiste Dupy on 04/07/2014.
 //
 //
 
-#ifndef CYTOK_IAction_hpp
-#define CYTOK_IAction_hpp
+#ifndef CYTOK_Action_hpp
+#define CYTOK_Action_hpp
 
 
 namespace ck
@@ -15,6 +15,8 @@ namespace ck
 	class IAction : public Object
 	{
     public:
+        
+        Action();
         
         virtual void perform() = 0;
         

@@ -23,10 +23,10 @@ namespace ck
             /// the ID, the ck::Object will set using this.
             /// But this has a type of ck::Object at this
             /// location. Thus ID will not be relevant.
-            fetchID(*this);
+            IDManager::get(type().hash_code());
         }
     }
-
+    
     
     ID Object::id()
     {
@@ -40,5 +40,10 @@ namespace ck
         out << "Object [id:"<<std::hex<<myID.id<<"] Address: 0x"<<this<<std::endl;
         
         return out.str();
+    }
+    
+    const std::type_info& Object::type()
+    {
+        return typeid(Object);
     }
 }

@@ -33,7 +33,7 @@ namespace ck
         LogStream(Log::Type logType,
                   Log::ContextInfo info = Log::NONE);
     
-        
+        void clearStream(std::ostringstream& stream);
     private:
         
         template<typename InputType>
@@ -42,7 +42,7 @@ namespace ck
         
         friend void operator << (LogStream& ls , End end);
         
-        std::ostringstream stream;
+        std::ostringstream mStream;
         
         Log::Type mType = Log::INFO;
         Log::ContextInfo mInfo = Log::NONE;

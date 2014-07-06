@@ -13,11 +13,13 @@
 
 namespace ck
 {
+    /*
     template<typename This>
     void Object::fetchID(This thisObj)
     {
         myID = IDManager::get(thisObj);
     }
+     */
 
 }
 
