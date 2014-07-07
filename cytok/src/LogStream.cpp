@@ -7,7 +7,7 @@
 //
 #include <iomanip>
 
-#include "LogStream.hpp"
+#include "Cytok/logs/LogStream.hpp"
 
 namespace ck
 {

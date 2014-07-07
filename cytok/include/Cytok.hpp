@@ -9,8 +9,12 @@
 #ifndef CYTOK_Header_hpp
 #define CYTOK_Header_hpp
 
-#include "version.hpp"
+#include "Cytok/version.hpp"
 
-#include "utils/Utils.hpp"
+#include "Cytok/Logs.hpp"
+#include "Cytok/IDManager.hpp"
+#include "Cytok/Object.hpp"
+#include "Cytok/NumericTypes.hpp"
+#include "Cytok/utils/Utils.hpp"
 
 #endif

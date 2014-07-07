@@ -9,17 +9,15 @@
 #include <iostream>
 #include <vector>
 
-#include "Hash.hpp"
+#include "Cytok/Hash.hpp"
 
-#include "Object.hpp"
+#include "Cytok/Object.hpp"
 
-#include "IDManager.hpp"
+#include "Cytok/IDManager.hpp"
 
-#include "Log.hpp"
-#include "Logger.hpp"
-#include "LogStream.hpp"
-#include "LoggerStd.hpp"
-#include "LogMacros.hpp"
+#include "Cytok/Logs.hpp"
+
+#include "Cytok/utils/VectorExtension.hpp"
 
 class Test : public ck::Object
 {
@@ -27,18 +25,21 @@ class Test : public ck::Object
     
 public:
     
+    virtual void description(std::ostringstream& stream)
+    {
+        Object::description(stream);
+        
+        stream<<" Hello World";
+    }
+    
 };
 
 
 int main(int argc, const char * argv[])
 {
-
-    Test* obj1 = ck::Object::create<Test>();
-    ck::Object* obj2 = ck::Object::create<ck::Object>();
+    ck::Object* obj = ck::Object::create<Test>();
     
-    LOG_INFO<<"Object 2:"<<std::hex<<obj2->id().id<<LOG_END;
-    
-    LOG_INFO<<"Object 1:"<<std::hex<<obj1->id().id<<LOG_END;
+    obj->describe();
 
 }
 

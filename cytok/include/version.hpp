@@ -2,11 +2,11 @@
 #define CK_MAJOR_VERSION 0
 #define CK_MINOR_VERSION 0
 #define CK_PATCH_VERSION 2
-#define CK_COMMIT_VERSION "gc5b4515"
-#define CK_REVISION_VERSION 11
+#define CK_COMMIT_VERSION "gbef8304"
+#define CK_REVISION_VERSION 12
 
-#define CK_VERSION_FULL "0.0.2.2.cgc5b4515.r11"
-#define CK_VERSION "0.0.2.2"
+#define CK_VERSION_FULL "0.0.2.3.cgbef8304.r12"
+#define CK_VERSION "0.0.2.3"
 
 
 

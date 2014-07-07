@@ -15,10 +15,17 @@ namespace ck
     {
         virtual const char* what() const throw()
         {
-            return "Invalid ID was generated or found";
+            return "Invalid ID was generated or found.";
         }
     };
-
+    
+    class OverflowIDException: public std::exception
+    {
+        virtual const char* what() const throw()
+        {
+            return "IDManager overflowed the ID space.";
+        }
+    };
 }
 
 #endif

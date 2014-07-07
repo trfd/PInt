@@ -11,7 +11,7 @@
 
 #include <cstdint>
 
-#include "NumericTypes.hpp"
+#include "Cytok/NumericTypes.hpp"
 
 namespace ck
 {

@@ -9,7 +9,7 @@
 #ifndef CYTOK_Logger_hpp
 #define CYTOK_Logger_hpp
 
-#include "Log.hpp"
+#include "Cytok/logs/Log.hpp"
 
 namespace ck
 {

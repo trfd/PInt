@@ -9,16 +9,21 @@
 #ifndef CYTOK_Object_hpp
 #define CYTOK_Object_hpp
 
-#include <string>
+#include <sstream>
 
-#include "NumericTypes.hpp"
+#include "Cytok/Logs.hpp"
 
-#include "ID.hpp"
+#include "Cytok/NumericTypes.hpp"
+
+#include "Cytok/ID.hpp"
 
 namespace ck
 {
 	class Object 
 	{
+
+        friend std::ostream& operator <<(std::ostream& stream, const Object& obj);
+        
     public:
 
         /// Static
@@ -36,9 +41,12 @@ namespace ck
         
         ID id();
         
-        virtual std::string toString();
+        virtual void description(std::ostringstream& stream);
         
+        std::string toString();
         
+        virtual void describe(Log::ContextInfo ctx = Log::ENGINE , Log::Type logType = Log::INFO);
+    
     protected:
         
         /// Flow

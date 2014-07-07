@@ -8,9 +8,9 @@
 
 #include <sstream>
 
-#include "Object.hpp"
+#include "Cytok/Object.hpp"
 
-#include "IDManager.hpp"
+#include "Cytok/IDManager.hpp"
 
 namespace ck
 {
@@ -26,10 +26,22 @@ namespace ck
     
     std::string Object::toString()
     {
-        std::ostringstream out;
+        std::ostringstream stream;
         
-        out << "Object [id:"<<std::hex<<myID.id<<"] Address: 0x"<<this<<std::endl;
+        this->description(stream);
+
+        stream<<"\n";
         
-        return out.str();
+        return stream.str();
+    }
+    
+    void Object::description(std::ostringstream& stream)
+    {
+        stream << "Object ClassID="<<typeid(*this).name()<<" [id:"<<std::hex<<myID.id<<"] Address=0x"<<this;
+    }
+    
+    void Object::describe(Log::ContextInfo ctx, Log::Type logType)
+    {
+        Log::message(logType, this->toString() , ctx);
     }
 }
