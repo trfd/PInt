@@ -33,13 +33,15 @@ namespace ck
         
         /// Constructor/Destructor
         
-        Object();
+        Object(std::string name = "No-Name");
         
         virtual ~Object(){};
         
         /// Accessor
         
         ID id();
+        
+        std::string name();
         
         virtual void description(std::ostringstream& stream);
         
@@ -56,6 +58,8 @@ namespace ck
     private:
      
         ID myID = CK_INVALID_ID;
+        
+        std::string myName = "UNKNOWN";
 	};
 }
 

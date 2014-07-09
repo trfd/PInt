@@ -16,5 +16,6 @@
 #include "Cytok/Object.hpp"
 #include "Cytok/NumericTypes.hpp"
 #include "Cytok/utils/Utils.hpp"
+#include "Cytok/Proxy.hpp"
 
 #endif

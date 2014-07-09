@@ -14,9 +14,10 @@
 
 namespace ck
 {
-    Object::Object()
+    Object::Object(std::string name)
     {
         myID = CK_INVALID_ID;
+        myName = name;
     }
     
     ID Object::id()

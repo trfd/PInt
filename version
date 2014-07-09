@@ -90,7 +90,7 @@ puts "Version short #{version_short}"
 files_in = ["git_config/version.hpp",
 		 	"git_config/Doxyfile"]
 
-files_out = ["cytok/include/version.hpp",
+files_out = ["cytok/include/Cytok/version.hpp",
 			 "doc/Doxyfile"]
 
 files_in.each_with_index { |file , idx| 

@@ -9,37 +9,67 @@
 #include <iostream>
 #include <vector>
 
-#include "Cytok/Hash.hpp"
+#include <Cytok.hpp>
 
-#include "Cytok/Object.hpp"
+using namespace ck;
+using namespace proxy;
 
-#include "Cytok/IDManager.hpp"
-
-#include "Cytok/Logs.hpp"
-
-#include "Cytok/utils/VectorExtension.hpp"
-
-class Test : public ck::Object
+class Test : public Object
 {
-    int a;
+    int _c;
     
 public:
     
-    virtual void description(std::ostringstream& stream)
+    void setC(int v)
     {
-        Object::description(stream);
-        
-        stream<<" Hello World";
+        _c = v;
     }
     
+    int c(){ return _c; }
+    
+    int inout(int c)
+    {return ++c;}
 };
 
+class TestProxy : public ObjectProxy
+{
+public:
+    
+    TestProxy(Test* test)
+    : ObjectProxy(test)
+    {}
+    
+    virtual void buildPropertyList()
+    {
+        Test* testObj =(Test*)this->object();
+        
+        addProperty(new ObjectPropertyGeneric<int>(
+                    "ParameterC",
+                    makeFunctor(testObj, &Test::c),
+                    Functor<void, int>(testObj, &Test::setC))
+                    );
+    }
+};
 
 int main(int argc, const char * argv[])
 {
-    ck::Object* obj = ck::Object::create<Test>();
+    Test obj;
     
-    obj->describe();
+    obj.setC(10);
+    
+    Functor<void, int>* f = new Functor<void, int>(&obj, &Test::setC);
+    
+    Functor<int, int>* f2 = new Functor<int, int>(&obj, &Test::inout);
+    
+    TestProxy prox = TestProxy(&obj);
+    
+    prox.buildPropertyList();
+    
+    prox.property(0)->valueFromString("20");
 
+    std::cout<<(*f2)(42)<<"\n";
+    
+    std::cout<<prox.property(0)->valueToString()<<"\n";
+    
 }
 
