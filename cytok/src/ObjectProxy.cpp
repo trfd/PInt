@@ -13,6 +13,16 @@ namespace ck
 {
     namespace proxy
     {
+        void ObjectProxy::setName(const std::string& name)
+        {
+            myName = name;
+        }
+        
+        std::string& ObjectProxy::name()
+        {
+            return myName;
+        }
+        
         void ObjectProxy::addProperty(ObjectProperty* prop)
         {
             if(prop == NULL)
@@ -37,9 +47,42 @@ namespace ck
         ObjectProperty* ObjectProxy::property(std::string pName)
         {
             PropertyList_it it = std::find_if(myProperties.begin(), myProperties.end(),
-                                              [&](ObjectProperty* p) -> bool { return  p->name() == pName; });
+                                              [&](ObjectProperty* p) -> bool
+            {
+                return  p->name() == pName;
+            });
             
             if(it == myProperties.end())
+                return NULL;
+            
+            return *it;
+        }
+        
+        
+        void ObjectProxy::addProxy(ObjectProxy* prox)
+        {
+            myProxies.push_back(prox);
+        }
+        
+        std::vector<ObjectProxy*>& ObjectProxy::proxies()
+        {
+            return myProxies;
+        }
+        
+        ObjectProxy* ObjectProxy::proxy(int atIdx)
+        {
+            return myProxies[atIdx];
+        }
+        
+        ObjectProxy* ObjectProxy::proxy(std::string pName)
+        {
+            ProxyList_it it = std::find_if(myProxies.begin(), myProxies.end(),
+                                           [&](ObjectProxy* p) -> bool
+            {
+                return  p->name() == pName;
+            });
+            
+            if(it == myProxies.end())
                 return NULL;
             
             return *it;
@@ -50,9 +93,7 @@ namespace ck
             return myObject;
         }
         
-        void ObjectProxy::buildPropertyList()
-        {
-            //        addProperty
-        }
+        void ObjectProxy::buildProxy()
+        {}
     }
 }

@@ -51,7 +51,7 @@ namespace ck
             
             inline virtual void valueFromString(const std::string& str)
             {
-                mySetter( 23 );//boost::lexical_cast<SetType>(str) );
+                mySetter(boost::lexical_cast<SetType>(str));
             }
             
         private:
