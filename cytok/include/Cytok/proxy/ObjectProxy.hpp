@@ -14,6 +14,8 @@
 
 #include "Cytok/Object.hpp"
 
+#include "ObjectPropertyHolder.hpp"
+
 namespace ck
 {
     namespace proxy
@@ -24,9 +26,22 @@ namespace ck
         {
         public:
             
+            ObjectProxy()
+            {
+                myObject = NULL;
+            }
+            
             ObjectProxy(ck::Object* obj)
             {
                 myObject = obj;
+            }
+            
+            void setObject(ck::Object* obj)
+            {
+                myObject = obj;
+
+                if(myObject)
+                    this->buildProxy();
             }
             
             void setName(const std::string& name);

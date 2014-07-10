@@ -9,8 +9,12 @@
 #ifndef CYTOK_Proxy_hpp
 #define CYTOK_Proxy_hpp
 
+#include "Cytok/proxy/ProxyMacros.hpp"
+
 #include "Cytok/proxy/ObjectPropertyGeneric.hpp"
 #include "Cytok/proxy/ObjectProxy.hpp"
 #include "Cytok/proxy/ObjectProxyProperty.hpp"
+
+#include "Cytok/proxy/ObjectProxyFactory.hpp"
 
 #endif

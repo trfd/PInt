@@ -25,7 +25,7 @@ namespace ck
     template<typename ReturnType,typename... Args>
     class FunctorPtrImpl : public FunctorImpl<ReturnType,Args...>
     {
-        typedef void (*FuncPtr)(Args...);
+        typedef ReturnType(*FuncPtr)(Args...);
         FuncPtr _funct;
         
     public:
@@ -126,6 +126,15 @@ namespace ck
                                             ReturnType(BaseClass::*fPtr)(Args...))
     {
         return Functor<ReturnType,Args...>(ptr,fPtr);
+    }
+    
+    template<
+        typename ReturnType,
+        typename... Args
+    >
+    Functor<ReturnType,Args...> makeFunctor(ReturnType(*fPtr)(Args...))
+    {
+        return Functor<ReturnType,Args...>(fPtr);
     }
 }
 

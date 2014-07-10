@@ -14,6 +14,8 @@
 
 namespace ck
 {
+    REGISTER_ROOT_CLASS(ck::Object);
+    
     Object::Object(std::string name)
     {
         myID = CK_INVALID_ID;

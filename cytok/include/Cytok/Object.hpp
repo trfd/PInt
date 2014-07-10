@@ -11,6 +11,8 @@
 
 #include <sstream>
 
+#include "Cytok/ClassType.hpp"
+
 #include "Cytok/Logs.hpp"
 
 #include "Cytok/NumericTypes.hpp"
@@ -21,10 +23,11 @@ namespace ck
 {
 	class Object 
 	{
-
         friend std::ostream& operator <<(std::ostream& stream, const Object& obj);
         
     public:
+        
+        DEFINE_CLASS(ck::Object);
 
         /// Static
         

@@ -20,6 +20,8 @@ class Basic : public Object
     
 public:
     
+    DEFINE_CLASS(Basic);
+    
     void setC(int v)
     {
         _c = v;
@@ -31,9 +33,17 @@ public:
     {return ++c;}
 };
 
+REGISTER_CLASS(Basic,ck::Object);
+
 class BasicProxy : public ObjectProxy
 {
 public:
+    
+    DEFINE_PROXY(Basic, BasicProxy);
+    
+    BasicProxy() : ObjectProxy(NULL)
+    {}
+    
     BasicProxy(Basic* basic)
     : ObjectProxy(basic)
     {}
@@ -50,6 +60,9 @@ public:
         
     }
 };
+
+REGISTER_PROXY(BasicProxy);
+
 
 class Test : public Object
 {
@@ -74,6 +87,12 @@ public:
     }
 };
 
+struct generator
+{
+
+};
+
+
 class TestProxy : public ObjectProxy
 {
 public:
@@ -85,9 +104,9 @@ public:
     virtual void buildProxy()
     {
         Test* testObj =(Test*)this->object();
+
+        addProperty(new ObjectProxyProperty("Object" , ObjectProxyFactory::instance()->createProxy(&testObj->object())));
         
-        addProperty(new ObjectProxyProperty("Object",
-                                            new BasicProxy(&(testObj->object()))));
         
         
         addProperty(new ObjectPropertyGeneric<int>(
@@ -115,6 +134,9 @@ int main(int argc, const char * argv[])
     prox.property(0)->property(0)->valueFromString("20");
     
     std::cout<<"Basic::c="<<prox.property(0)->property(0)->valueToString()<<"\n";
+    
+    std::cout<<"Object: "<<std::hex<<Object::type.id()<<"\n";
+    
     
 }
 

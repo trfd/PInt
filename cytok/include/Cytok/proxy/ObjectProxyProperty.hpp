@@ -15,7 +15,6 @@
 
 namespace ck
 {
-
     namespace proxy
     {
         class ObjectProxy;

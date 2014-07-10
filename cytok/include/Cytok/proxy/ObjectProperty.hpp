@@ -32,7 +32,6 @@ namespace ck
             
             virtual void valueFromString(const std::string&) = 0;
         
-            
             virtual size_t propertyCount();
             
             virtual PropertyList* properties();
