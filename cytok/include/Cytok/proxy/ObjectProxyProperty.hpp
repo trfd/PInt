@@ -20,21 +20,15 @@ namespace ck
     {
         class ObjectProxy;
         
-        class ObjectProxyProperty : public ObjectPropertyGeneric<ObjectProxy*>
+        class ObjectProxyProperty : public ObjectProperty
         {
 		public:
             
-            template<typename ProxyType,typename... Args>
-            ObjectProxyProperty(const std::string& name,
-                                Args&&... args)
+            ObjectProxyProperty(const std::string& name, ObjectProxy* proxy)
+            : ObjectProperty(name)
             {
-                if(!std::is_base_of<ck::proxy::ObjectProxy,ProxyType>::value)
-                {
-                    LOG_ERROR_I(Log::ENGINE)<<"ObjectProxyProperty's type must derive "
-                    <<"from ck::proxy::ObjectProxy"<<LOG_END;
-                }
-                
-                myProxy = new ProxyType(std::forward<Args>(args)...);
+                myProxy = proxy;
+                myProxy->buildProxy();
             }
             
             inline virtual ObjectProxy* value()
@@ -42,7 +36,7 @@ namespace ck
                 return myProxy;
             }
             
-            inline virtual void setValue(ObjectProxy*&& value)
+            inline virtual void setValue(ObjectProxy* value)
             {
                 if(myProxy)
                     delete myProxy;
