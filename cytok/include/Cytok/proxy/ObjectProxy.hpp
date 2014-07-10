@@ -20,15 +20,9 @@ namespace ck
     {
         class ObjectProperty;
         
-        class ObjectProxy 
+        class ObjectProxy : public IObjectPropertyHolder
         {
         public:
-            
-            typedef std::vector<ObjectProperty*> PropertyList;
-            typedef std::vector<ObjectProperty*>::iterator PropertyList_it;
-            
-            typedef std::vector<ObjectProxy*> ProxyList;
-            typedef std::vector<ObjectProxy*>::iterator ProxyList_it;
             
             ObjectProxy(ck::Object* obj)
             {
@@ -41,20 +35,14 @@ namespace ck
             
             void addProperty(ObjectProperty* prop);
             
-            PropertyList& properties();
+            virtual size_t propertyCount();
             
-            ObjectProperty* property(int atIdx);
+            virtual PropertyList* properties();
             
-            ObjectProperty* property(std::string pName);
+            virtual ObjectProperty* property(int atIdx);
             
-            
-            void addProxy(ObjectProxy* prox);
-            
-            ProxyList& proxies();
-            
-            ObjectProxy* proxy(int atIdx);
-            
-            ObjectProxy* proxy(std::string pName);
+            virtual ObjectProperty* property(std::string pName);
+
             
             ck::Object* object();
             
@@ -67,8 +55,6 @@ namespace ck
             std::string myName;
             
             PropertyList myProperties;
-            
-            ProxyList myProxies;
             
             ck::Object* myObject;
 

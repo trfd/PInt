@@ -43,10 +43,11 @@ public:
         Basic* base = (Basic*) this->object();
         
         this->setName("Basic");
-        
+       /*
         addProperty(new ObjectPropertyGeneric<int>("C",
                                                    makeFunctor(base,&Basic::c),
-                                                   makeFunctor(base,&Basic::setC)));
+                                                   Functor<void, int>(base,&Basic::setC)));
+        //*/
     }
 };
 
@@ -85,12 +86,6 @@ public:
     {
         Test* testObj =(Test*)this->object();
         
-        BasicProxy* prox = new BasicProxy(&testObj->object());
-        
-        prox->buildProxy();
-        
-        addProxy(prox);
-        
         addProperty(new ObjectPropertyGeneric<int>(
                     "ParameterC",
                     makeFunctor(testObj, &Test::c),
@@ -113,7 +108,7 @@ int main(int argc, const char * argv[])
 
     std::cout<<prox.property(0)->valueToString()<<"\n";
     
-    std::cout<<"Basic::c="<<prox.proxy(0)->property(0)->valueToString()<<"\n";
+    //std::cout<<"Basic::c="<<prox.proxy(0)->property(0)->valueToString()<<"\n";
     
 }
 

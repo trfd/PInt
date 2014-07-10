@@ -11,5 +11,6 @@
 
 #include "Cytok/proxy/ObjectPropertyGeneric.hpp"
 #include "Cytok/proxy/ObjectProxy.hpp"
+#include "Cytok/proxy/ObjectProxyProperty.hpp"
 
 #endif

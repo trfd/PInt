@@ -20,5 +20,26 @@ namespace ck
         {
             return myName;
         }
+        
+        size_t ObjectProperty::propertyCount()
+        {
+            return 0;
+        }
+        
+        ObjectProperty::PropertyList* ObjectProperty::properties()
+        {
+            return NULL;
+        }
+        
+        ObjectProperty* ObjectProperty::property(int atIdx)
+        {
+            return NULL;
+        }
+        
+        ObjectProperty* ObjectProperty::property(std::string pName)
+        {
+            return NULL;
+        }
+
     }
 }

@@ -34,14 +34,14 @@ namespace ck
             myGetter(getter) , mySetter(setter)
             {}
             
-            inline GetType value()
+            inline virtual GetType value()
             {
                 return myGetter();
             }
             
-            inline void setValue(SetType value)
+            inline virtual void setValue(SetType&& value)
             {
-                mySetter(value);
+                mySetter(std::forward<SetType>(value));
             }
             
             inline virtual std::string valueToString()
