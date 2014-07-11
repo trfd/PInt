@@ -2,11 +2,11 @@
 #define CK_MAJOR_VERSION 0
 #define CK_MINOR_VERSION 0
 #define CK_PATCH_VERSION 3
-#define CK_COMMIT_VERSION "g096ca40"
-#define CK_REVISION_VERSION 19
+#define CK_COMMIT_VERSION "g9f14e85"
+#define CK_REVISION_VERSION 20
 
-#define CK_VERSION_FULL "0.0.3.6.cg096ca40.r19"
-#define CK_VERSION "0.0.3.6"
+#define CK_VERSION_FULL "0.0.3.7.cg9f14e85.r20"
+#define CK_VERSION "0.0.3.7"
 
 
 

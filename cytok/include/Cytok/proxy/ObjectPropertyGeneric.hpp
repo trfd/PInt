@@ -20,7 +20,8 @@ namespace ck
 {
     namespace proxy
     {
-        template<
+        template
+        <
             typename GetType,
             typename SetType = GetType
         >

@@ -11,8 +11,9 @@
 
 #include "Cytok/Logs.hpp"
 
-#include "Cytok/proxy/ObjectProxy.hpp"
-#include "Cytok/proxy/ObjectPropertyGeneric.hpp"
+#include "Cytok/proxy/ProxyMacros.hpp"
+#include "Cytok/proxy/ObjectProperty.hpp"
+#include "Cytok/proxy/ObjectPropertyFactory.hpp"
 
 namespace ck
 {
@@ -24,7 +25,7 @@ namespace ck
         {
 		public:
             
-            DEFINE_PROPERTY(ObjectProperty::OBJECT, ObjectProxyProperty)
+            DEFINE_PROPERTY(ObjectProperty::OBJECT, ObjectProxyProperty);
             
             ObjectProxyProperty();
             

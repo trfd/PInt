@@ -13,7 +13,11 @@
 
 namespace ck
 {
-	template<typename ReturnType,typename... Args>
+	template
+    <
+        typename ReturnType,
+        typename... Args
+    >
     class FunctorImpl
     {
     public:
@@ -24,7 +28,10 @@ namespace ck
         virtual FunctorImpl* copy() = 0;
     };
     
-    template<typename ReturnType,typename... Args>
+    template<
+        typename ReturnType,
+        typename... Args
+    >
     class FunctorPtrImpl : public FunctorImpl<ReturnType,Args...>
     {
         typedef ReturnType(*FuncPtr)(Args...);
@@ -52,10 +59,12 @@ namespace ck
         }
     };
     
-    template<
+    template
+    <
         typename MemClass ,
         typename ReturnType,
-        typename... Args>
+        typename... Args
+    >
     class FunctorMethodPtrImpl : public FunctorImpl<ReturnType,Args...>
     {
         typedef ReturnType (MemClass::*MethodPtr)(Args...);
@@ -86,7 +95,11 @@ namespace ck
         }
     };
     
-    template<typename ReturnType,typename... Args>
+    template
+    <
+        typename ReturnType,
+        typename... Args
+    >
     class Functor
     {
         FunctorImpl<ReturnType,Args...> *_impl;
@@ -120,7 +133,8 @@ namespace ck
         
     };
     
-    template<
+    template
+    <
         typename BaseClass,
         typename ReturnType,
         typename... Args
@@ -131,7 +145,8 @@ namespace ck
         return Functor<ReturnType,Args...>(ptr,fPtr);
     }
     
-    template<
+    template
+    <
         typename ReturnType,
         typename... Args
     >
@@ -141,10 +156,11 @@ namespace ck
     }
     
     
-    template<
-    typename BaseClass,
-    typename ReturnType,
-    typename... Args
+    template
+    <
+        typename BaseClass,
+        typename ReturnType,
+        typename... Args
     >
     Functor<ReturnType,Args...>* makeNewFunctor(BaseClass* ptr,
                                                ReturnType(BaseClass::*fPtr)(Args...))
@@ -152,9 +168,10 @@ namespace ck
         return new Functor<ReturnType,Args...>(ptr,fPtr);
     }
     
-    template<
-    typename ReturnType,
-    typename... Args
+    template
+    <
+        typename ReturnType,
+        typename... Args
     >
     Functor<ReturnType,Args...>* makeNewFunctor(ReturnType(*fPtr)(Args...))
     {

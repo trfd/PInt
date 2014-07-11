@@ -9,6 +9,8 @@
 #ifndef CYTOK_ClassType_hpp
 #define CYTOK_ClassType_hpp
 
+#include <string>
+
 #include "Hash.hpp"
 #include "utils/MacrosUtils.hpp"
 
@@ -29,36 +31,16 @@ namespace ck
 	{
     public:
         
-		ClassType(const std::string& className , ClassType* rootClass = NULL)
-        :  myRootClass(rootClass) ,myName(className)
-        {
-            if(myRootClass)
-                myFullname = myRootClass->myFullname+"-"+myName;
-            else
-                myFullname = myName;
-         
-            myID = utils::hash<32>::get(myFullname);
-        }
+		ClassType(const std::string& className ,
+                  ClassType* rootClass = NULL);
         
-        ClassType* root()
-        {
-            return myRootClass;
-        }
+        ClassType* root();
         
-        std::string& fullname()
-        {
-            return myFullname;
-        }
+        std::string& fullname();
         
-        std::string& name()
-        {
-            return myName;
-        }
+        std::string& name();
         
-        uint32_t id()
-        {
-            return myID;
-        }
+        uint32_t id();
         
     private:
         

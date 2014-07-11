@@ -20,22 +20,28 @@ namespace ck
 {
     namespace proxy
     {
+        ///
+        ///
+        ///
         class ObjectPropertyFactoryMap
-        : public FactoryMap<
-            ObjectProperty,
-            ObjectProperty::PropertyType ,
-            Functor<ObjectProperty*>
+        : public FactoryMap
+            <
+                ObjectProperty,
+                ObjectProperty::PropertyType ,
+                Functor<ObjectProperty*>
             >,
         public utils::Singleton<ObjectPropertyFactoryMap>
-        {
-        public:
-        };
+        {};
         
+        ///
+        ///
+        ///
         class ObjectPropertyFactory
-        : public Factory<
-            ObjectProperty,
-            ObjectProperty::PropertyType,
-            Functor<ObjectProperty*>
+        : public Factory
+            <
+                ObjectProperty,
+                ObjectProperty::PropertyType,
+                Functor<ObjectProperty*>
             >
         {
         public:

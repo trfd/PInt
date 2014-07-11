@@ -15,7 +15,6 @@
 #include "Cytok/Functor.hpp"
 #include "Cytok/utils/Singleton.hpp"
 #include "Cytok/Factory.hpp"
-#include "Cytok/proxy/ObjectProxy.hpp"
 #include "Cytok/proxy/ObjectProxyFactoryError.hpp"
 
 namespace ck
@@ -47,39 +46,17 @@ namespace ck
             
         public:
             
-            static ObjectProxyFactory* currentFactory()
-            {
-                return myCurrFactory;
-            }
+            static ObjectProxyFactory* currentFactory();
             
-            static void setCurrentFactory(ObjectProxyFactory* f)
-            {
-                myCurrFactory = f;
-            }
+            static void setCurrentFactory(ObjectProxyFactory* f);
             
-            ObjectProxyFactory()
-            : Factory(ObjectProxyFactoryMap::instance())
-            {}
+            ObjectProxyFactory();
             
             template<typename BaseClass>
-            ObjectProxy* createProxy()
-            {
-                return createProduct(&BaseClass::type);
-            }
+            ObjectProxy* createProxy();
             
             template<typename BaseClass>
-            ObjectProxy* createProxy(BaseClass* obj)
-            {
-                if(!obj)
-                    return createProxy<BaseClass>();
-                
-                ObjectProxy* proxy = createProduct(obj->classType());
-                
-                if(proxy)
-                    proxy->setObject(obj);
-                
-                return proxy;
-            }
+            ObjectProxy* createProxy(BaseClass* obj);
             
         private:
             
@@ -98,5 +75,7 @@ namespace ck
 
     }
 }
+
+#include "ObjectProxyFactory_impl.hpp"
 
 #endif

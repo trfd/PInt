@@ -20,7 +20,6 @@ namespace ck
 {
     namespace proxy
     {
-        class ObjectProperty;
         
         class ObjectProxy : public IObjectPropertyHolder
         {
@@ -81,6 +80,9 @@ namespace ck
                                    BaseClass* ptr ,
                                    GetType(BaseClass::*getter)(),
                                    void(BaseClass::*setter)(SetType));
+            
+            template<typename BaseClass>
+            void addProxyProperty(const std::string& name, BaseClass* obj );
             
             virtual void addProperty(ObjectProperty* prop);
             

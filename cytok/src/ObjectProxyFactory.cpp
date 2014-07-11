@@ -15,5 +15,21 @@ namespace ck
     namespace proxy
     {
         ObjectProxyFactory* ObjectProxyFactory::myCurrFactory = NULL;
+        
+        ObjectProxyFactory* ObjectProxyFactory::currentFactory()
+        {
+            return myCurrFactory;
+        }
+        
+        void ObjectProxyFactory::setCurrentFactory(ObjectProxyFactory* f)
+        {
+            myCurrFactory = f;
+        }
+        
+        ObjectProxyFactory::ObjectProxyFactory()
+        : Factory(ObjectProxyFactoryMap::instance())
+        {}
+        
+
     }
 }

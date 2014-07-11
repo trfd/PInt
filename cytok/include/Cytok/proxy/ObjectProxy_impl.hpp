@@ -10,7 +10,10 @@
 #define CYTOK_ObjectProxy_impl_hpp
 
 #include "Cytok/proxy/ObjectPropertyGeneric.hpp"
+#include "Cytok/proxy/ObjectProxyProperty.hpp"
 #include "Cytok/proxy/ObjectPropertyFactory.hpp"
+#include "Cytok/proxy/ObjectProxyFactory.hpp"
+
 
 namespace ck
 {
@@ -72,6 +75,12 @@ namespace ck
                 throw InvalidPropertyException();
             
             this->addProperty(prop);
+        }
+        
+        template<typename BaseClass>
+        void ObjectProxy::addProxyProperty(const std::string& name, BaseClass* obj )
+        {
+            this->addProperty(new ObjectProxyProperty(name , ObjectProxyFactory::currentFactory()->createProxy(obj)));
         }
     }
 }

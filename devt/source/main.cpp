@@ -11,6 +11,8 @@
 
 #include <Cytok.hpp>
 
+#include <Cytok/ComponentHolder.hpp>
+
 using namespace ck;
 using namespace proxy;
 
@@ -65,6 +67,7 @@ class Test : public Object
 {
     float _c = 9.f;
     Basic obj;
+    Basic* obj2;
     
 public:
     
@@ -81,6 +84,11 @@ public:
     Basic& object()
     {
         return obj;
+    }
+    
+    Basic* object2()
+    {
+        return obj2;
     }
 };
 

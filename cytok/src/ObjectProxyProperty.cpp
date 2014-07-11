@@ -6,7 +6,7 @@
 //
 //
 
-#include "Cytok/proxy/ProxyMacros.hpp"
+#include "Cytok/proxy/ObjectProxy.hpp"
 #include "Cytok/proxy/ObjectPropertyFactory.hpp"
 #include "Cytok/proxy/ObjectProxyProperty.hpp"
 
@@ -17,7 +17,6 @@ namespace ck
         
         REGISTER_PROPERTY(ObjectProxyProperty);
     
-        
         ObjectProxyProperty::ObjectProxyProperty()
         {}
         
