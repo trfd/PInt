@@ -12,13 +12,19 @@ namespace ck
 {
     namespace proxy
     {
-        ObjectProperty::ObjectProperty(const std::string& name)
-        : myName(name)
+        ObjectProperty::ObjectProperty(const std::string& name ,
+                                       ObjectProperty::PropertyType type)
+        : myName(name) , myType(type)
         {}
         
         std::string& ObjectProperty::name()
         {
             return myName;
+        }
+        
+        ObjectProperty::PropertyType ObjectProperty::type()
+        {
+            return myType;
         }
         
         size_t ObjectProperty::propertyCount()

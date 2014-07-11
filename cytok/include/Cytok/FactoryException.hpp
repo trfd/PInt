@@ -13,15 +13,22 @@
 
 namespace ck
 {
+    class FactoryException : std::exception
+    {
+    };
+    
+    class FactoryNullMapException : FactoryException
+    {
+    };
     
     template<typename ProductID>
-    class FactoryException : public std::exception
+    class FactoryProductIDException : FactoryException
     {
         ProductID myId;
         
     public:
         
-        FactoryException(const ProductID& id)
+        FactoryProductIDException(const ProductID& id)
         {
             myId = id;
         }
@@ -45,15 +52,27 @@ namespace ck
             return myId;
         }
 		
+    };
+    
+    template<typename ProductID>
+    class FactoryError
+    {
+    public:
+        
         static void OnUnknownType(const ProductID& id)
         {
-            throw FactoryException(id);
+            throw FactoryProductIDException<ProductID>(id);
         }
+        
         static void OnNullProduct(const ProductID& id)
         {
-            throw FactoryException(id);
+            throw FactoryProductIDException<ProductID>(id);
         }
-    
+        
+        static void OnNullMap()
+        {
+            throw FactoryNullMapException();
+        }
 	};
 }
 

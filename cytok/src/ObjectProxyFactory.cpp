@@ -14,5 +14,6 @@ namespace ck
 {
     namespace proxy
     {
+        ObjectProxyFactory* ObjectProxyFactory::myCurrFactory = NULL;
     }
 }

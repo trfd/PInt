@@ -20,11 +20,30 @@ namespace ck
     {
         class ObjectProperty : public IObjectPropertyHolder
         {
+            
         public:
             
-            ObjectProperty(const std::string& name);
+            enum PropertyType
+            {
+                NONE        = 0,
+                
+                INTEGER     = 1,
+                FLOAT       = 2,
+                STRING      = 3,
+                ENUM        = 4,
+                OBJECT      = 5,
+                POINTER     = 6,
+                REFERENCE   = 7,
+                ARRAY       = 8,
+                MAP         = 9
+            };
+
+            
+            ObjectProperty(const std::string& name,PropertyType type = NONE);
             
             std::string& name();
+            
+            PropertyType type();
             
             virtual ~ObjectProperty(){};
             
@@ -43,6 +62,8 @@ namespace ck
         private:
             
             std::string myName;
+            
+            PropertyType myType;
         };
     }
 }

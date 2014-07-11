@@ -9,6 +9,8 @@
 #ifndef CYTOK_Functor_hpp
 #define CYTOK_Functor_hpp
 
+#include <utility>
+
 namespace ck
 {
 	template<typename ReturnType,typename... Args>

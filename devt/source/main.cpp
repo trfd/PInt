@@ -105,10 +105,8 @@ public:
     {
         Test* testObj =(Test*)this->object();
 
-        addProperty(new ObjectProxyProperty("Object" , ObjectProxyFactory::instance()->createProxy(&testObj->object())));
-        
-        
-        
+        addProperty(new ObjectProxyProperty("Object" , ObjectProxyFactory::currentFactory()->createProxy(&testObj->object())));
+
         addProperty(new ObjectPropertyGeneric<int>(
                     "ParameterC",
                     makeFunctor(testObj, &Test::c),
@@ -119,6 +117,11 @@ public:
 
 int main(int argc, const char * argv[])
 {
+    
+    ObjectProxyFactory* proxyFactory = new ObjectProxyFactory();
+    
+    ObjectProxyFactory::setCurrentFactory(proxyFactory);
+    
     Test obj;
     
     obj.setC(10);

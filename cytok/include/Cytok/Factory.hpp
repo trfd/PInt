@@ -11,6 +11,7 @@
 
 #include <map>
 
+#include "Cytok/FactoryMap.hpp"
 #include "Cytok/FactoryException.hpp"
 
 namespace ck
@@ -19,43 +20,51 @@ namespace ck
         typename AbstractProduct,
         typename ProductID,
         typename ProductCreator,
-        template<typename>class ErrorPolicy = FactoryException
+        template<typename>class ErrorPolicy = FactoryError
     >
 	class Factory 
 	{
     public:
         
-        typedef std::map<ProductID,ProductCreator> FactoryMap;
-        typedef std::pair<ProductID,ProductCreator> FactoryPair;
-        typedef typename std::map<ProductID,ProductCreator>::iterator FactoryMap_it;
+        typedef FactoryMap<AbstractProduct, ProductID, ProductCreator, ErrorPolicy> DelegatedMap;
         
-        virtual void registerProduct(ProductID id , ProductCreator creator)
+        Factory(DelegatedMap* pMap)
+        : mMap(pMap)
+        {}
+        
+        void setMap(DelegatedMap* pMap)
         {
-            myAssociations.insert(FactoryPair(id , creator));
+            mMap = pMap;
         }
         
-        virtual void unregisterProduct(ProductID id)
+        inline virtual void registerCreator(ProductID id , ProductCreator creator)
         {
-            myAssociations.erase(id);
+            if(mMap)
+                mMap->registerCreator(id,creator);
         }
         
+        inline void unregisterCreator(ProductID id)
+        {
+            if(mMap)
+                mMap->unregisterCreator(id);
+        }
+
         virtual AbstractProduct* createProduct(ProductID id)
         {
-            FactoryMap_it it = myAssociations.find(id);
+            if(!mMap)
+                ErrorPolicy<ProductID>::OnNullMap();
             
-            if(it == myAssociations.end())
-            {
-                ErrorPolicy<ProductID>::OnUnknownType(id);
-                return NULL;
-            }
+            ProductCreator* creator = mMap->productCreator(id);
             
-            return (it->second)();
+            if(!creator)
+                return NULL; // Assume that map already call ErrorPolicy
+            
+            return (*creator)();
         }
         
-    private:
+    protected:
         
-        FactoryMap myAssociations;
-        
+        DelegatedMap* mMap;
 	};
 }
 

@@ -15,6 +15,7 @@
 #include "Cytok/proxy/ObjectProxy.hpp"
 #include "Cytok/proxy/ObjectProxyProperty.hpp"
 
+#include "Cytok/proxy/ObjectPropertyFactory.hpp"
 #include "Cytok/proxy/ObjectProxyFactory.hpp"
 
 #endif
