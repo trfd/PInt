@@ -11,6 +11,7 @@
 
 #include "Cytok/Logs.hpp"
 
+#include "Cytok/proxy/ObjectProxy.hpp"
 #include "Cytok/proxy/ObjectPropertyGeneric.hpp"
 
 namespace ck
@@ -23,55 +24,27 @@ namespace ck
         {
 		public:
             
-            ObjectProxyProperty(const std::string& name, ObjectProxy* proxy)
-            : ObjectProperty(name)
-            {
-                myProxy = proxy;
-                myProxy->buildProxy();
-            }
+            DEFINE_PROPERTY(ObjectProperty::OBJECT, ObjectProxyProperty)
             
-            inline virtual ObjectProxy* value()
-            {
-                return myProxy;
-            }
+            ObjectProxyProperty();
             
-            inline virtual void setValue(ObjectProxy* value)
-            {
-                if(myProxy)
-                    delete myProxy;
-                    
-                myProxy = value;
-            }
+            ObjectProxyProperty(const std::string& name, ObjectProxy* proxy);
             
-            inline virtual std::string valueToString()
-            {
-                return myProxy->name();
-            }
+            virtual ObjectProxy* value();
             
-            inline virtual void valueFromString(const std::string& str)
-            {
-                myProxy->setName(str);
-            }
+            virtual void setValue(ObjectProxy* value);
             
-            inline virtual size_t propertyCount()
-            {
-                return myProxy->propertyCount();
-            }
+            virtual std::string valueToString();
             
-            inline virtual PropertyList* properties()
-            {
-                return myProxy->properties();
-            }
+            virtual void valueFromString(const std::string& str);
             
-            inline virtual ObjectProperty* property(int atIdx)
-            {
-                return myProxy->property(atIdx);
-            }
+            virtual size_t propertyCount();
             
-            inline virtual ObjectProperty* property(std::string pName)
-            {
-                return myProxy->property(pName);
-            }
+            virtual PropertyList* properties();
+            
+            virtual ObjectProperty* property(int atIdx);
+            
+            virtual ObjectProperty* property(std::string pName);
             
         private:
             

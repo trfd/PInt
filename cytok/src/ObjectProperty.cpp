@@ -12,9 +12,12 @@ namespace ck
 {
     namespace proxy
     {
-        ObjectProperty::ObjectProperty(const std::string& name ,
-                                       ObjectProperty::PropertyType type)
-        : myName(name) , myType(type)
+        ObjectProperty::ObjectProperty()
+        {
+        }
+        
+        ObjectProperty::ObjectProperty(const std::string& name)
+        : myName(name)
         {}
         
         std::string& ObjectProperty::name()
@@ -22,9 +25,14 @@ namespace ck
             return myName;
         }
         
-        ObjectProperty::PropertyType ObjectProperty::type()
+        void ObjectProperty::setName(const std::string &name)
         {
-            return myType;
+            myName = name;
+        }
+        
+        ObjectProperty::PropertyType ObjectProperty::propertyType()
+        {
+            return ObjectProperty::property_type;
         }
         
         size_t ObjectProperty::propertyCount()

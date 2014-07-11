@@ -40,6 +40,13 @@ namespace ck
         void ObjectProxy::buildProxy()
         {}
         
+        void ObjectProxy::clearProxy()
+        {
+            myObject = NULL;
+            myProperties.clear();
+            myName = "";
+        }
+        
         /// IObjectPropertyHolder
         
         size_t ObjectProxy::propertyCount()

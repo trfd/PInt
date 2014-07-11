@@ -50,7 +50,6 @@ namespace ck
                 myCurrFactory = f;
             }
 
-            
             ObjectPropertyFactory()
             : Factory(ObjectPropertyFactoryMap::instance())
             {}
@@ -59,7 +58,6 @@ namespace ck
             
             static ObjectPropertyFactory* myCurrFactory;
         };
-        
         
         template<typename Type>
         struct ObjectPropertyFactoryRegister

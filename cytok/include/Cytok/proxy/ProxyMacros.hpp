@@ -58,14 +58,20 @@ ck::proxy::ObjectProxyFactoryRegister<_ProxyClass_> registerProxy_##_ProxyClass_
 #define DEFINE_PROPERTY(_PropertyType_,_Class_) \
 static ck::proxy::ObjectProperty* createProperty()\
 {\
-    return new _Class_();\
-} \
+return new _Class_();\
+}\
 static void registerObjectPropertyFactory()\
 {\
     ck::proxy::ObjectPropertyFactoryMap::instance()\
     ->registerCreator(_PropertyType_,\
-    ck::makeFunctor(&_Class_::createProperty));\
-}
+                      ck::makeFunctor(&_Class_::createProperty));\
+}\
+static const PropertyType property_type = _PropertyType_;\
+virtual PropertyType propertyType()\
+{\
+    return _Class_::property_type;\
+}\
+
 
 #define REGISTER_PROPERTY(_Class_) \
 ck::proxy::ObjectPropertyFactoryRegister<_Class_> registerProperty_##_Class_

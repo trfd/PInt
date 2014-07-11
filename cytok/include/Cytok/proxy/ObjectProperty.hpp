@@ -37,13 +37,18 @@ namespace ck
                 ARRAY       = 8,
                 MAP         = 9
             };
-
             
-            ObjectProperty(const std::string& name,PropertyType type = NONE);
+            static const PropertyType property_type = NONE;
+            
+            ObjectProperty();
+            
+            ObjectProperty(const std::string& name);
+            
+            void setName(const std::string& name);
             
             std::string& name();
             
-            PropertyType type();
+            virtual PropertyType propertyType();
             
             virtual ~ObjectProperty(){};
             

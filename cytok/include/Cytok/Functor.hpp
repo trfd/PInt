@@ -34,7 +34,8 @@ namespace ck
         
         FunctorPtrImpl(const FunctorPtrImpl& f)
         : _funct(f._funct)
-        {}
+        {
+        }
         
         FunctorPtrImpl(FuncPtr funct)
         : _funct(funct)
@@ -138,6 +139,28 @@ namespace ck
     {
         return Functor<ReturnType,Args...>(fPtr);
     }
+    
+    
+    template<
+    typename BaseClass,
+    typename ReturnType,
+    typename... Args
+    >
+    Functor<ReturnType,Args...>* makeNewFunctor(BaseClass* ptr,
+                                               ReturnType(BaseClass::*fPtr)(Args...))
+    {
+        return new Functor<ReturnType,Args...>(ptr,fPtr);
+    }
+    
+    template<
+    typename ReturnType,
+    typename... Args
+    >
+    Functor<ReturnType,Args...>* makeNewFunctor(ReturnType(*fPtr)(Args...))
+    {
+        return new Functor<ReturnType,Args...>(fPtr);
+    }
+    
 }
 
 #endif

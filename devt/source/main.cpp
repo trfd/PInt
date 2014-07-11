@@ -53,11 +53,8 @@ public:
         Basic* base = (Basic*) this->object();
         
         this->setName("Basic");
-       
-        addProperty(new ObjectPropertyGeneric<int>("C",
-                                                   makeFunctor(base,&Basic::c),
-                                                   makeFunctor(base,&Basic::setC)));
         
+        addDefaultProperty(ObjectProperty::INTEGER, "C", base, &Basic::c, &Basic::setC);
     }
 };
 
@@ -66,19 +63,19 @@ REGISTER_PROXY(BasicProxy);
 
 class Test : public Object
 {
-    int _c;
+    float _c = 9.f;
     Basic obj;
     
 public:
     
-    void setC(int v)
+    void setC(float v)
     {
         _c = v;
     }
     
-    int c(){ return _c; }
+    float c(){ return _c; }
     
-    int inout(int c)
+    float inout(float c)
     {return ++c;}
     
     Basic& object()
@@ -107,16 +104,17 @@ public:
 
         addProperty(new ObjectProxyProperty("Object" , ObjectProxyFactory::currentFactory()->createProxy(&testObj->object())));
 
-        addProperty(new ObjectPropertyGeneric<int>(
-                    "ParameterC",
-                    makeFunctor(testObj, &Test::c),
-                    makeFunctor(testObj, &Test::setC))
-                    );
+        addDefaultProperty(ObjectProperty::FLOAT, "Parameter C", testObj, &Test::c, &Test::setC);
+ 
     }
 };
 
 int main(int argc, const char * argv[])
 {
+
+    ObjectPropertyFactory* propertyFactory = new ObjectPropertyFactory();
+    
+    ObjectPropertyFactory::setCurrentFactory(propertyFactory);
     
     ObjectProxyFactory* proxyFactory = new ObjectProxyFactory();
     
@@ -124,22 +122,32 @@ int main(int argc, const char * argv[])
     
     Test obj;
     
-    obj.setC(10);
+    //obj.setC(10);
     
     TestProxy prox = TestProxy(&obj);
     
     prox.buildProxy();
     
-//    prox.property(0)->valueFromString("20");
+    prox.property(0)->property(0)->valueFromString("23");
+    
+    for(int i= 0 ; i<prox.propertyCount() ; i++)
+    {
+        std::cout<<prox.property(i)->name()<<"=";
+        
+        if(prox.property(i)->propertyCount() > 0)
+        {
+            std::cout<<"{\n";
+            
+            for(int j=0 ; j<prox.property(i)->propertyCount() ; j++)
+            {
+               std::cout<<prox.property(i)->property(j)->name()<<"="
+                        <<prox.property(i)->property(j)->valueToString()<<"\n";
+            }
+            std::cout<<"}\n";
+        }
+        else
+            std::cout<<prox.property(i)->valueToString()<<"\n";
+    }
 
-  //  std::cout<<prox.property(0)->valueToString()<<"\n";
-    
-    prox.property(0)->property(0)->valueFromString("20");
-    
-    std::cout<<"Basic::c="<<prox.property(0)->property(0)->valueToString()<<"\n";
-    
-    std::cout<<"Object: "<<std::hex<<Object::type.id()<<"\n";
-    
-    
 }
 

@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "Cytok/Object.hpp"
-
+#include "Cytok/proxy/ObjectProperty.hpp"
 #include "ObjectPropertyHolder.hpp"
 
 namespace ck
@@ -38,6 +38,8 @@ namespace ck
             
             void setObject(ck::Object* obj)
             {
+                this->clearProxy();
+                
                 myObject = obj;
 
                 if(myObject)
@@ -48,8 +50,6 @@ namespace ck
             
             std::string& name();
             
-            void addProperty(ObjectProperty* prop);
-            
             virtual size_t propertyCount();
             
             virtual PropertyList* properties();
@@ -57,11 +57,38 @@ namespace ck
             virtual ObjectProperty* property(int atIdx);
             
             virtual ObjectProperty* property(std::string pName);
+            
+            /// Use the current ObjectPropertyFactory
+            template<
+                typename BaseClass ,
+                typename GetType,
+                typename SetType
+            >
+            void addDefaultProperty(ObjectProperty::PropertyType type,
+                                    const std::string& name,
+                                    BaseClass* ptr ,
+                                    GetType(BaseClass::*getter)(),
+                                    void(BaseClass::*setter)(SetType));
 
+            
+            template<
+                typename CustomPropertyType,
+                typename BaseClass ,
+                typename GetType,
+                typename SetType
+                >
+            void addCustomProperty(const std::string& name,
+                                   BaseClass* ptr ,
+                                   GetType(BaseClass::*getter)(),
+                                   void(BaseClass::*setter)(SetType));
+            
+            virtual void addProperty(ObjectProperty* prop);
             
             ck::Object* object();
             
             virtual void buildProxy();
+            
+            virtual void clearProxy();
             
             virtual ~ObjectProxy(){};
             
@@ -76,5 +103,7 @@ namespace ck
         };
     }
 }
+
+#include "ObjectProxy_impl.hpp"
 
 #endif
