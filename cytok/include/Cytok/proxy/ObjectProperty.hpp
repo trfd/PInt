@@ -12,13 +12,17 @@
 #include <string>
 #include <vector>
 
+#include "Cytok/Visitor.hpp"
+
 #include "ObjectPropertyHolder.hpp"
 
 namespace ck
 {
     namespace proxy
     {
-        class ObjectProperty : public IObjectPropertyHolder
+        class ObjectProperty :
+        public IObjectPropertyHolder,
+        public BaseVisitable<>
         {
             
         public:
@@ -37,6 +41,8 @@ namespace ck
                 ARRAY       = 8,
                 MAP         = 9
             };
+            
+            DEFINE_VISITABLE();
             
             static const PropertyType property_type = NONE;
             

@@ -16,7 +16,8 @@
 
 namespace ck
 {
-    template<
+    template
+    <
         typename AbstractProduct,
         typename ProductID,
         typename ProductCreator,

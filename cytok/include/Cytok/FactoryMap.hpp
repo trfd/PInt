@@ -9,6 +9,8 @@
 #ifndef CYTOK_FactoryMap_hpp
 #define CYTOK_FactoryMap_hpp
 
+#include <map>
+
 #include "FactoryMap.hpp"
 #include "FactoryException.hpp"
 

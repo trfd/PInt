@@ -20,27 +20,18 @@ namespace ck
 {
     namespace proxy
     {
+        ///
+        ///
+        ///
+        /*
         template
         <
-            typename GetType,
-            typename SetType = GetType
+        typename GetType,
+        typename SetType = GetType
         >
-        class ObjectPropertyGeneric  : public ObjectProperty
+        class ObjectPropertyGeneric_impl
         {
-            
         public:
-            
-            ObjectPropertyGeneric()
-            : myGetter(makeNewFunctor(&invalidGetter)) ,
-              mySetter(makeNewFunctor(&invalidSetter))
-            {}
-            
-            ObjectPropertyGeneric(const std::string& name,
-                                  Functor<GetType>* getter ,
-                                  Functor<void,SetType>* setter)
-            : ObjectProperty(name),
-            myGetter(getter) , mySetter(setter)
-            {}
             
             template<typename BaseClass>
             void setGetter(BaseClass* ptr, GetType(BaseClass::*getter)())
@@ -84,7 +75,7 @@ namespace ck
                 
                 mySetter = setter;
             }
-
+            
             
             inline virtual GetType value()
             {
@@ -95,6 +86,54 @@ namespace ck
             {
                 (*mySetter)(std::forward<SetType>(value));
             }
+
+        private:
+            
+            Functor<GetType>* myGetter;
+            Functor<void,SetType>* mySetter;
+            
+            static GetType invalidGetter()
+            {
+                throw InvalidPropertyException();
+            }
+            
+            static void invalidSetter(SetType setter)
+            {
+                throw InvalidPropertyException();
+            }
+            
+        };
+        */
+        /////////////////////////////////////////////////////
+        ///
+        /////////////////////////////////////////////////////
+        ///
+        ///
+        ///
+        template
+        <
+            typename GetType,
+            typename SetType = GetType
+        >
+        class ObjectPropertyGeneric  : public ObjectProperty
+        {
+            
+        public:
+            
+            DEFINE_VISITABLE();
+            
+            ObjectPropertyGeneric()
+            : myGetter(makeNewFunctor(&invalidGetter)) ,
+              mySetter(makeNewFunctor(&invalidSetter))
+            {}
+            
+            ObjectPropertyGeneric(const std::string& name,
+                                  Functor<GetType>* getter ,
+                                  Functor<void,SetType>* setter)
+            : ObjectProperty(name),
+            myGetter(getter) , mySetter(setter)
+            {}
+            
             
             inline virtual std::string valueToString()
             {
@@ -104,6 +143,61 @@ namespace ck
             inline virtual void valueFromString(const std::string& str)
             {
                 (*mySetter)(boost::lexical_cast<SetType>(str));
+            }
+            
+            
+            template<typename BaseClass>
+            void setGetter(BaseClass* ptr, GetType(BaseClass::*getter)())
+            {
+                if(myGetter)
+                    delete myGetter;
+                
+                myGetter = makeNewFunctor(ptr , getter);
+            }
+            
+            ~ObjectPropertyGeneric()
+            {
+                if(myGetter)
+                    delete myGetter;
+                
+                if(mySetter)
+                    delete mySetter;
+            }
+            
+            template<typename BaseClass>
+            void setSetter(BaseClass* ptr, void(BaseClass::*setter)(SetType))
+            {
+                if(mySetter)
+                    delete mySetter;
+                
+                mySetter = makeNewFunctor(ptr,setter);
+            }
+            
+            void setGetter(Functor<GetType>* getter)
+            {
+                if(myGetter)
+                    delete myGetter;
+                
+                myGetter = getter;
+            }
+            
+            void setSetter(Functor<void,SetType>* setter)
+            {
+                if(mySetter)
+                    delete mySetter;
+                
+                mySetter = setter;
+            }
+            
+            
+            inline virtual GetType value()
+            {
+                return (*myGetter)();
+            }
+            
+            inline virtual void setValue(SetType&& value)
+            {
+                (*mySetter)(std::forward<SetType>(value));
             }
             
         private:
@@ -120,7 +214,8 @@ namespace ck
             {
                 throw InvalidPropertyException();
             }
-         
+            
+            
             
         };
     }

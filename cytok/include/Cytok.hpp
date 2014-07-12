@@ -11,6 +11,7 @@
 
 #include "Cytok/version.hpp"
 
+#include "Cytok/Design.hpp"
 #include "Cytok/Logs.hpp"
 #include "Cytok/IDManager.hpp"
 #include "Cytok/Object.hpp"

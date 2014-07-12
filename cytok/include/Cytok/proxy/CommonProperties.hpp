@@ -23,6 +23,8 @@ namespace ck
             
             DEFINE_PROPERTY(ObjectProperty::INTEGER, IntProperty);
             
+            DEFINE_VISITABLE();
+            
             IntProperty()
             : ObjectPropertyGeneric<int>()
             {}
@@ -32,7 +34,6 @@ namespace ck
                         Functor<void, int>* setter)
             : ObjectPropertyGeneric<int>(name,getter,setter)
             {}
-            
         };
         
         class FloatProperty : public ObjectPropertyGeneric<float>
@@ -40,6 +41,8 @@ namespace ck
         public:
             
             DEFINE_PROPERTY(ObjectProperty::FLOAT, FloatProperty);
+            
+            DEFINE_VISITABLE();
             
             FloatProperty()
             : ObjectPropertyGeneric<float>()
@@ -58,6 +61,8 @@ namespace ck
         public:
             
             DEFINE_PROPERTY(ObjectProperty::STRING, StringProperty);
+            
+            DEFINE_VISITABLE();
             
         };
         

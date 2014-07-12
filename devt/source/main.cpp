@@ -117,6 +117,11 @@ public:
     }
 };
 
+std::string TestFunct(const std::string& c,float a)
+{
+    return c+"Hello"+typeid(a).name();
+}
+
 int main(int argc, const char * argv[])
 {
 
@@ -128,34 +133,11 @@ int main(int argc, const char * argv[])
     
     ObjectProxyFactory::setCurrentFactory(proxyFactory);
     
-    Test obj;
+    FunctorAdaptator<std::string,std::string,int> ada;
     
-    //obj.setC(10);
-    
-    TestProxy prox = TestProxy(&obj);
-    
-    prox.buildProxy();
-    
-    prox.property(0)->property(0)->valueFromString("23");
-    
-    for(int i= 0 ; i<prox.propertyCount() ; i++)
-    {
-        std::cout<<prox.property(i)->name()<<"=";
-        
-        if(prox.property(i)->propertyCount() > 0)
-        {
-            std::cout<<"{\n";
-            
-            for(int j=0 ; j<prox.property(i)->propertyCount() ; j++)
-            {
-               std::cout<<prox.property(i)->property(j)->name()<<"="
-                        <<prox.property(i)->property(j)->valueToString()<<"\n";
-            }
-            std::cout<<"}\n";
-        }
-        else
-            std::cout<<prox.property(i)->valueToString()<<"\n";
-    }
+    Functor<std::string,const std::string&,float> funct = Functor<std::string,const std::string&,float>(&TestFunct);
 
+    std::cout<<ada(funct,"World",2)<<"\n";
+    
 }
 
