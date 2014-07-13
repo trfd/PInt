@@ -96,6 +96,8 @@ namespace ck
             
             virtual ~ObjectProxy(){};
             
+            virtual void propertyValueDidChange(ObjectProperty* prop){}
+            
         private:
             
             std::string myName;

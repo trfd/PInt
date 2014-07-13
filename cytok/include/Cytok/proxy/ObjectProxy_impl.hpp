@@ -52,9 +52,11 @@ namespace ck
             
             if(baseProp)
                 baseProp->setAccessors(ptr, getter , setter);
+                
             else
                 throw InvalidPropertyException();
             
+            baseProp->setParentProxy(this);
             this->addProperty(baseProp);
         }
         
@@ -85,13 +87,18 @@ namespace ck
             else
                 throw InvalidPropertyException();
             
+            prop->setParentProxy(this);
             this->addProperty(prop);
         }
         
         template<typename BaseClass>
         void ObjectProxy::addProxyProperty(const std::string& name, BaseClass* obj )
         {
-            this->addProperty(new ObjectProxyProperty(name , ObjectProxyFactory::currentFactory()->createProxy(obj)));
+            ObjectProxyProperty* prop = new ObjectProxyProperty(name ,
+                                                                ObjectProxyFactory::currentFactory()
+                                                                ->createProxy(obj));
+            prop->setParentProxy(this);
+            this->addProperty(prop);
         }
     }
 }

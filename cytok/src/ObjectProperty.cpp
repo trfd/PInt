@@ -6,6 +6,7 @@
 //
 //
 
+#include "Cytok/proxy/ObjectProxy.hpp"
 #include "Cytok/proxy/ObjectProperty.hpp"
 
 namespace ck
@@ -54,6 +55,23 @@ namespace ck
         {
             return NULL;
         }
-
+        
+        void ObjectProperty::valueChangeCallback()
+        {
+            if(!myParentProxy)
+                throw std::bad_exception();
+            
+            myParentProxy->propertyValueDidChange(this);
+        }
+        
+        void ObjectProperty::setParentProxy(ObjectProxy* proxy)
+        {
+            myParentProxy = proxy;
+        }
+        
+        ObjectProxy* ObjectProperty::parentProxy()
+        {
+            return myParentProxy;
+        }
     }
 }

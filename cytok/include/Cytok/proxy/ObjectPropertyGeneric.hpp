@@ -249,6 +249,8 @@ namespace ck
                                         typename std::remove_reference<SetType>::type
                                     >::type
                                  >(str));
+                
+                valueChangeCallback();
             }
       
             inline virtual GetType value()
@@ -259,6 +261,8 @@ namespace ck
             inline virtual void setValue(SetType&& value)
             {
                 myImpl->setValue(std::forward<SetType>(value));
+                
+                valueChangeCallback();
             }
             
         private:

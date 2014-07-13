@@ -20,6 +20,8 @@ namespace ck
 {
     namespace proxy
     {
+        class ObjectProxy;
+        
         class ObjectProperty :
         public IObjectPropertyHolder,
         public BaseVisitable<>
@@ -70,11 +72,21 @@ namespace ck
             
             virtual ObjectProperty* property(std::string pName);
             
+            virtual void setParentProxy(ObjectProxy* proxy);
+            
+            virtual ObjectProxy* parentProxy();
+            
+        protected:
+            
+            virtual void valueChangeCallback();
+            
         private:
             
             std::string myName;
             
             PropertyType myType;
+            
+            ObjectProxy* myParentProxy;
         };
     }
 }
