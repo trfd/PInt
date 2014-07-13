@@ -24,24 +24,26 @@ namespace ck
         class ObjectProxy;
         
         class ObjectProxyFactoryMap
-        : public FactoryMap<
+        : public FactoryMap
+        <
             ObjectProxy,
             ClassType* ,
             Functor<ObjectProxy*> ,
             ObjectProxyFactoryError
-            >,
+        >,
         public utils::Singleton<ObjectProxyFactoryMap>
         {
         public:
         };
         
         class ObjectProxyFactory
-        : public Factory<
+        : public Factory
+        <
             ObjectProxy,
             ClassType*,
             Functor<ObjectProxy*>,
             ObjectProxyFactoryError
-            >
+        >
         {
             
         public:

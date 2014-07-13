@@ -13,11 +13,13 @@
 #include "ObjectProperty.hpp"
 #include "ObjectPropertyGeneric.hpp"
 
+#include "ObjectPropertyRequiredBase.hpp"
+
 namespace ck
 {
 	namespace proxy
     {
-        class IntProperty : public ObjectPropertyGeneric<int>
+        class IntProperty : public IntPropertyBase
         {
         public:
             
@@ -36,7 +38,7 @@ namespace ck
             {}
         };
         
-        class FloatProperty : public ObjectPropertyGeneric<float>
+        class FloatProperty : public FloatPropertyBase
         {
         public:
             
@@ -56,13 +58,25 @@ namespace ck
             
         };
 
-        class StringProperty : public ObjectPropertyGeneric<std::string>
+        class StringProperty : public StringPropertyBase
         {
         public:
             
             DEFINE_PROPERTY(ObjectProperty::STRING, StringProperty);
             
             DEFINE_VISITABLE();
+            
+            
+            inline virtual std::string valueToString()
+            {
+                return this->value() ;
+            }
+            
+            inline virtual void valueFromString(const std::string& str)
+            {
+                this->setValue(str);
+            }
+
             
         };
         

@@ -19,8 +19,21 @@ namespace ck
 {
 	namespace proxy
     {
-        template<
-            typename BaseClass ,
+        
+        /// RequiredBase is the base class
+        /// from which the property object must derive
+        /// example: in the basic implementation,
+        /// ck::proxy::ObjectProperty::INTEGER is
+        /// associated to an ObjectPropertGeneric<int,int> subclass
+        /// (namely IntPropery) thus the call for adding a property
+        /// of type in would be:
+        /// addPropperty<ObjectPropertGeneric<int,int>>(
+        ///     ck::proxy::ObjectProperty::INTEGER,
+        ///     "Parameter Lambda", ... )
+        template
+        <
+            typename RequiredBase,
+            typename BaseClass,
             typename GetType,
             typename SetType
         >
@@ -34,21 +47,19 @@ namespace ck
             
             prop->setName(name);
             
-            ObjectPropertyGeneric<GetType,SetType>* genericProp =
-                dynamic_cast<ObjectPropertyGeneric<GetType,SetType>*>(prop);
+            RequiredBase* baseProp =
+                dynamic_cast<RequiredBase*>(prop);
             
-            if(genericProp)
-            {
-                genericProp->setGetter(ptr, getter);
-                genericProp->setSetter(ptr, setter);
-            }
+            if(baseProp)
+                baseProp->setAccessors(ptr, getter , setter);
             else
                 throw InvalidPropertyException();
             
-            this->addProperty(genericProp);
+            this->addProperty(baseProp);
         }
         
-        template<
+        template
+        <
             typename CustomPropertyType,
             typename BaseClass ,
             typename GetType,

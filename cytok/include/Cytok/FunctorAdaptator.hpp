@@ -28,9 +28,9 @@ namespace ck
             typename InReturnType,
             typename... InArgs
         >
-        OutReturnType operator()(Functor<InReturnType,InArgs...> funct, OutArgs... args)
+        OutReturnType operator()(Functor<InReturnType,InArgs...>*funct, OutArgs... args)
         {
-            return (OutReturnType) funct( (InArgs) args...);
+            return (OutReturnType) (*funct)( (InArgs) args...);
         }
         
 	};

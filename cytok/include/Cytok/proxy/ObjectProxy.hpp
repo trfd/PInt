@@ -58,10 +58,12 @@ namespace ck
             virtual ObjectProperty* property(std::string pName);
             
             /// Use the current ObjectPropertyFactory
-            template<
-                typename BaseClass ,
-                typename GetType,
-                typename SetType
+            template
+            <
+            typename RequiredBase,
+            typename BaseClass,
+            typename GetType,
+            typename SetType
             >
             void addDefaultProperty(ObjectProperty::PropertyType type,
                                     const std::string& name,

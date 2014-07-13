@@ -11,6 +11,9 @@
 
 #include <vector>
 
+#include <boost/any.hpp>
+
+
 namespace ck
 {
     namespace proxy

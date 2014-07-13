@@ -56,7 +56,7 @@ public:
         
         this->setName("Basic");
         
-        addDefaultProperty(ObjectProperty::INTEGER, "C", base, &Basic::c, &Basic::setC);
+        addDefaultProperty<IntPropertyBase>(ObjectProperty::INTEGER, "C", base, &Basic::c, &Basic::setC);
     }
 };
 
@@ -110,17 +110,38 @@ public:
     {
         Test* testObj =(Test*)this->object();
 
-        addProperty(new ObjectProxyProperty("Object" , ObjectProxyFactory::currentFactory()->createProxy(&testObj->object())));
+        //addProperty(new ObjectProxyProperty("Object" , ObjectProxyFactory::currentFactory()->createProxy(&testObj->object())));
+        
+        addProxyProperty("Object", &testObj->object());
 
-        addDefaultProperty(ObjectProperty::FLOAT, "Parameter C", testObj, &Test::c, &Test::setC);
+        addDefaultProperty<FloatPropertyBase>(ObjectProperty::FLOAT, "Parameter C", testObj, &Test::c, &Test::setC);
  
     }
 };
 
-std::string TestFunct(const std::string& c,float a)
+
+class A
 {
-    return c+"Hello"+typeid(a).name();
-}
+public:
+    
+    virtual void hello(int a)
+    {
+        std::cout<<"HelloA\n";
+    }
+    
+};
+
+
+class B : public A
+{
+public:
+    
+    template<typename T>
+    void hello(T a)
+    {
+        std::cout<<"HellB\n";
+    }
+};
 
 int main(int argc, const char * argv[])
 {
@@ -133,11 +154,9 @@ int main(int argc, const char * argv[])
     
     ObjectProxyFactory::setCurrentFactory(proxyFactory);
     
-    FunctorAdaptator<std::string,std::string,int> ada;
+    A* a = new B();
     
-    Functor<std::string,const std::string&,float> funct = Functor<std::string,const std::string&,float>(&TestFunct);
-
-    std::cout<<ada(funct,"World",2)<<"\n";
+    a->hello(2);
     
 }
 
