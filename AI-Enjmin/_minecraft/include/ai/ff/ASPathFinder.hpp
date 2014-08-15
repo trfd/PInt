@@ -79,11 +79,13 @@ namespace ai
               m_resultPath(graph_),
               m_callback(this , &ASPathFinder::emptyCallback)
             {
+                assert(startIndx_ != targetIndx_);
+
                 m_currState = RUNNING;
 
-                m_pastCost.resize(m_graph->count());
-                m_estimCost.resize(m_graph->count());
-                m_totalCost.resize(m_graph->count());
+                m_pastCost.resize(m_graph->count(),0);
+                m_estimCost.resize(m_graph->count(),0);
+                m_totalCost.resize(m_graph->count(),0);
 
                 m_pastCost[m_startIndex] = 0;
                 m_estimCost[m_startIndex] = m_graph->estimate(m_startIndex,m_targetIndex);
@@ -201,6 +203,9 @@ namespace ai
                     }
                 }
 
+                if(minIdx == UINT_MAX)
+                    throw std::exception();//    return m_startIndex;
+
                 return minIdx;
             }
 
@@ -220,6 +225,8 @@ namespace ai
                     return (m_currState = FAILURE);
 
                 Index currIndex = findLowestTotalCost();
+
+               
 
                 if(currIndex == m_targetIndex)
                     return (m_currState = TERMINATED);

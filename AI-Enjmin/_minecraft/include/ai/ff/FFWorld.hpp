@@ -134,19 +134,6 @@ namespace ai
                     m_costChunkGraph[cIdx].computeAllNeighbors();
                 }
 
-                ASPathFinder pf(&m_costChunkGraph[2],0, 255);
-
-                pf.burnSteps();
-
-                if(pf.state() == ASPathFinder::TERMINATED)
-                {
-                    testPath = pf.path();
-
-                    std::cout << "Path found\n";
-                }
-                else
-                    std::cout << "Path not found\n";
-
             }
 
             #pragma region ChunkPortals
@@ -387,8 +374,8 @@ namespace ai
 
                             for(Index idx : neighbors)
                             {
-                                glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 3);
-                                glVertex3f((corg.x+ (idx%chunkWidth))*csize+csize/2, (corg.y+(idx/chunkWidth))*csize+csize/2,height + 3);
+                              //  glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 3);
+                               // glVertex3f((corg.x+ (idx%chunkWidth))*csize+csize/2, (corg.y+(idx/chunkWidth))*csize+csize/2,height + 3);
                             }
                         }
                     }
@@ -405,18 +392,39 @@ namespace ai
                 int x = 0;
                 int y = 0;
 
-                Cell corg = chunkOrigin(2);
                 glBegin(GL_LINES);
-                glColor3f(1,1,0);
+                
 
-                for(ASPathIterator it = testPath.begin() ; it != testPath.end() ; ++it)
-                {   
-                    x = it.index()%chunkWidth ; y = it.index()/chunkWidth;
+                for(int i = 0 ; i < chunkCount ; ++i)
+                {
+                    srand(i);
 
-                    glVertex3f((corg.x+prevX)*csize+csize/2,(corg.y+prevY)*csize+csize/2,height + 4);
-                    glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 4);
 
-                    prevX = x; prevY = y;
+                    Cell corg = chunkOrigin(i);
+
+                    for(std::vector<ASPath>::iterator p = m_portalPaths[i].begin();
+                        p != m_portalPaths[i].end() ; ++p)
+                    {
+                      
+                        int r = rand() %128;
+                        int v = rand() %128;
+                        int b = rand() %128;
+
+                        glColor3ub(r+128,v+128,b+128);
+
+                        prevX=p->begin().index()%chunkWidth;
+                        prevY=p->begin().index()/chunkWidth;
+
+                        for(ASPathIterator it = p->begin() ; it != p->end() ; ++it)
+                        {   
+                            x = it.index()%chunkWidth ; y = it.index()/chunkWidth;
+
+                            glVertex3f((corg.x+prevX)*csize+csize/2,(corg.y+prevY)*csize+csize/2,height + 4);
+                            glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 4);
+
+                            prevX = x; prevY = y;
+                        }
+                    }
                 }
 
                 glEnd();
@@ -463,6 +471,55 @@ namespace ai
                 {
                     computePortalsForChunk(chIdx);
                 }
+
+
+                //// Debug
+
+                
+                for(int cIdx = 0 ; cIdx< chunkCount ; cIdx++)
+                {
+                    Cell chunkOrig = chunkOrigin(cIdx);
+
+                    //// Compute path between portals
+
+                    ChunkPortals& cPortals = m_chunkPortalsMap[cIdx];
+
+                    std::vector<Portal_ptr> allPortals;
+
+                    for(int border = 0 ; border < 4 ; border++)
+                    {
+                        PortalList& portals = cPortals.portals((Border)border);
+                        
+                        allPortals.insert(allPortals.end(), portals.begin(), portals.end());
+                    }
+
+
+                    for(PortalList_it it = allPortals.begin() ; it != allPortals.end() ; ++it)
+                    {
+                        Cell itOrig = (*it)->origin(cIdx) - chunkOrig ;
+                        int itCellIdx = itOrig.x + itOrig.y * chunkWidth;
+
+
+                        for(PortalList_it other = it+1 ; other != allPortals.end() ; ++other)
+                        {
+                            Cell otherOrig = (*other)->origin(cIdx) - chunkOrig;
+                            int otherCellIdx = otherOrig.x + otherOrig.y * chunkWidth;
+
+                            ASPathFinder pf(&m_costChunkGraph[cIdx],itCellIdx,otherCellIdx);
+
+                            pf.burnSteps();
+
+                            if(pf.state() == ASPathFinder::TERMINATED)
+                            {
+                                m_portalPaths[cIdx].push_back(pf.path());
+                            }
+                            else
+                                std::cout << "ASPathFinder fails...\n";
+                        }
+                    }
+
+                }
+                ///
             }
 
             /// Returns the coordinate of the chunk in the grid
@@ -640,7 +697,7 @@ namespace ai
             /// [Unused for now]
             PortalGraph m_portalGraph;
 
-            ASPath testPath;
+            std::vector<ASPath> m_portalPaths[chunkCount];
             
         };
     }

@@ -28,6 +28,7 @@
 #ifndef AI_FF_ChunkGraph_hpp
 #define AI_FF_ChunkGraph_hpp
 
+
 #include "ASGraph.hpp"
 #include "ai/CKUMReturnType.hpp"
 
@@ -132,10 +133,12 @@ namespace ai
             {
                 // Heurisitic is straigh line
 
-                int x = (tgIdx_-stIdx_)%__width;
-                int y = (tgIdx_-stIdx_)/__width; 
+                int x = (tgIdx_%__width-stIdx_%__width);
+                int y = (tgIdx_/__width-stIdx_/__width); 
 
-                return sqrtf(x*x+y*y);
+                float value = sqrtf(x*x+y*y);
+
+                return value;
             }
 
             /// Returns the node's neighbors
@@ -174,6 +177,16 @@ namespace ai
                     return false;
 
                 return (g_maxCost != m_chunk->get(x_,y_));
+            }
+
+            inline ChunkID otherChunk(ChunkID chunk_)
+            {
+                if(m_entrance1.chunk == chunk_)
+                    return m_entrance2.chunk;
+                else if(m_entrance2.chunk == chunk_)
+                    return m_entrance1.chunk;
+                else
+                    throw std::exception(); //Bad chunkID
             }
            
         private:

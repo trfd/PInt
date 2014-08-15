@@ -110,8 +110,38 @@ namespace ai
                 return (m_entrance1.intersects(rect_) || m_entrance2.intersects(rect_));
             }
             
-            inline Entrance& entrance2(){ return m_entrance1; }
-            inline Entrance& entrance1(){ return m_entrance2; }
+            /// Returns the entrance that lies in chunk_
+            inline Entrance& entrance(ChunkID chunk_)
+            {
+                if(m_entrance1.chunk == chunk_)
+                    return m_entrance1;
+                else if(m_entrance2.chunk == chunk_)
+                    return m_entrance2;
+                else
+                    throw std::exception(); // Portal not in chunk
+            }
+
+            /// Returns the origin of entrance that lies in chunk
+            inline Cell origin(ChunkID chunk_)
+            {
+                return entrance(chunk_).cells.origin;
+            }
+
+             /// Returns the size of portal
+            inline CellSize size()
+            {
+                assert(m_entrance1.cells.size == m_entrance2.cells.size);
+                return m_entrance1.cells.size;
+            }
+
+            /// Returns the rectangle of entrance that lies in chunk
+            inline CellRect rectangle(ChunkID chunk_)
+            {
+                 return entrance(chunk_).cells;
+            }
+
+            inline Entrance& entrance1() { return m_entrance1; }
+            inline Entrance& entrance2() { return m_entrance2; }
 
         private:
             
