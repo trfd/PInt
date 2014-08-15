@@ -134,15 +134,10 @@ namespace ai
             void burnSteps()
             {
 
-                //clock_t t = clock();
-
                 while(m_currState == RUNNING)
                 {
                     step();
                 }
-
-                //t = clock() - t;
-                //printf ("It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
             }
            
             #pragma endregion

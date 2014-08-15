@@ -65,6 +65,7 @@ namespace ai
             {
                 ChunkID chunk;
                 CellRect cells;
+                Border border;
 
                 Entrance(ChunkID id_, CellRect cells_)
                 : chunk(id_), cells(cells_)
@@ -90,9 +91,9 @@ namespace ai
 
             #pragma endregion
 
-            Portal(Border border_, ChunkID c1_, ChunkID c2_,
+            Portal(FrontierID frontier_, ChunkID c1_, ChunkID c2_,
                    CellRect const& cr1_, CellRect const& cr2_)
-            : m_border(border_),
+            : m_frontier(frontier_),
             m_entrance1(c1_,cr1_),
             m_entrance2(c2_,cr2_)
             {}
@@ -143,12 +144,14 @@ namespace ai
             inline Entrance& entrance1() { return m_entrance1; }
             inline Entrance& entrance2() { return m_entrance2; }
 
+            inline FrontierID frontier() { return m_frontier; }
+
         private:
             
             Entrance m_entrance1;
             Entrance m_entrance2;
 
-            Border m_border;
+            FrontierID m_frontier;
         };
 
         

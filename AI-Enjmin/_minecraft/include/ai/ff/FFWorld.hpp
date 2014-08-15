@@ -108,6 +108,8 @@ namespace ai
             static const int chunkColumnCount = CostGrid::chunkColumnCount;
             static const int chunkCount       = CostGrid::chunkCount;
 
+            static const int frontierCount    = (2 * chunkRowCount - 1) * (chunkColumnCount - 1) - chunkRowCount ;
+
             #pragma endregion 
        
             World()
@@ -133,7 +135,6 @@ namespace ai
                     m_costChunkGraph[cIdx] = CostChunkGraph(m_costGrid.chunk(cIdx));
                     m_costChunkGraph[cIdx].computeAllNeighbors();
                 }
-
             }
 
             #pragma region ChunkPortals
@@ -348,8 +349,6 @@ namespace ai
                                        (rect2.origin.y + rect2.size.height) * csize, height+1);               
                             glVertex3f( rect2.origin.x * csize,
                                         rect2.origin.y * csize, height+1);
-                                        
-
                         }
                     }
 
@@ -467,54 +466,52 @@ namespace ai
             /// and recreating them.
             void computePortals()
             {
-                for(int chIdx = 0 ; chIdx < chunkCount ; chIdx++)
+                for(int frIdx = 0 ; frIdx < frontierCount ; frIdx++)
                 {
-                    computePortalsForChunk(chIdx);
+                    //computePortalsForChunk(chIdx);
+                    createPortals(frIdx);
                 }
 
 
                 //// Debug
 
                 
-                for(int cIdx = 0 ; cIdx< chunkCount ; cIdx++)
+                for(int frIdx = 0 ; frIdx < frontierCount ; frIdx++)
                 {
-                    Cell chunkOrig = chunkOrigin(cIdx);
+                    std::pair<ChunkID, ChunkID> chunks = chunksOfFrontier(frIdx);
+
+                    ChunkID chunkPair[2] = { chunks.first, chunks.second };
+
 
                     //// Compute path between portals
 
-                    ChunkPortals& cPortals = m_chunkPortalsMap[cIdx];
+                    std::vector<Portal_ptr> allPortals = m_portals[frIdx];
 
-                    std::vector<Portal_ptr> allPortals;
-
-                    for(int border = 0 ; border < 4 ; border++)
-                    {
-                        PortalList& portals = cPortals.portals((Border)border);
-                        
-                        allPortals.insert(allPortals.end(), portals.begin(), portals.end());
-                    }
-
-
+                   
                     for(PortalList_it it = allPortals.begin() ; it != allPortals.end() ; ++it)
                     {
-                        Cell itOrig = (*it)->origin(cIdx) - chunkOrig ;
-                        int itCellIdx = itOrig.x + itOrig.y * chunkWidth;
+                        for(int c = 0 ; c<2 ; c++)
+                        { 
+                            Cell chunkOrig = chunkOrigin(chunkPair[c]);
+                            Cell itOrig = (*it)->origin(chunkPair[c]) - chunkOrig ;
+                            int itCellIdx = itOrig.x + itOrig.y * chunkWidth;
 
-
-                        for(PortalList_it other = it+1 ; other != allPortals.end() ; ++other)
-                        {
-                            Cell otherOrig = (*other)->origin(cIdx) - chunkOrig;
-                            int otherCellIdx = otherOrig.x + otherOrig.y * chunkWidth;
-
-                            ASPathFinder pf(&m_costChunkGraph[cIdx],itCellIdx,otherCellIdx);
-
-                            pf.burnSteps();
-
-                            if(pf.state() == ASPathFinder::TERMINATED)
+                            for(PortalList_it other = it+1 ; other != allPortals.end() ; ++other)
                             {
-                                m_portalPaths[cIdx].push_back(pf.path());
+                                Cell otherOrig = (*other)->origin(chunkPair[c]) - chunkOrig;
+                                int otherCellIdx = otherOrig.x + otherOrig.y * chunkWidth;
+
+                                ASPathFinder pf(&m_costChunkGraph[chunkPair[c]],itCellIdx,otherCellIdx);
+
+                                pf.burnSteps();
+
+                                if(pf.state() == ASPathFinder::TERMINATED)
+                                {
+                                    m_portalPaths[chunkPair[c]].push_back(pf.path());
+                                }
+                                else
+                                    std::cout << "ASPathFinder fails...\n";
                             }
-                            else
-                                std::cout << "ASPathFinder fails...\n";
                         }
                     }
 
@@ -536,6 +533,11 @@ namespace ai
                 return chCoord.x + chCoord.y * chunkRowCount;
             }
 
+            inline static ChunkID chunkID(int x_,int y_)
+            {
+                return x_ + y_ * chunkRowCount;
+            }
+
             /// Returns the ChunkID of the neightbor chunk in direction dir_
             inline static ChunkID nextChunk(ChunkID chId_,Direction dir_)
             {
@@ -554,6 +556,52 @@ namespace ai
                 case RIGHT:  return Direction::RIGHT;
                 default:     return Direction::NONE;
                 }
+            }
+
+            /// Returns the direction associated to a frontier
+            /// Note that frontier's directions always point out
+            /// in the positive way. 
+            /// That is direction can only be RIGHT (positive X direction)
+            /// or BOTTOM (positive Y direction)
+            inline Direction directionFromFrontier(FrontierID frontier_)
+            {
+                std::pair<ChunkID, ChunkID> chunks = chunksOfFrontier(frontier_);
+
+                ChunkCoord c1 = chunkCoordinates(chunks.first);
+                ChunkCoord c2 = chunkCoordinates(chunks.second);
+
+                if(c1.x == c2.x)
+                    return Direction::RIGHT;
+                else if(c1.y == c2.y)
+                    return Direction::DOWN;
+                return Direction::NONE;
+            }
+
+            /// The border of chunk in which the frontier lies
+            inline Border borderOfFrontierInChunk(FrontierID frontier_,ChunkID chID_)
+            {
+                std::pair<ChunkID, ChunkID> chunks = chunksOfFrontier(frontier_);
+
+                ChunkID other = (chunks.first == chID_) ? chunks.second : chunks.first;
+                
+                ChunkCoord cThis = chunkCoordinates(chID_);
+                ChunkCoord cOther = chunkCoordinates(other);
+
+                if(cThis.x == cOther.x)
+                    if(cOther.y < cThis.y)
+                        return Border::TOP;
+                    else if(cOther.y > cThis.y)
+                        return Border::BOTTOM;
+                    else // Are equal (AND they shouldn't)
+                        return Border::NONE;
+                else if(cThis.y == cOther.y)
+                    if(cOther.x < cThis.x)
+                        return Border::LEFT;
+                    else if(cOther.y > cThis.y)
+                        return Border::RIGHT;
+                    else // Are equal (AND they shouldn't)
+                        return Border::NONE;
+                return Border::NONE;    
             }
 
             /// Return the origin of the chunk chID_
@@ -596,6 +644,43 @@ namespace ai
                 }
             }
 
+            /// Bijection from chunkID couple to frontierID
+            /// see chunksOfFrontier()
+            inline FrontierID frontier(ChunkID lhs_, ChunkID rhs_)
+            {
+                if(lhs_ == rhs_)
+                    return g_badFrontier;
+
+                ChunkCoord lCoord = chunkCoordinates(lhs_);
+                ChunkCoord rCoord = chunkCoordinates(rhs_);
+
+                if(lCoord.x == rCoord.x)
+                {
+                    return ((2 * chunkRowCount - 1) * min(lCoord.y,rCoord.y) + chunkRowCount - 1+ lCoord.x,rCoord.x);
+                }
+                else if(lCoord.y == rCoord.y)
+                {
+                    return ((2 * chunkRowCount - 1) * lCoord.y + min(lCoord.x,rCoord.x));
+                }
+                else
+                    return g_badFrontier;
+            }
+
+            inline std::pair<ChunkID, ChunkID> chunksOfFrontier(FrontierID frontier_)
+            {
+                int x1 = (frontier_ % (2*chunkRowCount - 1)) % (chunkRowCount - 1);
+                int y1 = frontier_ / (2*chunkRowCount - 1);
+
+                int x2,y2;
+                if(frontier_ % (2 * chunkRowCount - 1) >= chunkRowCount - 1)
+                    x2 = x1 , y2 = y1+1; 
+                else 
+                    x2 = x1+1 , y2 = y1;
+
+                return std::make_pair(chunkID(x1,y1),chunkID(x2,y2));
+            }
+
+            /*
             /// Compute all portals for a given chunk
             void computePortalsForChunk(ChunkID chunk_)
             {
@@ -614,21 +699,29 @@ namespace ai
                     createPortals(chunk_,Border::RIGHT);
              
             }
-
+            */
             inline bool isNotMaxCost(Cell const& cell_)
             {
                 return (m_costGrid.get(cell_.x, cell_.y) != g_maxCost);
             }
 
-            /// Create portals for a given chunk's border
+            /// Create portals for a given frontier
             /// This creation of portal removes every existing portals
             /// even if untouched. 
             //TODO: Improve efficiency of portal mutation by 
             // implementating Merge/Split/Extend/Reduce/Add/Remove mutation
             // on portals. This is tightly linked to agent's path recomputing.
-            void createPortals(ChunkID chID_, Border border_)
+            void createPortals(FrontierID frontier_)
             {
-                Direction dir = directionFromBorder(border_);
+                // Chunk take in reference for portal creation
+                // Doesn't matter which one is chosen
+                // since implementation is symmetric
+                ChunkID referenceChunk = chunksOfFrontier(frontier_).first;
+                ChunkID otherChunk = chunksOfFrontier(frontier_).second;
+
+                Border border = borderOfFrontierInChunk(frontier_,referenceChunk);
+
+                Direction dir = directionFromFrontier(frontier_);
 
                 ck::Vector2i vdir = direction(dir);
 
@@ -638,23 +731,22 @@ namespace ai
                 // to find portals
                 ck::Vector2i walk_dir(abs(vdir.y), abs(vdir.x));
 
-                ChunkPortals& cPortals = m_chunkPortalsMap[chID_];
+                //ChunkPortals& cPortals = m_chunkPortalsMap[chID_];
 
-                // List of portal for this border
-                // The portals are assumed not to be deprecated
-                // and sorted according to their origin
-                PortalList& list = cPortals.portals(border_);
+                // List of portal for this frontier
+    
+                PortalList& list = m_portals[frontier_];//cPortals.portals(border_);
 
                 // Remove all portals
                 for(PortalList_it it = list.begin(); it != list.end();)
                     it = list.erase(it);
 
-                ChunkCoord chCoord = chunkCoordinates(chID_);
+                ChunkCoord chCoord = chunkCoordinates(referenceChunk);
 
                 // Origin of chunk 
-                Cell corigin = chunkOrigin(chID_) + borderOffset(border_);
+                Cell corigin = chunkOrigin(referenceChunk) + borderOffset(border);
                 
-                Cell end = chunkEnd(chID_);
+                Cell end = chunkEnd(referenceChunk);
 
                 // Origin of the next portal
                 Cell org = corigin;
@@ -671,7 +763,7 @@ namespace ai
                             size += walk_dir;
                         }
 
-                        Portal_ptr newPortal(new Portal(border_,chID_, nextChunk(chID_,dir),
+                        Portal_ptr newPortal(new Portal(frontier_,referenceChunk, otherChunk,
                                                         CellRect(org, size), CellRect(org+vdir,size)));
                         list.push_back(newPortal);
                         
@@ -698,6 +790,8 @@ namespace ai
             PortalGraph m_portalGraph;
 
             std::vector<ASPath> m_portalPaths[chunkCount];
+
+            PortalList m_portals[frontierCount];
             
         };
     }

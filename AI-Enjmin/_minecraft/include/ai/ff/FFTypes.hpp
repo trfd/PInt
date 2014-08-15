@@ -118,13 +118,21 @@ namespace ai
             NONE    = 4
         };
 
+        
+
         typedef ck::Vector2i Cell;
 
         typedef ck::Size2i CellSize;
 
         typedef ck::CellRect CellRect;
 
+  
         typedef uint32_t ChunkID;
+
+        /// The frontier is the line between two chunks
+        typedef uint32_t FrontierID;
+
+        const FrontierID g_badFrontier = UINT32_MAX;
 
         typedef ck::Vector2i ChunkCoord;
 
@@ -150,6 +158,15 @@ namespace ai
             bool hasLineOfSight : 1;
             //  6 bits available
         };
+
+        /*
+        struct Frontier
+        {
+            FrontierID id;
+            ChunkID chunk1;
+            ChunkID chunk2;
+        };
+        */
 
     }
 }
