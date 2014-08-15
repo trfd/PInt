@@ -28,6 +28,7 @@
 #ifndef AI_FF_ASPathFinder_hpp
 #define AI_FF_ASPathFinder_hpp
 
+#include <ctime>
 #include <algorithm>
 #include <set>
 #include <map>
@@ -47,6 +48,7 @@ namespace ai
         /// Generic implementation of A* pathfinding
         class ASPathFinder
         {
+        public:
             enum State
             {
                 RUNNING,
@@ -54,20 +56,28 @@ namespace ai
                 TERMINATED
             };
 
+            #pragma region Typedefs
+
             //Sets are more efficient for searches
-            typedef std::set<Index>              NodeSet;
-            typedef typename NodeSet::iterator   NodeSet_it;
-            typedef std::map<Index,Index>        NodeMap;
-            typedef typename NodeMap::iterator   NodeMap_it;
-            typedef std::vector<float>           CostArray;
-            typedef typename CostArray::iterator CostArray_it;
+            typedef std::set<Index>       NodeSet;
+            typedef NodeSet::iterator     NodeSet_it;
+            typedef std::map<Index,Index> NodeMap;
+            typedef NodeMap::iterator     NodeMap_it;
+            typedef std::vector<float>    CostArray;
+            typedef CostArray::iterator   CostArray_it;
+
+            #pragma endregion
+
+            #pragma region Constructors
 
             ASPathFinder(ASGraph* graph_,
                          Index startIndx_, 
                          Index targetIndx_)
             : m_graph(graph_),
-            m_startIndex(startIndx_), 
-            m_targetIndex(targetIndx_)
+              m_startIndex(startIndx_), 
+              m_targetIndex(targetIndx_),
+              m_resultPath(graph_),
+              m_callback(this , &ASPathFinder::emptyCallback)
             {
                 m_currState = RUNNING;
 
@@ -77,20 +87,114 @@ namespace ai
 
                 m_pastCost[m_startIndex] = 0;
                 m_estimCost[m_startIndex] = m_graph->estimate(m_startIndex,m_targetIndex);
+                m_totalCost[m_startIndex] = m_pastCost[m_startIndex] + m_estimCost[m_startIndex];
+
+                m_openSet.insert(m_startIndex);
             }
+
+            #pragma endregion
+
+            #pragma region Accessors
+
+            inline State state() const { return m_currState; }
+             
+            inline const ASPath& path() const
+            { 
+                if(m_currState == RUNNING) 
+                    return g_failPath;
+                return m_resultPath; 
+            }
+              
+            inline void setCallback(ck::Functor<void, ASPath const&> const& callb_)
+            {
+                m_callback = callb_;
+            }
+
+            #pragma endregion
+           
+            #pragma region Process Interface
+
+            void step()
+            {   
+                if(m_currState == RUNNING)
+                    doStep();
+                
+                if(m_currState != RUNNING)
+                 {
+                    buildPath();
+                    
+                    // Callback
+                    m_callback(m_resultPath);
+                 }
+            }
+            
+            /// Performs all steps at once
+            void burnSteps()
+            {
+
+                //clock_t t = clock();
+
+                while(m_currState == RUNNING)
+                {
+                    step();
+                }
+
+                //t = clock() - t;
+                //printf ("It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+            }
+           
+            #pragma endregion
+
+        private:
+            
+            void buildPath()
+            {
+                if(m_currState == FAILURE)
+                {
+                    m_resultPath = g_failPath;
+                    return;
+                }
+
+                try
+                { 
+                    // Construct the path starting from the end
+
+                    Index tmpIdx = m_targetIndex;
+                
+                    m_resultPath.m_nodeIndexes.push_back(m_targetIndex);
+
+                    while(tmpIdx != m_startIndex)
+                    {
+                        tmpIdx = m_pathMap[tmpIdx];
+                        m_resultPath.m_nodeIndexes.push_front(tmpIdx);
+                    }
+                }
+                catch(std::exception_ptr& e)
+                {
+                    // Path map construction error
+                    m_resultPath = g_failPath;
+                }
+            }
+
+            void emptyCallback(ASPath const&)
+            {}
 
             Index findLowestTotalCost()
             {
-                float minCost = std::numeric_limits<float>::max();
+                // Note: windows.hpp defines min/max macros
+                // which makes usage of std min/max and numeric_limits
+                // unusable.
+
+                float minCost = FLT_MAX; //std::numeric_limits<float>::max();
                 
                 // Index is typedef for size_t
-                Index minIdx  = std::numeric_limits<Index>::max(); 
+                Index minIdx  = UINT_MAX; //std::numeric_limits<Index>::max(); 
 
                 // O(N) can be reduced to O(log N) by sorting out the list
              
-                for(Index idx = 0 ; idx < m_totalCost.size() ; ++idx)
+                for(Index idx : m_openSet)
                 {
-                    if(minCost>m_totalCost[idx])
+                    if(minCost>m_totalCost[idx] && m_totalCost[idx]!=0)
                     {
                         minCost = m_totalCost[idx];
                         minIdx = idx; 
@@ -108,26 +212,6 @@ namespace ai
             inline bool isInOpenSet(Index idx)
             {
                 return (std::find(m_openSet.begin(),m_openSet.end(),idx)!= m_openSet.end());
-            }
-
-           
-
-            void step()
-            {   
-                if(m_currState == RUNNING)
-                    doStep();
-                
-                if(m_currState != RUNNING)
-                 {
-                    buildPath();
-                 }
-            }
-            
-        private:
-            
-            void buildPath()
-            {
-                
             }
             
             State doStep()
@@ -150,11 +234,11 @@ namespace ai
                     if(isInClosedSet(*it))
                         continue;
                     
-                    int tmpCost = m_pastCost[currIndex] + m_graph->cost(*it);
+                    int tmpCost = m_pastCost[currIndex] + m_graph->cost(currIndex,*it);
 
                     bool neighborIsOpen = isInOpenSet(*it);
 
-                    if(neighborIsOpen || tmpCost < m_pastCost[*it])
+                    if(!neighborIsOpen || tmpCost < m_pastCost[*it])
                     {
                         m_pathMap[*it] = currIndex;
                         m_pastCost[*it] = tmpCost;
@@ -199,8 +283,10 @@ namespace ai
             ASPath m_resultPath;
 
             /// Termination callback
-            ck::Functor<void,ASPathFinder*,ASPath const&> m_callback;
+            ck::Functor<void,ASPath const&> m_callback;
 
         };
     }
 }
+
+#endif //AI_FF_ASPathFinder_hpp

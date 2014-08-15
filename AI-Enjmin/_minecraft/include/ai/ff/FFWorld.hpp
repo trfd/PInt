@@ -38,6 +38,9 @@
 #include "FFGrid.hpp"
 #include "FFPortal.hpp"
 
+#include "ASPathFinder.hpp"
+#include "FFCostChunkGraph.hpp"
+
 #include "Tests.hpp"
 
 #define __USE_SAFE_PORTAL_INSERT__
@@ -70,7 +73,9 @@ namespace ai
         {
         public:
 
-            #pragma region Constants
+            class ChunkPortals;
+
+            #pragma region Typedefs/Constants
 
             static const int chunkWidth  = _Config::chunkWidth;
             static const int chunkHeight = _Config::chunkHeight;
@@ -78,23 +83,19 @@ namespace ai
             static const int gridWidth  = _Config::gridWidth;
             static const int gridHeight = _Config::gridHeight;
 
-            #pragma endregion
-            class ChunkPortals;
-
-            #pragma region Typedefs
-
             typedef typename _Config::BufferCell BufferCell;
             typedef typename _Config::FlowCell   FlowCell;
 
-            typedef Chunk<Cost      , _Config::chunkWidth, _Config::chunkHeight> CostChunk;
-            typedef Chunk<BufferCell, _Config::chunkWidth, _Config::chunkHeight> BufferChunk;
-            typedef Chunk<FlowCell  , _Config::chunkWidth, _Config::chunkHeight> FlowChunk;
+            typedef Chunk<Cost      ,chunkWidth,chunkHeight> CostChunk;
+            typedef Chunk<BufferCell,chunkWidth,chunkHeight> BufferChunk;
+            typedef Chunk<FlowCell  ,chunkWidth,chunkHeight> FlowChunk;
 
-            typedef std::shared_ptr<CostChunk>      CostChunk_ptr;
+            typedef std::shared_ptr<CostChunk>             CostChunk_ptr;
+            typedef CostChunkGraph<chunkWidth,chunkHeight> CostChunkGraph;
 
-            typedef Grid<CostChunk  , _Config::gridWidth, _Config::gridHeight> CostGrid;
-            typedef Grid<BufferChunk, _Config::gridWidth, _Config::gridHeight> BufferGrid;
-            typedef Grid<FlowChunk  , _Config::gridWidth, _Config::gridHeight> FlowGrid;
+            typedef Grid<CostChunk  ,gridWidth,gridHeight> CostGrid;
+            typedef Grid<BufferChunk,gridWidth,gridHeight> BufferGrid;
+            typedef Grid<FlowChunk  ,gridWidth,gridHeight> FlowGrid;
 
             typedef std::shared_ptr<Portal> Portal_ptr;
 
@@ -103,11 +104,15 @@ namespace ai
             typedef ck::gen::data::AdjacencyList<Portal_ptr>    PortalGraph;
             typedef std::map<ChunkID,ChunkPortals>              ChunkPortalsMap;
 
+            static const int chunkRowCount    = CostGrid::chunkRowCount;
+            static const int chunkColumnCount = CostGrid::chunkColumnCount;
+            static const int chunkCount       = CostGrid::chunkCount;
+
             #pragma endregion 
        
             World()
             {
-                for(int idx = 0 ; idx< CostGrid::chunkCount ; idx++)
+                for(int idx = 0 ; idx< chunkCount ; idx++)
                     m_costGrid.setChunk(CostChunk_ptr(new CostChunk()),idx);
 
                 for(int i= 0 ; i<gridWidth*gridHeight ; i++)
@@ -122,6 +127,25 @@ namespace ai
 #ifdef __ENABLE_DEBUG_DRAW__
                 Debug::addToRender(ck::makeFunctor(this,&World::drawGrid));
 #endif
+            
+                for(int cIdx = 0 ; cIdx< chunkCount ; cIdx++)
+                {
+                    m_costChunkGraph[cIdx] = CostChunkGraph(m_costGrid.chunk(cIdx));
+                    m_costChunkGraph[cIdx].computeAllNeighbors();
+                }
+
+                ASPathFinder pf(&m_costChunkGraph[2],0, 255);
+
+                pf.burnSteps();
+
+                if(pf.state() == ASPathFinder::TERMINATED)
+                {
+                    testPath = pf.path();
+
+                    std::cout << "Path found\n";
+                }
+                else
+                    std::cout << "Path not found\n";
 
             }
 
@@ -243,6 +267,8 @@ namespace ai
                 float csize = 10.f;
                 float height = 200.f;
 
+                //// Draw cells' cost
+
                 glBegin(GL_QUADS);
 
                 glColor3f(1 , 1 , 1);
@@ -280,9 +306,11 @@ namespace ai
 
                 glEnd();
 
+                //// Draw Portals
+
                 glBegin(GL_LINES);
                 glColor3f(0,1,1);
-                for(int i = 0 ; i < CostGrid::chunkCount ; ++i)
+                for(int i = 0 ; i < chunkCount ; ++i)
                 {
                     ChunkPortals& cp = m_chunkPortalsMap[i];
 
@@ -341,6 +369,57 @@ namespace ai
                 }
 
                 glEnd();
+
+
+                //// Draw neighbors
+
+                glBegin(GL_LINES);
+                glColor3f(1,0,1);
+                for(int i = 0 ; i < chunkCount ; ++i)
+                {
+                    Cell corg = chunkOrigin(i);
+
+                    for(int x = 0 ; x < chunkWidth ; x++)
+                    {
+                        for(int y = 0 ; y < chunkHeight ; y++)
+                        {
+                            IndexArray& neighbors = m_costChunkGraph[i].neighbors(x+y*chunkWidth);
+
+                            for(Index idx : neighbors)
+                            {
+                                glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 3);
+                                glVertex3f((corg.x+ (idx%chunkWidth))*csize+csize/2, (corg.y+(idx/chunkWidth))*csize+csize/2,height + 3);
+                            }
+                        }
+                    }
+
+                }
+
+                glEnd();
+
+                /// Draw path
+
+                int prevX=0;
+                int prevY=0;
+
+                int x = 0;
+                int y = 0;
+
+                Cell corg = chunkOrigin(2);
+                glBegin(GL_LINES);
+                glColor3f(1,1,0);
+
+                for(ASPathIterator it = testPath.begin() ; it != testPath.end() ; ++it)
+                {   
+                    x = it.index()%chunkWidth ; y = it.index()/chunkWidth;
+
+                    glVertex3f((corg.x+prevX)*csize+csize/2,(corg.y+prevY)*csize+csize/2,height + 4);
+                    glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 4);
+
+                    prevX = x; prevY = y;
+                }
+
+                glEnd();
             }
 
             #pragma endregion 
@@ -380,7 +459,7 @@ namespace ai
             /// and recreating them.
             void computePortals()
             {
-                for(int chIdx = 0 ; chIdx < CostGrid::chunkCount ; chIdx++)
+                for(int chIdx = 0 ; chIdx < chunkCount ; chIdx++)
                 {
                     computePortalsForChunk(chIdx);
                 }
@@ -389,15 +468,15 @@ namespace ai
             /// Returns the coordinate of the chunk in the grid
             inline static ChunkCoord chunkCoordinates(ChunkID chunk_)
             {
-                return ChunkCoord(chunk_ % CostGrid::chunkRowCount,
-                                  chunk_ / CostGrid::chunkRowCount);
+                return ChunkCoord(chunk_ % chunkRowCount,
+                                  chunk_ / chunkRowCount);
             }
 
             /// Returns the ChunkID corresponding to the coordinates
             /// of a chunk
             inline static ChunkID chunkID(ChunkCoord const& chCoord)
             {
-                return chCoord.x + chCoord.y * CostGrid::chunkRowCount;
+                return chCoord.x + chCoord.y * chunkRowCount;
             }
 
             /// Returns the ChunkID of the neightbor chunk in direction dir_
@@ -424,8 +503,8 @@ namespace ai
             /// in cell coordinates
             inline Cell chunkOrigin(ChunkID chID_)
             {
-                return Cell((chID_ % CostGrid::chunkRowCount) * chunkWidth,
-                            (chID_ / CostGrid::chunkRowCount) * chunkHeight);
+                return Cell((chID_ % chunkRowCount) * chunkWidth,
+                            (chID_ / chunkRowCount) * chunkHeight);
             }
 
             /// Return the (past-)end of the chunk chID_
@@ -436,8 +515,8 @@ namespace ai
             /// with lastCell the lastCell in the grid.
             inline Cell chunkEnd(ChunkID chID_)
             {
-                return Cell(((chID_ % CostGrid::chunkRowCount)+1) * chunkWidth,
-                            ((chID_ / CostGrid::chunkRowCount)+1) * chunkHeight);
+                return Cell(((chID_ % chunkRowCount)+1) * chunkWidth,
+                            ((chID_ / chunkRowCount)+1) * chunkHeight);
             }
 
             /// Return the rectangle corresponding to the chunk chID_
@@ -466,34 +545,17 @@ namespace ai
                 ChunkCoord chc = chunkCoordinates(chunk_);
 
                 ChunkPortals& cPortals = m_chunkPortalsMap[chunk_];
-                /*
-                for(int border = 0 ; border < Border::NONE ; border++)
-                {
-                    if(!cPortals.isBorderDirty((Border)border))
-                        continue;
+            
+                // Create on bottom and right portals since 
+                // since each chunk will create portals (avoid duplication)
+                // BUT this not the correct to do this.
 
-                    ck::Vector2i vdir = direction(directionFromBorder((Border)border));
-
-                    if(((chc+vdir).x >=0 && (chc+vdir).x < CostGrid::chunkRowCount) &&
-                       ((chc+vdir).y >=0 && (chc+vdir).y < CostGrid::chunkRowCount))
-                     {
-                        createPortals(chunk_,(Border)border);
-                     }
-                }*/
-                //*
-                if(cPortals.isBorderDirty(Border::BOTTOM) && chc.y+1 <  CostGrid::chunkColumnCount)
+                if(cPortals.isBorderDirty(Border::BOTTOM) && chc.y+1 < chunkColumnCount)
                     createPortals(chunk_,Border::BOTTOM);
                    
-               if(cPortals.isBorderDirty(Border::RIGHT) && chc.x+1 <  CostGrid::chunkRowCount)
+               if(cPortals.isBorderDirty(Border::RIGHT) && chc.x+1 < chunkRowCount)
                     createPortals(chunk_,Border::RIGHT);
-                    //*/
-                /*
-                if(cPortals.isBorderDirty(Border::TOP) && chc.y > 0)
-                    createPortals(chunk_,Border::TOP);
-                   
-               if(cPortals.isBorderDirty(Border::LEFT) && chc.x > 0)
-                    createPortals(chunk_,Border::LEFT);
-                    */
+             
             }
 
             inline bool isNotMaxCost(Cell const& cell_)
@@ -567,17 +629,19 @@ namespace ai
 
             #pragma endregion
 
-            /// Holds dirty state of chunks
-            /// The dirty chunks have deprecated portals
-            /// that need to be recomputed.
-            bool m_dirtyTable[CostGrid::chunkCount];
-
+            /// Grid containing cost of cells
             CostGrid m_costGrid;
 
+            CostChunkGraph m_costChunkGraph[chunkCount];
+
+            /// Map ChunkID to ChunkPortals 
             ChunkPortalsMap m_chunkPortalsMap;
                 
+            /// [Unused for now]
             PortalGraph m_portalGraph;
 
+            ASPath testPath;
+            
         };
     }
 }

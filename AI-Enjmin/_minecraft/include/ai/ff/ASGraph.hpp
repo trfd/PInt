@@ -36,16 +36,18 @@ namespace ai
 {
     namespace ff
     {
-        typedef size_t Index;
-        typedef std::vector<Index>            IndexArray;
-        typedef typename IndexArray::iterator IndexArray_it;
-        typedef std::list<Index>              IndexList;
-        typedef typename IndexList::iterator  IndexList_it;
+        typedef size_t               Index;
+        typedef std::vector<Index>   IndexArray;
+        typedef IndexArray::iterator IndexArray_it;
+        typedef std::list<Index>     IndexList;
+        typedef IndexList::iterator  IndexList_it;
 
         /// Interface for ASPathFinder
         class ASGraph
         {
         public:
+
+            virtual ~ASGraph(){}
 
             /// Returns the number of nodes 
             /// in the graph
@@ -55,7 +57,7 @@ namespace ai
             virtual float estimate(Index stIdx_, Index tgIdx_) = 0;
 
             /// Returns the node's neighbors
-            virtual IndexList& neighbors(Index idx_) = 0;
+            virtual IndexArray& neighbors(Index idx_) = 0;
 
             /// Returns cost of adjacent nodes
             virtual float cost(Index fromIdx_, Index toIdx_) = 0;

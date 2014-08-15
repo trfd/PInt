@@ -61,6 +61,11 @@ namespace ai
                 return (x_>=0 && y_>=0 && x_ < __width && y_ < __height);
             }
 
+            inline bool isInChunk(int idx_)
+            {
+                return (idx_ >= 0 && idx_ < size);
+            }
+
             inline void set(_Data&& d_, int x_, int y_)
             {
                 if(!isInChunk(x_,y_))

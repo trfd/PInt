@@ -36,16 +36,18 @@ namespace ai
     {
         class ASPathFinder;
 
+        class ASPath;
+
         class ASPathIterator
         {
             friend ASPath;
 
             ASPathIterator(ASPath* path_, IndexList_it const& it_)
-            : m_path(path_), m_list_it(it_)
+            :m_path(path_), m_list_it(it_)
             {}
 
         public:
-            
+ 
             ASPathIterator()
             : m_path(nullptr)
             {}
@@ -126,16 +128,20 @@ namespace ai
 
             typedef ASPathIterator iterator;
 
+            ASPath()
+            : m_graph(nullptr)
+            {}
+
             ASPath(ASGraph* graph_)
             : m_graph(graph_)
             {}
 
-            iterator begin() const
+            iterator begin()
             {
                 return ASPathIterator(this, m_nodeIndexes.begin());
             }
 
-            iterator end() const
+            iterator end()
             {
                 return ASPathIterator(this, m_nodeIndexes.end());
             }
@@ -149,7 +155,7 @@ namespace ai
             IndexList m_nodeIndexes;
         };
 
-     
+        const ASPath g_failPath;
     }
 }
 
