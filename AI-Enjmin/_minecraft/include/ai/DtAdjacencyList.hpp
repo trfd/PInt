@@ -43,6 +43,12 @@ namespace ck
             class AdjacencyList
             {
             public:
+                
+                class Node;
+
+                typedef std::vector<Node*> NodeList;
+                typedef typename std::vector<Node*>::iterator NodeList_it;
+
                 class Node
                 {
                     friend class AdjacencyList;
@@ -84,40 +90,34 @@ namespace ck
                     
                     void addEdge(Node* node)
                     {
-                        std::vector<int>::iterator it =
-                            std::find(m_adjNodes.begin(),
-                            m_adjNodes.end(),
-                                  idx);
+                        NodeList_it it = std::find(m_adjNodes.begin(),
+                                                   m_adjNodes.end(),
+                                                   node);
                         
                         if(it != m_adjNodes.end())
                             return;
                         
-                        m_adjNodes.push_back(idx);
+                        m_adjNodes.push_back(node);
                     }
 
                     void removeEdge(Node* node)
                     {
-                        std::vector<int>::iterator it =
-                            std::find(m_adjNodes.begin(),
-                            m_adjNodes.end(),
-                            idx);
+                        NodeList_it it = std::find(m_adjNodes.begin(),
+                                                   m_adjNodes.end(),
+                                                   node);
 
                         if(it == m_adjNodes.end())
                             return;
 
                         m_adjNodes.erase(it);
                     }
-                    
           
-                    std::vector<Node*> m_adjNodes;
+                    NodeList m_adjNodes;
                     
                     _DataNode m_data;
                 };
                 
-            public:
-
-                typedef std::vector<Node*> NodeList;
-                typedef typename std::vector<Node*>::iterator NodeList_it;
+            
                 
                 
                 size_t nodeCount()
@@ -128,6 +128,22 @@ namespace ck
                 Node* addNode()
                 {
                     Node* n = new Node();
+                    m_list.push_back(n);
+                    return n;
+                }
+
+                Node* addNode(_DataNode&& dt)
+                {
+                    Node* n = new Node();
+                    n->setData(std::forward<_DataNode>(dt));
+                    m_list.push_back(n);
+                    return n;
+                }
+
+                Node* addNode(_DataNode const& dt)
+                {
+                    Node* n = new Node();
+                    n->setData(dt);
                     m_list.push_back(n);
                     return n;
                 }
@@ -149,7 +165,30 @@ namespace ck
                 {
                     return m_list[idx];
                 }
+
+                template<typename _U>
+                Node* nodeWithData(_U&& d_)
+                {
+                    for(Node* n : m_list)
+                    {
+                        if(n->data() == d_)
+                            return n;
+                    }
+                    return nullptr;
+                }
                 
+                template<typename _U,typename _V>
+                void addEdge(_U&& d1_, _V&& d2_)
+                {
+                    Node* n1 = nodeWithData(d1_);
+                    Node* n2 = nodeWithData(d2_);
+
+                    if(!n1 || !n2)
+                        throw std::exception();
+                    
+                    addEdge(n1,n2);
+                }
+
                 void addEdge(Node* n1, Node* n2)
                 {
                     NodeList_it it1 = std::find(m_list.begin() , m_list.end() , n1);

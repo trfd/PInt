@@ -73,8 +73,6 @@ namespace ai
         {
         public:
 
-            class ChunkPortals;
-
             #pragma region Typedefs/Constants
 
             static const int chunkWidth  = _Config::chunkWidth;
@@ -99,11 +97,10 @@ namespace ai
 
             typedef std::shared_ptr<Portal> Portal_ptr;
 
-            typedef std::vector<Portal_ptr>                     PortalList;
-            typedef typename PortalList::iterator               PortalList_it;
-            typedef ck::gen::data::AdjacencyList<Portal_ptr>    PortalGraph;
-            typedef std::map<ChunkID,ChunkPortals>              ChunkPortalsMap;
-            typedef std::vector<Portal::Entrance*>              EntranceList;
+            typedef std::vector<Portal_ptr>                  PortalList;
+            typedef typename PortalList::iterator            PortalList_it;
+            typedef ck::gen::data::AdjacencyList<Portal_ptr> PortalGraph;
+            typedef std::vector<Portal::Entrance*>           EntranceList;
 
             static const int chunkRowCount    = CostGrid::chunkRowCount;
             static const int chunkColumnCount = CostGrid::chunkColumnCount;
@@ -116,7 +113,9 @@ namespace ai
             World()
             {
                 for(int idx = 0 ; idx< chunkCount ; idx++)
+                { 
                     m_costGrid.setChunk(CostChunk_ptr(new CostChunk()),idx);
+                }
 
                 for(int i= 0 ; i<gridWidth*gridHeight ; i++)
                 { 
@@ -148,119 +147,7 @@ namespace ai
                     m_costChunkGraph[cIdx].computeAllNeighbors();
                 }
 
-
             }
-
-            #pragma region ChunkPortals
-
-            class ChunkPortals
-            {
-            public:
-
-                ChunkPortals()
-                {
-                    m_portalDirty[0] = true;
-                    m_portalDirty[1] = true;
-                    m_portalDirty[2] = true;
-                    m_portalDirty[3] = true;
-                }
-                
-                /// World callback that allow ChunkPortals to 
-                /// track deprecated portals and graphs
-                void cellHasChanged(Cost from_, Cost to_, int x_, int y_)
-                {
-                    int lx = x_ % chunkWidth;
-                    int ly = y_ % chunkHeight;
-
-                    if(lx == 0 || ly == 0 || lx == chunkWidth-1 || ly == chunkHeight-1)
-                        borderCellHasChanged(from_,to_,x_,y_);
-
-                    m_portalGraphDirty = true; 
-                }
-
-                /// Returns the corresponding Border if the cell (x_,y_)
-                /// belongs to any. Otherwise returns Border::NONE 
-                inline static Border borderForCell(int x_, int y_)
-                {
-                    return borderForLocalCell(x_%chunkWidth, y_%chunkHeight);
-                }
-
-                /// Same as borderForCell but cell (localx_,localy_) has
-                /// local coordinate relative to a chunk (no matter with chunk,
-                /// the border are the sames)
-                inline static Border borderForLocalCell(int localx_, int localy_)
-                {
-                    if(localy_ == 0)                
-                        return Border::TOP;
-                    else if(localy_ == chunkHeight-1)    
-                        return Border::BOTTOM;
-                    else if(localx_ == 0)                
-                        return Border::LEFT;
-                    else if(localx_ == chunkWidth-1)     
-                        return Border::RIGHT;
-
-                    return Border::NONE;
-                }
-
-                inline std::vector<Portal_ptr>& portals(Border border_)
-                {
-                    if(border_ >= Border::NONE)
-                        throw std::exception();
-
-                    return m_portals[border_];
-                }
-
-                inline ChunkID chunkID(){ return m_chunk; }
-
-                inline bool isGraphDirty(){ return m_portalGraphDirty; }
-
-                inline bool isBorderDirty(Border border_)
-                {
-                     if(border_ >= Border::NONE)
-                        throw std::exception();
-
-                    return m_portalDirty[border_];
-                }
-
-            private:
-
-                /// Track changes on border of the chunk.
-                /// Removes deprecated portals and set dirty flag
-                void borderCellHasChanged(Cost from_, Cost to_, int x_, int y_)
-                {
-                    Border border = borderForCell(x_,y_);
-
-                    if(border >= Border::NONE)
-                        return;
-
-                    CellRect cell(x_,y_,1,1);
-
-                    PortalList& list = m_portals[border];
-                    
-                    // Check if the cell that has changed intersects any of the existing
-                    // portals of the corresponding border (top,bottom,...)
-                    for(PortalList_it it = list.begin() ; it != list.end() ; ++it)
-                    {
-                        if((*it)->intersects(cell))
-                        {
-                            // Remove the portal if cell is in the portal
-                            // Trying to fix the portal is worthless
-                            it = list.erase(it);
-                        }
-                    }
-
-                    m_portalDirty[border] = true;
-                }
-
-                ChunkID m_chunk;
-                
-                bool m_portalDirty[4];
-                bool m_portalGraphDirty;
-
-                PortalList m_portals[4];
-            };
-
-            #pragma endregion
 
             #pragma region Debug
 
@@ -309,67 +196,63 @@ namespace ai
                 glEnd();
 
                 //// Draw Portals
+                
 
                 glBegin(GL_LINES);
                 glColor3f(0,1,1);
-                for(int i = 0 ; i < chunkCount ; ++i)
+                for(int i = 0 ; i < frontierCount ; ++i)
                 {
-                    ChunkPortals& cp = m_chunkPortalsMap[i];
-
-                    for(int j = 0; j < 4 ; j++)
+                    PortalList& list = m_portals[i];
+                    for(auto p : list)
                     {
-                        PortalList& list = cp.portals((Border)j);
-                        for(auto p : list)
-                        {
-                            CellRect rect1 = p->entrance1().cells; 
-                            CellRect rect2 = p->entrance2().cells;
+                        CellRect rect1 = p->entrance1().cells; 
+                        CellRect rect2 = p->entrance2().cells;
 
-                            glVertex3f( rect1.origin.x * csize,
-                                        rect1.origin.y * csize, height+1);
-                            glVertex3f((rect1.origin.x + rect1.size.width) * csize,
-                                        rect1.origin.y * csize, height+1);
+                        glVertex3f( rect1.origin.x * csize,
+                                    rect1.origin.y * csize, height+1);
+                        glVertex3f((rect1.origin.x + rect1.size.width) * csize,
+                                    rect1.origin.y * csize, height+1);
 
-                            glVertex3f((rect1.origin.x + rect1.size.width) * csize,
-                                        rect1.origin.y * csize, height+1);
-                            glVertex3f((rect1.origin.x + rect1.size.width) * csize,
-                                       (rect1.origin.y + rect1.size.height) * csize, height+1);
+                        glVertex3f((rect1.origin.x + rect1.size.width) * csize,
+                                    rect1.origin.y * csize, height+1);
+                        glVertex3f((rect1.origin.x + rect1.size.width) * csize,
+                                   (rect1.origin.y + rect1.size.height) * csize, height+1);
 
-                            glVertex3f((rect1.origin.x + rect1.size.width) * csize,
-                                       (rect1.origin.y + rect1.size.height) * csize, height+1);
-                            glVertex3f( rect1.origin.x * csize,
-                                       (rect1.origin.y + rect1.size.height) * csize, height+1);
-                             
-                            glVertex3f( rect1.origin.x * csize,
-                                       (rect1.origin.y + rect1.size.height) * csize, height+1);
-                            glVertex3f( rect1.origin.x * csize,
-                                        rect1.origin.y * csize, height+1);
-                            
-                            glVertex3f( rect2.origin.x * csize,
-                                        rect2.origin.y * csize, height+1);
-                            glVertex3f((rect2.origin.x + rect2.size.width) * csize,
-                                        rect2.origin.y * csize, height+1);
-                                            
-                            glVertex3f((rect2.origin.x + rect1.size.width) * csize,
-                                        rect2.origin.y * csize, height+1);
-                            glVertex3f((rect2.origin.x + rect2.size.width) * csize,
-                                       (rect2.origin.y + rect2.size.height) * csize, height+1);
-                                            
-                            glVertex3f((rect2.origin.x + rect2.size.width) * csize,
-                                       (rect2.origin.y + rect2.size.height) * csize, height+1);
-                            glVertex3f( rect2.origin.x * csize,
-                                       (rect2.origin.y + rect2.size.height) * csize, height+1);
+                        glVertex3f((rect1.origin.x + rect1.size.width) * csize,
+                                   (rect1.origin.y + rect1.size.height) * csize, height+1);
+                        glVertex3f( rect1.origin.x * csize,
+                                   (rect1.origin.y + rect1.size.height) * csize, height+1);
+                         
+                        glVertex3f( rect1.origin.x * csize,
+                                   (rect1.origin.y + rect1.size.height) * csize, height+1);
+                        glVertex3f( rect1.origin.x * csize,
+                                    rect1.origin.y * csize, height+1);
+                        
+                        glVertex3f( rect2.origin.x * csize,
+                                    rect2.origin.y * csize, height+1);
+                        glVertex3f((rect2.origin.x + rect2.size.width) * csize,
+                                    rect2.origin.y * csize, height+1);
+                                        
+                        glVertex3f((rect2.origin.x + rect1.size.width) * csize,
+                                    rect2.origin.y * csize, height+1);
+                        glVertex3f((rect2.origin.x + rect2.size.width) * csize,
+                                   (rect2.origin.y + rect2.size.height) * csize, height+1);
+                                        
+                        glVertex3f((rect2.origin.x + rect2.size.width) * csize,
+                                   (rect2.origin.y + rect2.size.height) * csize, height+1);
+                        glVertex3f( rect2.origin.x * csize,
+                                   (rect2.origin.y + rect2.size.height) * csize, height+1);
 
-                            glVertex3f( rect2.origin.x * csize,
-                                       (rect2.origin.y + rect2.size.height) * csize, height+1);               
-                            glVertex3f( rect2.origin.x * csize,
-                                        rect2.origin.y * csize, height+1);
-                        }
+                        glVertex3f( rect2.origin.x * csize,
+                                   (rect2.origin.y + rect2.size.height) * csize, height+1);               
+                        glVertex3f( rect2.origin.x * csize,
+                                    rect2.origin.y * csize, height+1);
                     }
+                    
 
                 }
 
                 glEnd();
-
 
                 //// Draw neighbors
 
@@ -392,7 +275,6 @@ namespace ai
                             }
                         }
                     }
-
                 }
 
                 glEnd();
@@ -411,7 +293,6 @@ namespace ai
                 for(int i = 0 ; i < chunkCount ; ++i)
                 {
                     srand(i);
-
 
                     Cell corg = chunkOrigin(i);
 
@@ -432,11 +313,38 @@ namespace ai
                         {   
                             x = it.index()%chunkWidth ; y = it.index()/chunkWidth;
 
-                            glVertex3f((corg.x+prevX)*csize+csize/2,(corg.y+prevY)*csize+csize/2,height + 4);
-                            glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 4);
+                            //glVertex3f((corg.x+prevX)*csize+csize/2,(corg.y+prevY)*csize+csize/2,height + 4);
+                            //glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 4);
 
                             prevX = x; prevY = y;
                         }
+                    }
+                }
+
+                glEnd();
+
+
+                /// Draw portal graph
+
+                glBegin(GL_LINES);
+                glColor3f(1,1,1);
+
+                for(int idx = 0 ; idx < m_portalGraph.nodeCount() ; idx++)
+                {
+                    auto node1 = m_portalGraph.nodeAt(idx);
+
+                    Portal_ptr portal1 = node1->data();
+
+                    Cell orig1 = portal1->entrance1().cells.origin;
+
+                    for(int edge = 0 ; edge < m_portalGraph.nodeAt(idx)->edgeCount() ; edge++)
+                    {
+                         Portal_ptr portal2 = node1->adjacentNodeAt(edge)->data();
+
+                         Cell orig2 = portal2->entrance1().cells.origin;
+
+                         glVertex3f( orig1.x * csize , orig1.y * csize, height + 4 );
+                         glVertex3f( orig2.x * csize , orig2.y * csize, height + 3 );
                     }
                 }
 
@@ -485,9 +393,7 @@ namespace ai
                     createPortals(frIdx);
                 }
 
-
                 //// Debug
-
 
                 for(ChunkID chID = 0 ; chID < chunkCount ; chID++)
                 {
@@ -515,13 +421,15 @@ namespace ai
                              if(pf.state() == ASPathFinder::TERMINATED)
                              {
                                  m_portalPaths[chID].push_back(pf.path());
+                              
+                                 m_portalGraph.addEdge((*entr_first_it)->portal.ptr(),
+                                                       (*entr_sec_it)->portal.ptr());
                              }
                              else
                                  std::cout << "ASPathFinder fails...\n";
                         }
                     }
                 }
-                ///
             }
 
             /// Returns the coordinate of the chunk in the grid
@@ -675,7 +583,8 @@ namespace ai
 
                 if(lCoord.x == rCoord.x)
                 {
-                    return ((2 * chunkRowCount - 1) * min(lCoord.y,rCoord.y) + chunkRowCount - 1+ lCoord.x,rCoord.x);
+                    return ((2 * chunkRowCount - 1) * min(lCoord.y,rCoord.y) + chunkRowCount - 1 +
+                            lCoord.x,rCoord.x);
                 }
                 else if(lCoord.y == rCoord.y)
                 {
@@ -733,7 +642,7 @@ namespace ai
 
                 ck_assert(border != Border::NONE);
 
-                Direction dir = directionFromBorder(border);//directionOfFrontierInChunk(frontier_,referenceChunk);
+                Direction dir = directionFromBorder(border);
 
                 ck_assert(dir != Direction::NONE);
 
@@ -744,8 +653,6 @@ namespace ai
                 // Direction in which the grid is processed
                 // to find portals
                 ck::Vector2i walk_dir(abs(vdir.y), abs(vdir.x));
-
-                //ChunkPortals& cPortals = m_chunkPortalsMap[chID_];
 
                 // List of portal for this frontier
 
@@ -789,6 +696,8 @@ namespace ai
                         m_entrances[referenceChunk].push_back(&newPortal->entrance(referenceChunk));
                         m_entrances[otherChunk].push_back(&newPortal->entrance(otherChunk));
 
+                        m_portalGraph.addNode(newPortal);
+
                         org += walk_dir * size;
                        
                     }
@@ -804,11 +713,7 @@ namespace ai
             CostGrid m_costGrid;
 
             CostChunkGraph m_costChunkGraph[chunkCount];
-
-            /// Map ChunkID to ChunkPortals 
-            ChunkPortalsMap m_chunkPortalsMap;
                 
-            /// [Unused for now]
             PortalGraph m_portalGraph;
 
             std::vector<ASPath> m_portalPaths[chunkCount];

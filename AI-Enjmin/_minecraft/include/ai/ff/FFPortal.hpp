@@ -46,7 +46,7 @@ namespace ai
         /// Portal connect chunkA to chunkB
         /// with the cells defined by the Cell rectangle 
         /// aCells of chunkA and bCells of chunkB
-        class Portal
+        class Portal : public std::enable_shared_from_this<Portal>
         {
         public:
            
@@ -65,9 +65,10 @@ namespace ai
                 ChunkID chunk;
                 CellRect cells;
                 Border border;
+                Portal& portal;
 
-                Entrance(Border border_,ChunkID id_, CellRect cells_)
-                : border(border_),chunk(id_), cells(cells_)
+                Entrance(Portal& portal_,Border border_,ChunkID id_, CellRect cells_)
+                : portal(portal_), border(border_),chunk(id_), cells(cells_)
                 {}
 
                 bool operator==(Entrance const& entr_)
@@ -95,8 +96,8 @@ namespace ai
                    Border b1_, Border b2_,
                    CellRect const& cr1_, CellRect const& cr2_)
             : m_frontier(frontier_),
-            m_entrance1(b1_,c1_,cr1_),
-            m_entrance2(b2_,c2_,cr2_)
+            m_entrance1(*this,b1_,c1_,cr1_),
+            m_entrance2(*this,b2_,c2_,cr2_)
             {}
 
             inline static bool intersects(Portal const& lhs_, Portal const& rhs_)
@@ -128,6 +129,8 @@ namespace ai
             {
                 return entrance(chunk_).cells.origin;
             }
+
+            std::shared_ptr<Portal> ptr(){ return shared_from_this(); }
 
              /// Returns the size of portal
             inline CellSize size()
