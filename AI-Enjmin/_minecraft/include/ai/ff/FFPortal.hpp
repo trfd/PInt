@@ -27,8 +27,7 @@
 
 #ifndef AI_FF_Portal_hpp
 #define AI_FF_Portal_hpp
-
-#include <cassert>
+#include "ai/CKAssert.hpp"
 #include <map>
 #include <memory>
 
@@ -67,8 +66,8 @@ namespace ai
                 CellRect cells;
                 Border border;
 
-                Entrance(ChunkID id_, CellRect cells_)
-                : chunk(id_), cells(cells_)
+                Entrance(Border border_,ChunkID id_, CellRect cells_)
+                : border(border_),chunk(id_), cells(cells_)
                 {}
 
                 bool operator==(Entrance const& entr_)
@@ -91,11 +90,13 @@ namespace ai
 
             #pragma endregion
 
-            Portal(FrontierID frontier_, ChunkID c1_, ChunkID c2_,
+            Portal(FrontierID frontier_,
+                   ChunkID c1_, ChunkID c2_, 
+                   Border b1_, Border b2_,
                    CellRect const& cr1_, CellRect const& cr2_)
             : m_frontier(frontier_),
-            m_entrance1(c1_,cr1_),
-            m_entrance2(c2_,cr2_)
+            m_entrance1(b1_,c1_,cr1_),
+            m_entrance2(b2_,c2_,cr2_)
             {}
 
             inline static bool intersects(Portal const& lhs_, Portal const& rhs_)
@@ -131,7 +132,7 @@ namespace ai
              /// Returns the size of portal
             inline CellSize size()
             {
-                assert(m_entrance1.cells.size == m_entrance2.cells.size);
+                ck_assert(m_entrance1.cells.size == m_entrance2.cells.size);
                 return m_entrance1.cells.size;
             }
 

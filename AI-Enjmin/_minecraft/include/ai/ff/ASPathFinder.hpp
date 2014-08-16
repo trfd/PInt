@@ -79,7 +79,7 @@ namespace ai
               m_resultPath(graph_),
               m_callback(this , &ASPathFinder::emptyCallback)
             {
-                assert(startIndx_ != targetIndx_);
+                ck_assert(startIndx_ != targetIndx_);
 
                 m_currState = RUNNING;
 

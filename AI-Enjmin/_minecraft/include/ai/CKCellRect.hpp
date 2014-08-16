@@ -32,7 +32,7 @@
 
 
 #include <algorithm>
-#include <cassert>
+#include "ai/CKAssert.hpp"
 #include <vector>
 
 #include "CKVector.hpp"
@@ -146,7 +146,7 @@ namespace ck
         
         static CellRect intersection(const CellRect& r1 , const CellRect& r2)
         {
-            assert(intersects(r1,r2));
+            ck_assert(intersects(r1,r2));
             
             int xleft = max(r1.left() , r2.left());
             int xright = min(r1.right() , r2.right());

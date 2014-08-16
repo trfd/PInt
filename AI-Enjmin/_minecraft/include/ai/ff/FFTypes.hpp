@@ -72,8 +72,8 @@ namespace ai
 
             Y       = 0x4,
             
-            DOWN    = 0x4,
-            UP      = 0xC
+            UP      = 0x4,
+            DOWN    = 0xC
         
         };
         
