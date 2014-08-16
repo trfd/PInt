@@ -45,6 +45,8 @@ namespace ai
 {
     namespace ff
     {
+        const ASPath<Index> g_failPath;
+
         /// Generic implementation of A* pathfinding
         class ASPathFinder
         {
@@ -100,14 +102,14 @@ namespace ai
 
             inline State state() const { return m_currState; }
              
-            inline const ASPath& path() const
+            inline const ASPath<Index>& path() const
             { 
                 if(m_currState == RUNNING) 
                     return g_failPath;
                 return m_resultPath; 
             }
               
-            inline void setCallback(ck::Functor<void, ASPath const&> const& callb_)
+            inline void setCallback(ck::Functor<void, ASPath<Index> const&> const& callb_)
             {
                 m_callback = callb_;
             }
@@ -158,12 +160,12 @@ namespace ai
 
                     Index tmpIdx = m_targetIndex;
                 
-                    m_resultPath.m_nodeIndexes.push_back(m_targetIndex);
+                    m_resultPath.m_nodes.push_back(m_targetIndex);
 
                     while(tmpIdx != m_startIndex)
                     {
                         tmpIdx = m_pathMap[tmpIdx];
-                        m_resultPath.m_nodeIndexes.push_front(tmpIdx);
+                        m_resultPath.m_nodes.push_front(tmpIdx);
                     }
                 }
                 catch(std::exception_ptr& e)
@@ -173,7 +175,7 @@ namespace ai
                 }
             }
 
-            void emptyCallback(ASPath const&)
+            void emptyCallback(ASPath<Index> const&)
             {}
 
             Index findLowestTotalCost()
@@ -220,8 +222,6 @@ namespace ai
                     return (m_currState = FAILURE);
 
                 Index currIndex = findLowestTotalCost();
-
-               
 
                 if(currIndex == m_targetIndex)
                     return (m_currState = TERMINATED);
@@ -282,10 +282,10 @@ namespace ai
             CostArray m_totalCost;
 
             /// Path result of search
-            ASPath m_resultPath;
+            ASPath<Index> m_resultPath;
 
             /// Termination callback
-            ck::Functor<void,ASPath const&> m_callback;
+            ck::Functor<void,ASPath<Index> const&> m_callback;
 
         };
     }

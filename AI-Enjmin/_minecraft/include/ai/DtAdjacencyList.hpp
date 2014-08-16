@@ -116,10 +116,7 @@ namespace ck
                     
                     _DataNode m_data;
                 };
-                
-            
-                
-                
+
                 size_t nodeCount()
                 {
                     return m_list.size();
@@ -159,6 +156,16 @@ namespace ck
                     NodeList_it it = std::find(m_list.begin(),m_list.end(),n);
 
                     m_list.erase(it);
+                }
+
+                int indexOf(Node* node)
+                {
+                    NodeList_it it = std::find(m_list.begin(),m_list.end(),node);
+
+                    if(it == m_list.end())
+                        return INT_MAX;
+
+                    return std::distance(m_list.begin() , it);
                 }
 
                 Node* nodeAt(int idx)

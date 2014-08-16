@@ -40,6 +40,7 @@
 
 #include "ASPathFinder.hpp"
 #include "FFCostChunkGraph.hpp"
+#include "FFPortalGraph.hpp"
 
 #include "Tests.hpp"
 
@@ -99,7 +100,7 @@ namespace ai
 
             typedef std::vector<Portal_ptr>                  PortalList;
             typedef typename PortalList::iterator            PortalList_it;
-            typedef ck::gen::data::AdjacencyList<Portal_ptr> PortalGraph;
+            //typedef ck::gen::data::AdjacencyList<Portal_ptr> PortalGraph;
             typedef std::vector<Portal::Entrance*>           EntranceList;
 
             static const int chunkRowCount    = CostGrid::chunkRowCount;
@@ -203,35 +204,37 @@ namespace ai
                 for(int i = 0 ; i < frontierCount ; ++i)
                 {
                     PortalList& list = m_portals[i];
-                    for(auto p : list)
+                    for(int pIdx = 0 ; pIdx < list.size() ; pIdx++)
                     {
+                        Portal_ptr p = list[pIdx];
+
                         CellRect rect1 = p->entrance1().cells; 
                         CellRect rect2 = p->entrance2().cells;
 
                         glVertex3f( rect1.origin.x * csize,
-                                    rect1.origin.y * csize, height+1);
+                                    rect1.origin.y * csize, height+pIdx);
                         glVertex3f((rect1.origin.x + rect1.size.width) * csize,
-                                    rect1.origin.y * csize, height+1);
+                                    rect1.origin.y * csize, height+pIdx);
 
                         glVertex3f((rect1.origin.x + rect1.size.width) * csize,
-                                    rect1.origin.y * csize, height+1);
+                                    rect1.origin.y * csize, height+pIdx);
                         glVertex3f((rect1.origin.x + rect1.size.width) * csize,
-                                   (rect1.origin.y + rect1.size.height) * csize, height+1);
+                                   (rect1.origin.y + rect1.size.height) * csize, height+pIdx);
 
                         glVertex3f((rect1.origin.x + rect1.size.width) * csize,
-                                   (rect1.origin.y + rect1.size.height) * csize, height+1);
+                                   (rect1.origin.y + rect1.size.height) * csize, height+pIdx);
                         glVertex3f( rect1.origin.x * csize,
-                                   (rect1.origin.y + rect1.size.height) * csize, height+1);
+                                   (rect1.origin.y + rect1.size.height) * csize, height+pIdx);
                          
                         glVertex3f( rect1.origin.x * csize,
-                                   (rect1.origin.y + rect1.size.height) * csize, height+1);
+                                   (rect1.origin.y + rect1.size.height) * csize, height+pIdx);
                         glVertex3f( rect1.origin.x * csize,
-                                    rect1.origin.y * csize, height+1);
+                                    rect1.origin.y * csize, height+pIdx);
                         
                         glVertex3f( rect2.origin.x * csize,
-                                    rect2.origin.y * csize, height+1);
+                                    rect2.origin.y * csize, height+pIdx);
                         glVertex3f((rect2.origin.x + rect2.size.width) * csize,
-                                    rect2.origin.y * csize, height+1);
+                                    rect2.origin.y * csize, height+pIdx);
                                         
                         glVertex3f((rect2.origin.x + rect1.size.width) * csize,
                                     rect2.origin.y * csize, height+1);
@@ -296,7 +299,7 @@ namespace ai
 
                     Cell corg = chunkOrigin(i);
 
-                    for(std::vector<ASPath>::iterator p = m_portalPaths[i].begin();
+                    for(std::vector<ASPath<Index>>::iterator p = m_portalPaths[i].begin();
                         p != m_portalPaths[i].end() ; ++p)
                     {
                       
@@ -306,12 +309,12 @@ namespace ai
 
                         glColor3ub(r+128,v+128,b+128);
 
-                        prevX=p->begin().index()%chunkWidth;
-                        prevY=p->begin().index()/chunkWidth;
+                        prevX= (*p->begin())%chunkWidth;
+                        prevY=(*p->begin())/chunkWidth;
 
-                        for(ASPathIterator it = p->begin() ; it != p->end() ; ++it)
+                        for(ASPath<Index>::iterator it = p->begin() ; it != p->end() ; ++it)
                         {   
-                            x = it.index()%chunkWidth ; y = it.index()/chunkWidth;
+                            x = (*it)%chunkWidth ; y = (*it)/chunkWidth;
 
                             //glVertex3f((corg.x+prevX)*csize+csize/2,(corg.y+prevY)*csize+csize/2,height + 4);
                             //glVertex3f((corg.x+x)*csize+csize/2,(corg.y+y)*csize+csize/2,height + 4);
@@ -337,16 +340,42 @@ namespace ai
 
                     Cell orig1 = portal1->entrance1().cells.origin;
 
+                    orig1.x +=  portal1->entrance1().cells.size.width>>1;
+                    orig1.y +=  portal1->entrance1().cells.size.height>>1;
+
                     for(int edge = 0 ; edge < m_portalGraph.nodeAt(idx)->edgeCount() ; edge++)
                     {
                          Portal_ptr portal2 = node1->adjacentNodeAt(edge)->data();
 
                          Cell orig2 = portal2->entrance1().cells.origin;
 
+                         orig2.x +=  portal2->entrance1().cells.size.width>>1;
+                         orig2.y +=  portal2->entrance1().cells.size.height>>1;
+
                          glVertex3f( orig1.x * csize , orig1.y * csize, height + 4 );
                          glVertex3f( orig2.x * csize , orig2.y * csize, height + 3 );
                     }
                 }
+
+                glEnd();
+
+                glBegin(GL_QUADS);
+
+                glColor3f(1 , 1 , 1);
+
+                Cell c = m_portalGraph.nodeAt(16)->data()->entrance1().cells.origin;
+
+                glVertex3f(  c.x    * csize,  c.y    * csize, height+1);
+                glVertex3f( (c.x+1) * csize,  c.y    * csize, height+1);
+                glVertex3f( (c.x+1) * csize, (c.y+1) * csize, height+1);
+                glVertex3f(  c.x    * csize, (c.y+1) * csize, height+1);
+
+                 c = m_portalGraph.nodeAt(0)->data()->entrance1().cells.origin;
+
+                glVertex3f(  c.x    * csize,  c.y    * csize, height+1);
+                glVertex3f( (c.x+1) * csize,  c.y    * csize, height+1);
+                glVertex3f( (c.x+1) * csize, (c.y+1) * csize, height+1);
+                glVertex3f(  c.x    * csize, (c.y+1) * csize, height+1);
 
                 glEnd();
             }
@@ -393,8 +422,12 @@ namespace ai
                     createPortals(frIdx);
                 }
 
-                //// Debug
+                computePortalGraph();
+                
+            }
 
+            void computePortalGraph()
+            {
                 for(ChunkID chID = 0 ; chID < chunkCount ; chID++)
                 {
                     Cell chunkOrig = chunkOrigin(chID);
@@ -430,6 +463,21 @@ namespace ai
                         }
                     }
                 }
+
+                m_portalGraph.computeAllNeighbors();
+
+                ASPathFinder pf(&m_portalGraph,0,16);
+
+                pf.burnSteps();
+
+                if(pf.state() == ASPathFinder::TERMINATED)
+                {
+                    portalPathTest = m_portalGraph.makePortalPath(pf.path());
+                    std::cout << "Found graph path\n";
+                }
+                else
+                 std::cout << "Did not Found graph path\n";
+
             }
 
             /// Returns the coordinate of the chunk in the grid
@@ -594,6 +642,7 @@ namespace ai
                     return g_badFrontier;
             }
 
+            /// Returns the pair of chunks on either side of the frontier
             inline std::pair<ChunkID, ChunkID> chunksOfFrontier(FrontierID frontier_)
             {
                 ck_assert(frontier_>=0 && frontier_<frontierCount);
@@ -704,7 +753,6 @@ namespace ai
                     else
                         org += walk_dir;
                 }
-                
             }
 
             #pragma endregion
@@ -716,11 +764,13 @@ namespace ai
                 
             PortalGraph m_portalGraph;
 
-            std::vector<ASPath> m_portalPaths[chunkCount];
+            std::vector<ASPath<Index>> m_portalPaths[chunkCount];
 
             PortalList m_portals[frontierCount];
 
             EntranceList m_entrances[chunkCount];
+
+            ASPath<Portal_ptr> portalPathTest;
             
         };
     }

@@ -28,7 +28,10 @@
 #ifndef AI_FF_ASPath_hpp
 #define AI_FF_ASPath_hpp
 
+#include "ai/CKUMReturnType.hpp"
 #include "ASGraph.hpp"
+
+using namespace ck::utils::meta;
 
 namespace ai
 {
@@ -36,17 +39,31 @@ namespace ai
     {
         class ASPathFinder;
 
+        template<typename _NodeType>
         class ASPath;
 
+        template<typename _NodeType>
         class ASPathIterator
         {
-            friend ASPath;
+            friend ASPath<_NodeType>;
 
-            ASPathIterator(ASPath* path_, IndexList_it const& it_)
-            :m_path(path_), m_list_it(it_)
+            typedef std::list<_NodeType>                 NodeList;
+            typedef typename NodeList::iterator          NodeList_it;
+            typedef typename NodeList::const_iterator    NodeList_cit;
+            typedef typename ReturnType<_NodeType>::type ReturnType;
+
+            ASPathIterator(const ASPath<_NodeType>* path_, NodeList_cit & it_)
+            :m_path(path_), m_list_it(unconst(m_path,it_)) 
             {}
 
         public:
+
+            static NodeList_it unconst(ASPath<_NodeType>* path_,const NodeList_cit& cit)
+            {
+                NodeList_it it = path_->m_nodes.begin();
+                std::advance(it, std::distance<NodeList_cit>(path_->m_nodes.begin(), cit));
+                return it; 
+            }
  
             ASPathIterator()
             : m_path(nullptr)
@@ -99,34 +116,38 @@ namespace ai
                         m_list_it != rhs.m_list_it);
             }
             
-            inline Index index()
+            inline ReturnType node()
             {
                 return *m_list_it;
             }
 
-            /* Must template ASPath and ASPathFinder
-            inline _NodeType& operator*();
-            
-            inline _NodeType* operator->();
-            */
+            ReturnType operator*()
+            {
+                return *m_list_it;
+            }
+
          private:
             
             /// Parent path
-            ASPath* m_path;
+            const ASPath<_NodeType>* m_path;
 
             /// List iterator of parent path's list
-            IndexList_it m_list_it; 
+            NodeList_it m_list_it; 
 
         };
 
+        template<typename _NodeType>
         class ASPath
         {
             friend ASPathFinder;
-            friend ASPathIterator;
+            friend ASPathIterator<_NodeType>;
 
         public:
 
-            typedef ASPathIterator iterator;
+            typedef ASPathIterator<_NodeType>   iterator;
+            typedef std::list<_NodeType>        NodeList;
+            typedef typename NodeList::iterator NodeList_it;
+
 
             ASPath()
             : m_graph(nullptr)
@@ -136,15 +157,17 @@ namespace ai
             : m_graph(graph_)
             {}
 
-            iterator begin()
+            iterator begin() const
             {
-                return ASPathIterator(this, m_nodeIndexes.begin());
+                return iterator(this, m_nodes.begin());
             }
 
-            iterator end()
+            iterator end() const
             {
-                return ASPathIterator(this, m_nodeIndexes.end());
+                return iterator(this, m_nodes.end());
             }
+
+            NodeList& nodeList() { return m_nodes; }
 
         private:
             
@@ -152,10 +175,9 @@ namespace ai
             ASGraph* m_graph; 
          
             /// List of node indexes
-            IndexList m_nodeIndexes;
+            NodeList m_nodes;
         };
 
-        const ASPath g_failPath;
     }
 }
 

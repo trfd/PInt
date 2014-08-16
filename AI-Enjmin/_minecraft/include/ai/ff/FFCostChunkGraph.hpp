@@ -123,13 +123,13 @@ namespace ai
 
             /// Returns the number of nodes 
             /// in the graph
-            inline virtual size_t count()
+            inline virtual size_t count() override
             {
                 return size;
             }
 
             /// Returns estimation of cost of path
-            virtual float estimate(Index stIdx_, Index tgIdx_)
+            virtual float estimate(Index stIdx_, Index tgIdx_) override
             {
                 // Heurisitic is straigh line
 
@@ -142,7 +142,7 @@ namespace ai
             }
 
             /// Returns the node's neighbors
-            inline virtual IndexArray& neighbors(Index idx_)
+            inline virtual IndexArray& neighbors(Index idx_) override
             {
                 if(!m_neighbors[idx_].first)
                     computeNeighbors(idx_);
@@ -150,7 +150,7 @@ namespace ai
             }
 
             /// Returns cost of adjacent nodes
-            inline virtual float cost(Index fromIdx_, Index toIdx_)
+            inline virtual float cost(Index fromIdx_, Index toIdx_) override
             {
                 return get(toIdx_)+1;
             }
