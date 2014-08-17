@@ -406,7 +406,7 @@ void keyboardDownFunction(unsigned char key, int p1, int p2)
 		g_avatar->shoot(g_renderer->_Camera->_Direction);
 	}
 	
-	
+    Debug::keyDown(key);
 
 }
 
@@ -441,6 +441,8 @@ void keyboardUpFunction(unsigned char key, int p1, int p2)
     {
         g_avatar->Crouch = false;
     }
+
+     Debug::keyUp(key);
 }
 
 void mouseWheelFunction(int wheel, int dir, int x, int y)

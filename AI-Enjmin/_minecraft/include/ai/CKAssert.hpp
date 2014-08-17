@@ -1,7 +1,7 @@
 ///
 ///  CKAssert.hpp
 ///
-///  Created by Baptiste Dupy on 10/08/2014.
+///  Created by Baptiste Dupy on 16/08/2014.
 ///  Contact:
 ///          Mail:       <baptiste.dupy@gmail.com>
 ///          GitHub:     trfd <https://github.com/trfd>

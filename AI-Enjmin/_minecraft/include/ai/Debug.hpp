@@ -1,6 +1,7 @@
 #ifndef __Debug_Utils_hpp__
 #define __Debug_Utils_hpp__
 
+#include <map>
 #include <sstream>
 
 #include "external/gl/glew.h"
@@ -30,6 +31,11 @@ class Debug : public ck::utils::Singleton<Debug>
     friend ck::utils::Singleton<Debug>;
 
 public:
+    
+    typedef std::vector<ck::Functor<void>>        CallbackArray;
+    typedef CallbackArray::iterator               CallbackArray_it;
+    typedef std::map<unsigned char,CallbackArray> KeyListenerMap;
+    typedef KeyListenerMap::iterator              KeyListenerMap_it;
 
     inline static Debug* instance()
     {
@@ -41,6 +47,39 @@ public:
         std::string str = "{";
         str += std::to_string(vect.x()) + "," + std::to_string(vect.y()) + "," + std::to_string(vect.z()) + "}";
         return str;
+    }
+
+    inline static void keyDown(unsigned char key)
+    {
+        instance()->callListeners(instance()->m_keyDownListeners,key);
+    }
+
+    inline static void keyUp(unsigned char key)
+    {
+         instance()->callListeners(instance()->m_keyUpListeners,key);
+    }
+
+    inline void callListeners(KeyListenerMap& map, unsigned char key)
+    {
+#ifdef ENABLE_DEBUG
+        KeyListenerMap_it map_it = map.find(key);
+
+        if(map_it == map.end())
+            return;
+
+        for(auto callback : map_it->second)
+            callback();
+#endif
+    }
+
+    static void addKeyDownListener(unsigned char key, ck::Functor<void> const& func_)
+    {
+        instance()->m_keyDownListeners[key].push_back(func_);
+    }
+
+    static void addKeyUpListener(unsigned char key, ck::Functor<void> const& func_)
+    {
+        instance()->m_keyUpListeners[key].push_back(func_);
     }
 
     static void addToRender(ck::Functor<void> const& func_)
@@ -105,8 +144,12 @@ public:
     }
 
 private:
-    std::vector<ck::Functor<void>> m_renderCallback;
+    
+    CallbackArray m_renderCallback;
     std::vector<Line> m_lines;
+
+    KeyListenerMap m_keyDownListeners;
+    KeyListenerMap m_keyUpListeners;
 };
 
 #endif // __Debug_Utils_hpp__

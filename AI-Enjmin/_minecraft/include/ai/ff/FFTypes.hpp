@@ -30,6 +30,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <list>
+#include <deque>
 
 #include "ai/CKVector.hpp"
 #include "ai/CKCellRect.hpp"
@@ -121,6 +123,7 @@ namespace ai
         
 
         typedef ck::Vector2i Cell;
+        typedef ck::Vector2i LocalCell;
 
         typedef ck::Size2i CellSize;
 
@@ -134,6 +137,14 @@ namespace ai
 
         const FrontierID g_badFrontier = UINT32_MAX;
 
+        /// Chunk coordinates are coordinate of 
+        /// chunks in grid's chunks-grid frame.
+        //Example: In a grid 32x32 with chunks of size 16x16
+        // chunk-grid is of size 2x2. Then ChunkCoord are: 
+        // for chunk 0 : (0,0)
+        // for chunk 1 : (1,0)
+        // for chunk 2 : (0,1)
+        // for chunk 3 : (1,1)
         typedef ck::Vector2i ChunkCoord;
 
         /// Type representing cost of grid cell (0-255).
@@ -143,12 +154,27 @@ namespace ai
 
         const Cost g_maxCost = 0xFF;
 
+        typedef std::vector<Cell>   CellArray;
+        typedef CellArray::iterator CellArray_it;
+        typedef std::list<Cell>     CellList;
+        typedef CellList::iterator  CellList_it;
+        typedef std::deque<Cell>    CellDeque;
+        typedef CellList::iterator  CellDeque_it;
+
+        typedef std::vector<LocalCell>   LocalCellArray;
+        typedef LocalCellArray::iterator LocalCellArray_it;
+        typedef std::list<LocalCell>     LocalCellList;
+        typedef LocalCellList::iterator  LocalCellList_it;
+        typedef std::deque<LocalCell>    LocalCellDeque;
+        typedef LocalCellDeque::iterator LocalCellDeque_it;
+
         struct BufferCell
         {
-            uint16_t sumCost : 16;
-            bool waveFront : 1;
-            bool lineOfSight : 1;
-            // 6 bits available
+            uint16_t sumCost   : 16;
+            bool waveFront     : 1;
+            bool pastWaveFront : 1;
+            bool lineOfSight   : 1;
+            // 5 bits available
         };
 
         struct FlowCell

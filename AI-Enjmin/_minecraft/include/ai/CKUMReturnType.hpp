@@ -49,7 +49,6 @@ namespace ck
                 typedef typename ReturnType_impl<_DataType,std::is_scalar<_DataType>::value>::type type;
             };
             
-            
             template<typename _DataType>
             struct ReturnType_impl<_DataType,true>
             {

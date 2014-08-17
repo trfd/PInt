@@ -1,7 +1,7 @@
 ///
-///  FFChunkGraph.hpp
+///  FFCostChunkGraph.hpp
 ///
-///  Created by Baptiste Dupy on 13/08/2014.
+///  Created by Baptiste Dupy on 15/08/2014.
 ///  Contact:
 ///          Mail:       <baptiste.dupy@gmail.com>
 ///          GitHub:     trfd <https://github.com/trfd>
@@ -25,8 +25,8 @@
 ///
 ///
 
-#ifndef AI_FF_ChunkGraph_hpp
-#define AI_FF_ChunkGraph_hpp
+#ifndef AI_FF_CostChunkGraph_hpp
+#define AI_FF_CostChunkGraph_hpp
 
 
 #include "ASGraph.hpp"
@@ -202,4 +202,4 @@ namespace ai
     }
 }
 
-#endif //AI_FF_ChunkGraph_hpp
+#endif //AI_FF_CostChunkGraph_hpp

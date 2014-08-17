@@ -18,3 +18,5 @@ GridGenerator/
 *.sln
 *.suo
 AI-Enjmin/_minecraft/minecraft.opensdf
+*.lastcodeanalysissucceeded
+*.xml

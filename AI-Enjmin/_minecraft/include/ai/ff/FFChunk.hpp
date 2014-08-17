@@ -85,7 +85,7 @@ namespace ai
             inline ReturnType get(int x_, int y_)
             {
                 if(!isInChunk(x_, y_))
-                    return ReturnType();
+                    return _Data();
 
                return m_grid[x_ + __width * y_];
             }
