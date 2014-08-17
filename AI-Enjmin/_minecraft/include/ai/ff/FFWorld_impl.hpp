@@ -339,6 +339,8 @@ namespace ai
             testIntegrator->drawBuffer(csize,height);
         
             testIntegrator->drawWaveFront(csize,height);
+
+            testIntegrator->drawFlow(csize,height);
         }
 
         #pragma endregion 

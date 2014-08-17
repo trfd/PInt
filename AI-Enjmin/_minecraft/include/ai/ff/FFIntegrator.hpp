@@ -64,18 +64,6 @@ namespace ai
             typedef Chunk<BufferCell,chunkWidth,chunkHeight> BufferChunk;
             typedef Chunk<FlowCell  ,chunkWidth,chunkHeight> FlowChunk;
 
-            //typedef std::shared_ptr<Portal> Portal_ptr;
-
-            //typedef std::vector<Portal_ptr>                  PortalList;
-            //typedef typename PortalList::iterator            PortalList_it;
-            //typedef std::vector<Portal::Entrance*>           EntranceList;
-
-            //static const int chunkRowCount    = CostGrid::chunkRowCount;
-            //static const int chunkColumnCount = CostGrid::chunkColumnCount;
-            //static const int chunkCount       = CostGrid::chunkCount;
-
-            //static const int frontierCount    = (2 * chunkRowCount - 1) * chunkColumnCount  - chunkRowCount ;
-
             #pragma endregion 
 
             Integrator(World<_Config>* world_, ChunkID chID_, const LocalCellArray& goals_)
@@ -131,13 +119,25 @@ namespace ai
 
                     bufferAt(cell).sumCost = cheapCost + cheapICost;
                 }
+
+                if(m_waveFront.size() == 0 || 
+                   ( m_waveFront.size() ==1 && m_waveFront.front() == s_endCell))
+                    processFlowField();
             }
 
-            void passFlowField()
+            /// Create the flow field once the integration is done
+            void processFlowField()
             {
-
+                for(int i = 0 ; i< chunkSize ; i++)
+                {
+                    LocalCell lcell(i%chunkWidth , i/chunkHeight);
+                    m_flow.get(lcell.x,lcell.y).direction = 
+                        uniDirOfCheapestIntegratedCostAround(lcell);
+                }
             }
 
+            /// Returns the lowest cost (from cost field) of the 4 cells
+            /// around the cell passed as argument.
             Cost cheapestCostAround(const LocalCell& cell_)
             {
                 Cost minCost = g_maxCost;
@@ -161,6 +161,8 @@ namespace ai
                 return minCost;
             }
 
+            /// Returns the lowest integrated cost of the 4 cells
+            /// around the cell passed as argument.
             IntegratedCost cheapestIntegratedCostAround(const LocalCell& cell_)
             {
                 IntegratedCost minCost = g_maxIntegratedCost;
@@ -180,6 +182,36 @@ namespace ai
                     return 0;
 
                 return minCost;
+            }
+
+            /// Returns the direction pointing to the cell containing the lowest
+            /// integrated cost of the 8 surrounding cells of the cell 
+            /// passed as argument.
+            UniDirection uniDirOfCheapestIntegratedCostAround(const LocalCell& cell_)
+            {
+                UniDirection result;
+                IntegratedCost minCost = g_maxIntegratedCost;
+                IntegratedCost tmp;
+                for(UniDirection udir = UniDirection::UP ;
+                    udir <= UniDirection::DOWN_RIGHT ; udir++)
+                {
+                    ck::Vector2i dir = direction(udir);
+
+                    tmp = bufferAt(dir + cell_).sumCost;
+
+                    if(tmp > 0 && tmp< minCost)
+                    {
+                       minCost = bufferAt(dir + cell_).sumCost;
+                       result = udir;
+                    }
+                }
+                
+                if(minCost == g_maxIntegratedCost)
+                {
+                    return UniDirection::NONE;
+                }
+
+                return result;
             }
 
             bool hasUnIntegratedAround(const LocalCell& cell_)
@@ -217,11 +249,6 @@ namespace ai
                     for(UniDirection udir = UniDirection::UP ; 
                         udir <= UniDirection::RIGHT ; udir++)
                         addToWaveFront(cell + direction(udir));
-
-                    //addToWaveFront(cell + ck::Vector2i(0 ,-1));
-                    //addToWaveFront(cell + ck::Vector2i(0 , 1));
-                    //addToWaveFront(cell + ck::Vector2i(-1, 0));
-                    //addToWaveFront(cell + ck::Vector2i( 1, 0));
                 }
 
                 // Remove previous wave front from buffer
@@ -342,6 +369,30 @@ namespace ai
                 glEnd();
             }
 
+            void drawFlow(float csize,float height)
+            {
+                float hcsize = 0.5f;
+
+                glBegin(GL_LINES);
+                glColor3f(1, 1 , 1);
+
+                for(int i = 0 ; i< chunkSize ; i++)
+                {
+                    LocalCell lcell(i%chunkWidth , i/chunkHeight);
+
+                    IntegratedCost cost = bufferAt(lcell).sumCost;
+
+                    Cell cell = Utils::localToGrid(m_chunkID,lcell);
+
+                    ck::Vector2i dir = direction(m_flow.get(lcell.x,lcell.y).direction);
+
+                    glVertex3f( (cell.x + 0.5f) * csize, (cell.y+ 0.5f)   * csize, height+5);
+                    glVertex3f( (cell.x+ 0.5f) * csize + dir.x*0.5f*csize, (cell.y+ 0.5f)   * csize + dir.y*0.5f*csize, height+5);
+
+                }
+                glEnd();
+            }
+
         private:
 
             /// Adds a cell to wave front if not already wavefront
@@ -365,6 +416,8 @@ namespace ai
             World<_Config>* m_world = nullptr;
 
             BufferChunk m_buffer;
+
+            FlowChunk m_flow;
 
             LocalCellArray m_goals;
 

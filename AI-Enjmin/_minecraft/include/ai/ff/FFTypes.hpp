@@ -270,9 +270,9 @@ namespace ai
 
         struct FlowCell
         {
-            Direction direction : 8;
-            bool pathable : 1;
-            bool hasLineOfSight : 1;
+            UniDirection direction : 8;
+            //bool pathable : 1;
+            //bool hasLineOfSight : 1;
             //  6 bits available
         };
 

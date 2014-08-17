@@ -53,7 +53,8 @@ namespace ai
             typedef typename ReturnType<_NodeType>::type ReturnType;
 
             ASPathIterator(const ASPath<_NodeType>* path_, NodeList_cit & it_)
-            :m_path(path_), m_list_it(unconst(m_path,it_)) 
+            : m_path(path_), 
+              m_list_it(unconst(m_path,it_)) 
             {}
 
         public:
