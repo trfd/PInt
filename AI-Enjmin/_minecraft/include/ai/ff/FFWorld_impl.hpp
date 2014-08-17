@@ -90,7 +90,7 @@ namespace ai
         ::stepIntegrator()
         {
             if(testIntegrator)
-                testIntegrator->stepWaveFront();
+                testIntegrator->stepCostIntegration();
         }
 
         template<typename _Config>
@@ -336,6 +336,8 @@ namespace ai
             }
             glEnd();
 
+            testIntegrator->drawBuffer(csize,height);
+        
             testIntegrator->drawWaveFront(csize,height);
         }
 

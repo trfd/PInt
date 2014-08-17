@@ -182,6 +182,23 @@ namespace ai
             return ck::Vector2i(dir_x(dir), dir_y(dir));
         }
 
+        // Preincrement
+        UniDirection& operator++(UniDirection& udir_)
+        {
+            return udir_ = (UniDirection)((uint8_t)udir_+1);
+        }
+        
+        // PostIncrement
+        UniDirection& operator++(UniDirection& udir_,int)
+        {
+            UniDirection cResult(udir_);
+
+            operator++(udir_);          
+
+            return cResult;      
+        }
+
+
         #pragma endregion
 
         enum Border
@@ -193,8 +210,6 @@ namespace ai
 
             NONE    = 4
         };
-
-        
 
         typedef ck::Vector2i Cell;
         typedef ck::Vector2i LocalCell;
@@ -225,8 +240,10 @@ namespace ai
         /// 255 is not a non-walking cell (usually walls).
         /// [1-254] are common cost (0 is reserved).
         typedef uint8_t Cost;
+        typedef uint16_t IntegratedCost;
 
         const Cost g_maxCost = 0xFF;
+        const IntegratedCost g_maxIntegratedCost = 0xFFFF;
 
         typedef std::vector<Cell>   CellArray;
         typedef CellArray::iterator CellArray_it;
@@ -244,7 +261,7 @@ namespace ai
 
         struct BufferCell
         {
-            uint16_t sumCost   : 16;
+            IntegratedCost sumCost   : 16;
             bool waveFront     : 1;
             bool pastWaveFront : 1;
             bool lineOfSight   : 1;

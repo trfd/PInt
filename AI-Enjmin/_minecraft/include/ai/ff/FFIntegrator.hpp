@@ -52,6 +52,7 @@ namespace ai
 
             static const int chunkWidth  = _Config::chunkWidth;
             static const int chunkHeight = _Config::chunkHeight;
+            static const int chunkSize   = _Config::chunkWidth * _Config::chunkHeight;
 
             static const int gridWidth  = _Config::gridWidth;
             static const int gridHeight = _Config::gridHeight;
@@ -89,7 +90,7 @@ namespace ai
                 return m_buffer.get(lcell_.x,lcell_.y);
             }
 
-            inline Cost& costAt(const LocalCell& lcell_)
+            inline Cost costAt(const LocalCell& lcell_)
             {
                 return m_world->costAt(Utils::localToGrid(m_chunkID, lcell_));
             }
@@ -118,9 +119,17 @@ namespace ai
 
             void stepCostIntegration()
             {
+                stepWaveFront();
+
                 for(LocalCell& cell : m_waveFront)
                 {
                     Cost cheapCost = cheapestCostAround(cell);
+                    IntegratedCost cheapICost = cheapestIntegratedCostAround(cell);
+
+                    ck_assert(cheapCost < g_maxCost);
+                    ck_assert(cheapICost < g_maxIntegratedCost);
+
+                    bufferAt(cell).sumCost = cheapCost + cheapICost;
                 }
             }
 
@@ -133,9 +142,56 @@ namespace ai
             {
                 Cost minCost = g_maxCost;
 
-                if(costAt(cell_ + ck::Vector2i(0,-1) < minCost)
-                    minCost = costAt(cell_ + ck::Vector2i(0,-1);
+                for(UniDirection udir = UniDirection::UP ;
+                    udir <= UniDirection::RIGHT ; udir++)
+                {
+                    ck::Vector2i dir = direction(udir);
 
+                    Cost cost = costAt(dir + cell_);
+                       
+                    // Warning cost field can have 0 value
+                    // thus increase all value of 1
+                    if(cost < g_maxCost)
+                        cost++; 
+
+                    if(cost < minCost)
+                       minCost = cost;
+                }
+                
+                return minCost;
+            }
+
+            IntegratedCost cheapestIntegratedCostAround(const LocalCell& cell_)
+            {
+                IntegratedCost minCost = g_maxIntegratedCost;
+                IntegratedCost tmp;
+                for(UniDirection udir = UniDirection::UP ;
+                    udir <= UniDirection::RIGHT ; udir++)
+                {
+                    ck::Vector2i dir = direction(udir);
+
+                    tmp = bufferAt(dir + cell_).sumCost;
+
+                    if(tmp > 0 && tmp< minCost)
+                       minCost = bufferAt(dir + cell_).sumCost;
+                }
+                
+                if(minCost == g_maxIntegratedCost)
+                    return 0;
+
+                return minCost;
+            }
+
+            bool hasUnIntegratedAround(const LocalCell& cell_)
+            {
+                for(UniDirection udir = UniDirection::UP ;
+                    udir <= UniDirection::RIGHT ; udir++)
+                {
+                    if(bufferAt(cell_ + dir).sumCost == 0)
+                        return true;
+                }
+                
+                return false;
             }
 
             /// Propagate the wave front of one cell
@@ -158,10 +214,14 @@ namespace ai
                 {
                     LocalCell& cell = m_waveFront[idx];
 
-                    addToWaveFront(cell + ck::Vector2i(0 ,-1));
-                    addToWaveFront(cell + ck::Vector2i(0 , 1));
-                    addToWaveFront(cell + ck::Vector2i(-1, 0));
-                    addToWaveFront(cell + ck::Vector2i( 1, 0));
+                    for(UniDirection udir = UniDirection::UP ; 
+                        udir <= UniDirection::RIGHT ; udir++)
+                        addToWaveFront(cell + direction(udir));
+
+                    //addToWaveFront(cell + ck::Vector2i(0 ,-1));
+                    //addToWaveFront(cell + ck::Vector2i(0 , 1));
+                    //addToWaveFront(cell + ck::Vector2i(-1, 0));
+                    //addToWaveFront(cell + ck::Vector2i( 1, 0));
                 }
 
                 // Remove previous wave front from buffer
@@ -183,6 +243,58 @@ namespace ai
                 // set new end
                 m_waveFront.push_back(s_endCell);
             }
+
+            void drawBuffer(float csize,float height)
+            {
+                float hcsize = 0.5f;
+
+                glBegin(GL_QUADS);
+                
+
+                for(int i = 0 ; i< chunkSize ; i++)
+                {
+                    LocalCell lcell(i%chunkWidth , i/chunkHeight);
+
+                    IntegratedCost cost = bufferAt(lcell).sumCost;
+
+                    Cell cell = Utils::localToGrid(m_chunkID,lcell);
+
+                    glColor3f(0, 0 , cost / 10.f);
+
+                    glVertex3f( (cell.x+0.25f) * csize, (cell.y+0.25f) * csize, height+1);
+                    glVertex3f( (cell.x+0.75f) * csize, (cell.y+0.25f) * csize, height+1);
+                    glVertex3f( (cell.x+0.75f) * csize, (cell.y+0.75f) * csize, height+1);
+                    glVertex3f( (cell.x+0.25f) * csize, (cell.y+0.75f) * csize, height+1);
+                }
+                glEnd();
+
+                glBegin(GL_LINES);
+                
+                for(int i = 0 ; i< chunkSize ; i++)
+                {
+                    LocalCell lcell(i%chunkWidth , i/chunkHeight);
+
+                    IntegratedCost cost = bufferAt(lcell).sumCost;
+
+                    Cell cell = Utils::localToGrid(m_chunkID,lcell);
+
+                    glColor3f(0, 0 , cost / 10.f);
+
+                    glVertex3f( (cell.x)   * csize, (cell.y)   * csize, height+1);
+                    glVertex3f( (cell.x+1) * csize, (cell.y)   * csize, height+1);
+
+                    glVertex3f( (cell.x+1) * csize, (cell.y)   * csize, height+1);
+                    glVertex3f( (cell.x+1) * csize, (cell.y+1) * csize, height+1);
+
+                    glVertex3f( (cell.x+1) * csize, (cell.y+1) * csize, height+1);
+                    glVertex3f( (cell.x)   * csize, (cell.y+1) * csize, height+1);
+
+                    glVertex3f( (cell.x)   * csize, (cell.y+1) * csize, height+1);
+                    glVertex3f( (cell.x)   * csize, (cell.y)   * csize, height+1);
+                }
+                glEnd();
+            }
+
 
             void drawWaveFront(float csize,float height)
             {
