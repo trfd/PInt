@@ -378,6 +378,24 @@ namespace ai
                 glVertex3f(  c.x    * csize, (c.y+1) * csize, height+1);
 
                 glEnd();
+
+
+                glBegin(GL_LINES);
+                glColor3f(1,0,1);
+                Cell prev = (*portalPathTest.begin())->entrance1().cells.origin;
+
+                for(auto it = portalPathTest.begin() ; it != portalPathTest.end() ; ++it)
+                {
+                    Cell cell = (*it)->entrance1().cells.origin;
+
+                    glVertex3f(prev.x*csize,prev.y*csize, height +3);
+                    glVertex3f(cell.x*csize,cell.y*csize, height +3);
+
+                    prev = cell;
+                
+                }
+
+                glEnd();
             }
 
             #pragma endregion 

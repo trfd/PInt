@@ -58,9 +58,9 @@ namespace ai
 
         public:
 
-            static NodeList_it unconst(ASPath<_NodeType>* path_,const NodeList_cit& cit)
+            static NodeList_it unconst(const ASPath<_NodeType>* path_,const NodeList_cit& cit)
             {
-                NodeList_it it = path_->m_nodes.begin();
+                NodeList_it it = const_cast<ASPath<_NodeType>*>(path_)->m_nodes.begin();
                 std::advance(it, std::distance<NodeList_cit>(path_->m_nodes.begin(), cit));
                 return it; 
             }
