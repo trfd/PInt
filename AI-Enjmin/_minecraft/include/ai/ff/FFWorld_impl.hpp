@@ -459,7 +459,7 @@ namespace ai
             else
                 std::cout << "Did not Found graph path\n";
 
-            testIntegrator = new Integrator<_Config>(this, 0, {  Cell(7,8),Cell(8,8),Cell(8,7),Cell(7,6) });
+            testIntegrator = new Integrator<_Config>(this, 10, {  Cell(7,8),Cell(8,8),Cell(8,7),Cell(7,6) });
             testIntegrator->resetBuffer();
         }
 

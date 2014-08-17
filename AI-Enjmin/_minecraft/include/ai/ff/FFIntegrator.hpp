@@ -111,18 +111,30 @@ namespace ai
                 m_waveFront.push_back(s_endCell);
             }
 
-            void passLineOfSight()
+            void stepLineOfSight()
             {
 
             }
 
-            void passCostIntegration()
+            void stepCostIntegration()
             {
-
+                for(LocalCell& cell : m_waveFront)
+                {
+                    Cost cheapCost = cheapestCostAround(cell);
+                }
             }
 
             void passFlowField()
             {
+
+            }
+
+            Cost cheapestCostAround(const LocalCell& cell_)
+            {
+                Cost minCost = g_maxCost;
+
+                if(costAt(cell_ + ck::Vector2i(0,-1) < minCost)
+                    minCost = costAt(cell_ + ck::Vector2i(0,-1);
 
             }
 
@@ -179,10 +191,12 @@ namespace ai
                 glBegin(GL_QUADS);
                 glColor3f(0, 1 , 0);
 
-                for(LocalCell& cell : m_waveFront)
+                for(LocalCell& lcell : m_waveFront)
                 {
-                    if(cell == s_endCell)
+                    if(lcell == s_endCell)
                         continue;
+
+                    Cell cell = Utils::localToGrid(m_chunkID,lcell);
 
                     glVertex3f( (cell.x+0.25f) * csize, (cell.y+0.25f) * csize, height+1);
                     glVertex3f( (cell.x+0.75f) * csize, (cell.y+0.25f) * csize, height+1);
@@ -194,10 +208,12 @@ namespace ai
                 glBegin(GL_LINES);
                 glColor3f(0, 1 , 0);
 
-                for(LocalCell& cell : m_waveFront)
+                for(LocalCell& lcell : m_waveFront)
                 {
-                    if(cell == s_endCell)
+                    if(lcell == s_endCell)
                         continue;
+
+                    Cell cell = Utils::localToGrid(m_chunkID,lcell);
 
                     glVertex3f( (cell.x)   * csize, (cell.y)   * csize, height+1);
                     glVertex3f( (cell.x+1) * csize, (cell.y)   * csize, height+1);
@@ -243,7 +259,6 @@ namespace ai
             LocalCellDeque m_waveFront;
 
             static const Cell s_endCell;
-
         };
 
         template<typename _Config>
