@@ -27,11 +27,13 @@
 
 #ifndef AI_FF_Portal_hpp
 #define AI_FF_Portal_hpp
+
 #include "ai/CKAssert.hpp"
+
 #include <map>
 #include <memory>
 
-
+#include "ai/CKHash.hpp"
 #include "ai/DtAdjacencyList.hpp"
 
 #include "FFTypes.hpp"
@@ -50,6 +52,33 @@ namespace ai
         class Portal : public std::enable_shared_from_this<Portal>
         {
         public:
+
+             /// Portal ids are built using the index
+             /// of the portal's origin cell and its size.
+             /// The origin is the min in X and Y of 
+             /// entrance's origins.
+             /// In this way portal have unique ids 
+             /// independant of memory,time and implementation.
+             /// The size is either the width or height
+             /// depending of portal's orientation.
+             /// The size uses only 5 bits thus it can
+             /// not be greater than 64.
+             /// The size of chunks can then be not 
+             /// larger than that.
+             /// Thus the index uses 58 bits. That makes 
+             /// the square grid can not be larger than 
+             /// 2^29x2^29
+             //TODO: add an extra to save world's ID
+            union ID
+            {   
+                struct
+                {
+                    uint64_t index : 58;
+                    uint8_t  size  : 6;
+                };
+
+                uint64_t id;
+            };
            
             enum CompareResult
             {
@@ -60,16 +89,49 @@ namespace ai
 
             #pragma region Entrance
 
-            /// Half of portal that resides on one chunk
-            struct Entrance
+            struct EntranceData
             {
+                /// Entrance ids are built using the local index
+                /// of the entrance's origin cell and its size.
+                /// The size is either the width or height
+                /// depending of portal's orientation.
+                /// The local index is the index of origin
+                /// in chunk coordinates. It uses 8 bits
+                /// Thus chunk should not be larger than 64x64
+                /// Note that a lot value can not be used,
+                /// since localIndex lies in the chunk's edge 
+                /// making every index in the interior unused
+                /// and the size can not exceed chunk width or
+                /// height.
+                union ID
+                {
+                    struct
+                    {
+                        uint32_t chunkHash;
+                        uint16_t localIndex;
+                        uint8_t  size;
+                        // 8 bits free
+                    };
+                    uint64_t id;
+                };
+
+                ID uid;
                 ChunkID chunk;
                 CellRect cells;
                 Border border;
+
+                EntranceData(ID uid_,ChunkID chunk_,CellRect cells_,Border border_)
+                : uid(uid_), chunk(chunk_), cells(cells_), border(border_)
+                {}
+            };
+
+            /// Half of portal that resides on one chunk
+            struct Entrance : public EntranceData
+            {
                 Portal& portal;
 
-                Entrance(Portal& portal_,Border border_,ChunkID id_, CellRect cells_)
-                : portal(portal_), border(border_),chunk(id_), cells(cells_)
+                Entrance(Portal& portal_,const EntranceData& data_)
+                : EntranceData(data_) , portal(portal_)
                 {}
 
                 bool operator==(Entrance const& entr_)
@@ -92,21 +154,24 @@ namespace ai
 
             #pragma endregion
 
-            Portal(FrontierID frontier_,
-                   ChunkID c1_, ChunkID c2_, 
-                   Border b1_, Border b2_,
-                   CellRect const& cr1_, CellRect const& cr2_)
-            : m_frontier(frontier_),
-            m_entrance1(*this,b1_,c1_,cr1_),
-            m_entrance2(*this,b2_,c2_,cr2_)
-            {}
+            Portal(ID id_,
+                   FrontierID frontier_, 
+                   const EntranceData& en1Data_,
+                   const EntranceData& en2Data_)
+            : m_id(id_),
+            m_frontier(frontier_),
+            m_entrance1(*this,en1Data_),
+            m_entrance2(*this,en2Data_)
+            {
+                ck_assert(m_entrance1.cells.size == m_entrance2.cells.size);
+            }
 
             inline static bool intersects(Portal const& lhs_, Portal const& rhs_)
             {
                 return ((Entrance::intersects(lhs_.m_entrance1,rhs_.m_entrance1)) || 
-                       (Entrance::intersects(lhs_.m_entrance1,rhs_.m_entrance2)) ||
-                       (Entrance::intersects(lhs_.m_entrance2,rhs_.m_entrance1)) ||
-                       (Entrance::intersects(lhs_.m_entrance2,rhs_.m_entrance2)) );
+                        (Entrance::intersects(lhs_.m_entrance1,rhs_.m_entrance2)) ||
+                        (Entrance::intersects(lhs_.m_entrance2,rhs_.m_entrance1)) ||
+                        (Entrance::intersects(lhs_.m_entrance2,rhs_.m_entrance2)) );
             }
 
             inline bool intersects(CellRect const& rect_)
@@ -151,8 +216,12 @@ namespace ai
 
             inline FrontierID frontier() { return m_frontier; }
 
+            inline ID id(){ return m_id; }
+
         private:
             
+            ID m_id;
+
             Entrance m_entrance1;
             Entrance m_entrance2;
 

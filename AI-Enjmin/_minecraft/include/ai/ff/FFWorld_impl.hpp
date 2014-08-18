@@ -391,6 +391,8 @@ namespace ai
             return (m_costGrid.get(cell_.x, cell_.y) != g_maxCost);
         }
         
+     
+
         #pragma endregion
 
 
@@ -402,7 +404,7 @@ namespace ai
         {
             for(int frIdx = 0 ; frIdx < frontierCount ; frIdx++)
             {
-                createPortals(frIdx);
+                createAllPortalsOn(frIdx);
             }
 
             computePortalGraph();
@@ -468,12 +470,58 @@ namespace ai
         }
 
         template<typename _Config>
-        void World<_Config>
-        ::createPortals(FrontierID frontier_)
+        Portal_ptr World<_Config>
+        ::createNewPortal(FrontierID frontier_,
+                          ChunkID chunk1_, ChunkID chunk2_,
+                          const Cell& entr1Origin_, const Cell& entr2Origin_,
+                          const CellSize& size_)
         {
-            // Chunk take in reference for portal creation
+            // Create Portal Unique ID
+
+            Portal::ID portalId = Utils::makePortalID(entr1Origin_,entr2Origin_,size_);
+
+            // Create Entrance ID's
+
+            Portal::EntranceData::ID entr1ID = Utils::makeEntranceID(chunk1_,entr1Origin_,size_);
+            Portal::EntranceData::ID entr2ID = Utils::makeEntranceID(chunk2_,entr2Origin_,size_);
+
+            // Entrances' Data
+
+            Portal::EntranceData entrance1(entr1ID,chunk1_, CellRect(entr1Origin_, size_),
+                                           Utils::borderOfFrontierInChunk(frontier_,chunk1_));
+
+            Portal::EntranceData entrance2(entr2ID,chunk2_, CellRect(entr2Origin_, size_),
+                                           Utils::borderOfFrontierInChunk(frontier_,chunk2_));
+
+            // Instantiate 
+
+            return Portal_ptr(new Portal(portalId,frontier_,entrance1,entrance2));
+        }
+
+        template<typename _Config>
+        void World<_Config>
+        ::addPortal(Portal_ptr portal_)
+        {
+            m_portals[portal_->frontier()].push_back(portal_);
+            
+            // Add newly created portal entrances to their respectives chunks
+
+            m_entrances[portal_->entrance1().chunk].push_back(&portal_->entrance1());
+            m_entrances[portal_->entrance2().chunk].push_back(&portal_->entrance2());
+
+            // And add the portal to the graph
+
+            m_portalGraph.addNode(portal_);
+        }
+
+
+        template<typename _Config>
+        void World<_Config>
+        ::createAllPortalsOn(FrontierID frontier_)
+        {
+            // Chunk took in reference for portal creation
             // Doesn't matter which one is chosen
-            // since implementation is symmetric
+            // since implementation is symetric
             ChunkID referenceChunk = Utils::chunksOfFrontier(frontier_).first;
             ChunkID otherChunk = Utils::chunksOfFrontier(frontier_).second;
 
@@ -494,10 +542,8 @@ namespace ai
             ck::Vector2i walk_dir(abs(vdir.y), abs(vdir.x));
 
             // List of portal for this frontier
-
-            //ck_assert(m_portals[frontier_].size() == 0);
     
-            PortalList& list = m_portals[frontier_];//cPortals.portals(border_);
+            PortalList& list = m_portals[frontier_];
 
             // Remove all portals
             for(PortalList_it it = list.begin(); it != list.end();)
@@ -517,6 +563,8 @@ namespace ai
             {
                 if(isPathable(org) && isPathable(org + vdir))
                 {
+                    // Are pathable
+                    // Then keep moving forward to find the end of the portal
                     CellSize size(1,1);
                     while((org + walk_dir * size).x < end.x && (org + walk_dir * size).y < end.y &&
                           isPathable(org +  walk_dir * size) && 
@@ -525,22 +573,21 @@ namespace ai
                         size += walk_dir;
                     }
 
-                    Portal_ptr newPortal(new Portal(frontier_,
-                                                    referenceChunk, otherChunk,
-                                                    Utils::borderOfFrontierInChunk(frontier_,referenceChunk),
-                                                    Utils::borderOfFrontierInChunk(frontier_,otherChunk),
-                                                    CellRect(org, size), CellRect(org+vdir,size)));
-                    list.push_back(newPortal);
-                    
-                    m_entrances[referenceChunk].push_back(&newPortal->entrance(referenceChunk));
-                    m_entrances[otherChunk].push_back(&newPortal->entrance(otherChunk));
+                    Cell entr1Origin = org;
+                    Cell entr2Origin = org+vdir;
 
-                    m_portalGraph.addNode(newPortal);
+                    // Instantiate 
+
+                    Portal_ptr newPortal = createNewPortal(frontier_,referenceChunk,otherChunk,entr1Origin,entr2Origin,size);
+
+                    addPortal(newPortal);
+
+                    // Move origin to the end of the portal
 
                     org += walk_dir * size;
                    
                 }
-                else
+                else // Cells are not pathable then keep moving forward
                     org += walk_dir;
             }
         }

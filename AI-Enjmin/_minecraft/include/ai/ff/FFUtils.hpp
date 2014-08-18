@@ -320,6 +320,50 @@ namespace ai
                 return (gcell_.x >= 0 && gcell_.y >= 0 && gcell_.x < gridWidth && gcell_.y < gridHeight);
             }
 
+            /// Create a portal ID using entrance origins and size
+            inline static Portal::ID makePortalID(Cell entr1Origin, Cell entr2Origin, const CellSize& size)
+            {  
+              Portal::ID id;
+
+              id.index = Utils::indexOfCell(Cell(min(entr1Origin.x,entr2Origin.x) , min(entr1Origin.y,entr2Origin.y)));
+              id.size  = max(size.width , size.height);
+
+              return id;
+            }
+
+            /// Create a portal ID using min origin (that is min X and min Y of entrances' origin)
+            /// and size
+            inline static Portal::ID makePortalID(Cell origin, const CellSize& size)
+            {  
+              Portal::ID id;
+
+              id.index = Utils::indexOfCell(origin);
+              id.size  = max(size.width , size.height);
+
+              return id;
+            }
+
+            inline static Portal::EntranceData::ID makeEntranceID(ChunkID chID_,const Cell& origin_, const CellSize& size_)
+            {
+                Portal::EntranceData::ID id;
+
+                id.chunkHash = ck::utils::hash<32>::get(chID_);
+                id.localIndex = Utils::indexOfLocalCell(Utils::gridToLocal(chID_,origin_));
+                id.size = max(size_.width , size_.height);
+
+                return id;
+            };
+
+            inline static Portal::EntranceData::ID makeEntranceID(ChunkID chID_,const CellRect& rect_)
+            {
+                Portal::EntranceData::ID id;
+
+                id.chunkHash = ck::utils::hash<32>::get(chID_);
+                id.localIndex = Utils::indexOfLocalCell(Utils::gridToLocal(chID_,rect_.origin));
+                id.size = max(rect_.size.width , rect_.size.height);
+
+                return id;
+            };
         };
     }
 }

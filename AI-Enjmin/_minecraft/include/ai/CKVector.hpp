@@ -74,17 +74,17 @@ namespace ck
         /// Binary operation Vector2
         
         
-        Vector2 operator+ (const Vector2& a)
+        Vector2 operator+ (const Vector2& a) const
         {
             return Vector2(x+a.x,y+a.y);
         }
         
-        Vector2 operator- (const Vector2& a)
+        Vector2 operator- (const Vector2& a) const
         {
             return Vector2(x-a.x,y-a.y);
         }
         
-        Vector2 operator* (const Vector2& a)
+        Vector2 operator* (const Vector2& a) const
         {
             return Vector2(x*a.x,y*a.y);
         }
@@ -115,16 +115,16 @@ namespace ck
         
         // Operator Size2
         
-        Vector2 operator+ (const Size2<_T>& a)
+        Vector2 operator+ (const Size2<_T>& a) const
         {
             return Vector2(x+a.width,y+a.height);
         }
         
-        Vector2 operator- (const Size2<_T>& a)
+        Vector2 operator- (const Size2<_T>& a) const
         {
             return Vector2(x-a.width,y-a.height);
         }
-        Vector2 operator* (const Size2<_T>& a)
+        Vector2 operator* (const Size2<_T>& a) const
         {
             return Vector2(x*a.width,y*a.height);
         }

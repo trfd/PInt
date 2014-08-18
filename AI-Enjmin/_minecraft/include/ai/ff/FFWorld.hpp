@@ -161,7 +161,17 @@ namespace ai
             //TODO: Improve efficiency of portal mutation by 
             // implementating Merge/Split/Extend/Reduce/Add/Remove mutation
             // on portals. This is tightly linked to agent's path recomputing.
-            void createPortals(FrontierID frontier_);
+            void createAllPortalsOn(FrontierID frontier_);
+
+            /// Create a new portal shared pointer.
+            Portal_ptr createNewPortal(FrontierID frontier_,ChunkID chunk1_, ChunkID chunk2_,
+                                       const Cell& entr1Origin_, const Cell& entr2Origin_,
+                                       const CellSize& size_);
+
+            /// Adds a portal to the list of portal, its entrances 
+            /// to the map of entrances
+            /// and add the corresponding node to the portal graph.
+            void addPortal(Portal_ptr portal_);
 
             #pragma endregion
 

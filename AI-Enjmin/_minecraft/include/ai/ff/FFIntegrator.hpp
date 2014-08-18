@@ -292,6 +292,7 @@ namespace ai
                     glVertex3f( (cell.x+0.75f) * csize, (cell.y+0.25f) * csize, height+1);
                     glVertex3f( (cell.x+0.75f) * csize, (cell.y+0.75f) * csize, height+1);
                     glVertex3f( (cell.x+0.25f) * csize, (cell.y+0.75f) * csize, height+1);
+
                 }
                 glEnd();
 
@@ -386,8 +387,8 @@ namespace ai
 
                     ck::Vector2i dir = direction(m_flow.get(lcell.x,lcell.y).direction);
 
-                    glVertex3f( (cell.x + 0.5f) * csize, (cell.y+ 0.5f)   * csize, height+5);
-                    glVertex3f( (cell.x+ 0.5f) * csize + dir.x*0.5f*csize, (cell.y+ 0.5f)   * csize + dir.y*0.5f*csize, height+5);
+                    glVertex3f( (cell.x + 0.5f) * csize, (cell.y+ 0.5f) * csize, height+5);
+                    glVertex3f( (cell.x+ 0.5f) * csize + dir.x*0.5f*csize, (cell.y+ 0.5f) * csize + dir.y*0.5f*csize, height+5);
 
                 }
                 glEnd();
