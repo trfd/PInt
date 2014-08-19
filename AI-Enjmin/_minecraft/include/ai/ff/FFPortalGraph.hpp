@@ -42,6 +42,7 @@ namespace ai
     namespace ff
     {
         typedef std::shared_ptr<Portal> Portal_ptr;
+        typedef ASPath<Portal_ptr> PortalPath;
         
         class PortalGraph 
         : public ASGraph, 
@@ -49,6 +50,8 @@ namespace ai
         {
         public:
            
+
+
             /// Returns the number of nodes 
             /// in the graph
             inline virtual size_t count() override

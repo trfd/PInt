@@ -178,6 +178,8 @@ namespace ai
             {
                 return (m_entrance1.intersects(rect_) || m_entrance2.intersects(rect_));
             }
+
+            #pragma region Accessors
             
             /// Returns the entrance that lies in chunk_
             inline Entrance& entrance(ChunkID chunk_)
@@ -211,12 +213,24 @@ namespace ai
                  return entrance(chunk_).cells;
             }
 
+            inline ChunkID otherChunk(ChunkID chunk_)
+            {
+                 if(m_entrance1.chunk == chunk_)
+                    return m_entrance2.chunk;
+                else if(m_entrance2.chunk == chunk_)
+                    return m_entrance1.chunk;
+                else 
+                    return g_badChunk;
+            }
+
             inline Entrance& entrance1() { return m_entrance1; }
             inline Entrance& entrance2() { return m_entrance2; }
 
             inline FrontierID frontier() { return m_frontier; }
 
             inline ID id(){ return m_id; }
+
+            #pragma endregion
 
         private:
             
@@ -228,7 +242,12 @@ namespace ai
             FrontierID m_frontier;
         };
 
+        #pragma region Post-Typedefs
+
+        typedef Portal::ID               PortalID;
+        typedef Portal::EntranceData::ID EntranceID;
         
+        #pragma endregion
     }
 }
 

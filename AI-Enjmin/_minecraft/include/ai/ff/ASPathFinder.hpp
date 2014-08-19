@@ -53,6 +53,7 @@ namespace ai
         class ASPathFinder
         {
         public:
+
             enum State
             {
                 RUNNING,

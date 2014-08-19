@@ -66,7 +66,6 @@ namespace ai
             static const int gridHeight  = __height; 
         };
 
-
         //TODO: Change the way portal are created. In supporting actions
         // on portals such as Merge/Split/Expand/Reduce/Add/Remove, dynamic
         // mutation of costGrid can be achieved and alter only paths
@@ -83,8 +82,8 @@ namespace ai
             static const int chunkWidth  = _Config::chunkWidth;
             static const int chunkHeight = _Config::chunkHeight;
 
-            static const int gridWidth  = _Config::gridWidth;
-            static const int gridHeight = _Config::gridHeight;
+            static const int gridWidth   = _Config::gridWidth;
+            static const int gridHeight  = _Config::gridHeight;
 
             typedef typename _Config::BufferCell BufferCell;
             typedef typename _Config::FlowCell   FlowCell;
@@ -93,12 +92,12 @@ namespace ai
             typedef Chunk<BufferCell,chunkWidth,chunkHeight> BufferChunk;
             typedef Chunk<FlowCell  ,chunkWidth,chunkHeight> FlowChunk;
 
-            typedef std::shared_ptr<CostChunk>             CostChunk_ptr;
-            typedef CostChunkGraph<chunkWidth,chunkHeight> CostChunkGraph;
+            typedef std::shared_ptr<CostChunk>               CostChunk_ptr;
+            typedef CostChunkGraph<chunkWidth,chunkHeight>   CostChunkGraph;
 
-            typedef Grid<CostChunk  ,gridWidth,gridHeight> CostGrid;
-            typedef Grid<BufferChunk,gridWidth,gridHeight> BufferGrid;
-            typedef Grid<FlowChunk  ,gridWidth,gridHeight> FlowGrid;
+            typedef Grid<CostChunk  ,gridWidth,gridHeight>   CostGrid;
+            typedef Grid<BufferChunk,gridWidth,gridHeight>   BufferGrid;
+            typedef Grid<FlowChunk  ,gridWidth,gridHeight>   FlowGrid;
 
             typedef std::shared_ptr<Portal> Portal_ptr;
 
@@ -125,7 +124,7 @@ namespace ai
 
             #pragma endregion 
 
-            #pragma region Mutation
+            #pragma region Accessors
 
             inline Cost costAt(int x_, int y_);
             inline Cost costAt(const Cell& cell_);
@@ -135,6 +134,8 @@ namespace ai
             inline void setCostAt(const Cost& cost_, int x_, int y_);
 
             inline bool isPathable(Cell const& cell_);
+
+            inline PortalGraph& portalGraph();
            
             #pragma endregion
 

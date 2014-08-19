@@ -345,7 +345,7 @@ namespace ai
 
         #pragma endregion 
 
-        #pragma region Mutation
+        #pragma region Accessors
 
         template<typename _Config>
         inline Cost World<_Config>
@@ -391,7 +391,12 @@ namespace ai
             return (m_costGrid.get(cell_.x, cell_.y) != g_maxCost);
         }
         
-     
+        template<typename _Config>
+        inline PortalGraph& World<_Config>
+        ::portalGraph()
+        {
+            return m_portalGraph;
+        }
 
         #pragma endregion
 
@@ -478,12 +483,12 @@ namespace ai
         {
             // Create Portal Unique ID
 
-            Portal::ID portalId = Utils::makePortalID(entr1Origin_,entr2Origin_,size_);
+            PortalID portalId = Utils::makePortalID(entr1Origin_,entr2Origin_,size_);
 
             // Create Entrance ID's
 
-            Portal::EntranceData::ID entr1ID = Utils::makeEntranceID(chunk1_,entr1Origin_,size_);
-            Portal::EntranceData::ID entr2ID = Utils::makeEntranceID(chunk2_,entr2Origin_,size_);
+            EntranceID entr1ID = Utils::makeEntranceID(chunk1_,entr1Origin_,size_);
+            EntranceID entr2ID = Utils::makeEntranceID(chunk2_,entr2Origin_,size_);
 
             // Entrances' Data
 

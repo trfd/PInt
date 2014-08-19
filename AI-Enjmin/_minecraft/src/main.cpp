@@ -773,6 +773,9 @@ int main(int argc, char* argv[])
 
     world.endChanges();
 
+    ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0), 
+                                                   ai::ff::Cell(50,50));
+
 	glutMainLoop(); 
 
 	return 0;

@@ -220,6 +220,8 @@ namespace ai
 
   
         typedef uint32_t ChunkID;
+        
+        const ChunkID g_badChunk = UINT32_MAX;
 
         /// The frontier is the line between two chunks
         typedef uint32_t FrontierID;

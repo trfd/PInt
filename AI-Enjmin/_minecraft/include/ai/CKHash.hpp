@@ -106,6 +106,22 @@ namespace ck
             {
                 return hash_impl<__n>::get((const unsigned char*)value , strlen(value));
             }
+
+            template<typename _T>
+            static ReturnType get(size_t size_, _T* ptr)
+            {
+                const uint8_t* val = reinterpret_cast<const uint8_t*>(ptr);
+                
+                return hash_impl<__n>::get(val,size_);
+            }
+
+            template<typename _T>
+            static ReturnType get(const std::vector<_T>& dvec_)
+            {
+                const uint8_t* val = reinterpret_cast<const uint8_t*>(dvec_.data());
+                
+                return hash_impl<__n>::get(val,dvec_.size());
+            }
             
             template<typename _T>
             static ReturnType get(const _T value,int8_t offset = 0)

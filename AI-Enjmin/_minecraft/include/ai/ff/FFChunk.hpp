@@ -54,7 +54,20 @@ namespace ai
                 clear();
             }
 
+            /// Constructor using loadFrom() instead of clearing
+            Chunk(void* addr_ptr)
+            {
+                loadFrom(addr_ptr);
+            }
+
+
             virtual ~Chunk(){}
+
+            /// Copy the data at address passed to the chunk
+            void loadFrom(void* addr_ptr)
+            {
+                std::memcpy(m_grid,addr_ptr, sizeof(m_grid));
+            }
 
             inline bool isInChunk(int x_, int y_)
             {
@@ -93,6 +106,11 @@ namespace ai
             inline void clear()
             {
                 std::memset(m_grid, 0, sizeof(m_grid));
+            }
+
+            inline _Data* data()
+            {
+                return m_grid;
             }
            
         private:

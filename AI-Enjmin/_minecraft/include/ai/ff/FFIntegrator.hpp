@@ -46,9 +46,18 @@ namespace ai
         {
         public:
 
+            enum State
+            {
+                RUNNING,
+                FAILURE,
+                TERMINATED
+            };
+
             #pragma region Typedefs/Constants
 
-            typedef Utils<_Config> Utils;
+            typedef Utils<_Config>        Utils;
+            typedef FlowTile<_Config>     FlowTile;
+            typedef FlowTile_ptr<_Config> FlowTile_ptr;
 
             static const int chunkWidth  = _Config::chunkWidth;
             static const int chunkHeight = _Config::chunkHeight;
@@ -66,12 +75,13 @@ namespace ai
 
             #pragma endregion 
 
-            Integrator(World<_Config>* world_, ChunkID chID_, const LocalCellArray& goals_)
+            Integrator(World<_Config>* world_)
             : m_world(world_), 
-            m_chunkID(chID_), 
-            m_goals(goals_)
             {}
 
+            inline State state(){ return m_state; }
+
+            inline FlowTile_ptr tile(){ return m_flowTile; }
 
             inline BufferCell& bufferAt(const LocalCell& lcell_)
             {
@@ -86,6 +96,18 @@ namespace ai
             inline bool isPathable(const LocalCell& lcell_)
             {
                 return m_world->isPathable(Utils::localToGrid(m_chunkID, lcell_));
+            }
+
+            void run(FlowTile_ptr tile_ptr)
+            {
+                m_flowTile = tile_ptr;
+
+                m_chunkID = m_flowTile->data().chunk();
+                m_goals = m_flowTile->data().goals();
+                
+                m_state = State::RUNNING;
+
+                resetBuffer();
             }
 
             void resetBuffer()
@@ -107,6 +129,9 @@ namespace ai
 
             void stepCostIntegration()
             {
+                if(m_state != State::RUNNING)
+                    return;
+
                 stepWaveFront();
 
                 for(LocalCell& cell : m_waveFront)
@@ -128,12 +153,17 @@ namespace ai
             /// Create the flow field once the integration is done
             void processFlowField()
             {
+                if(m_state != State::RUNNING)
+                    return;
+
                 for(int i = 0 ; i< chunkSize ; i++)
                 {
                     LocalCell lcell(i%chunkWidth , i/chunkHeight);
-                    m_flow.get(lcell.x,lcell.y).direction = 
+                    m_flowTile->flow().get(lcell.x,lcell.y).direction = 
                         uniDirOfCheapestIntegratedCostAround(lcell);
                 }
+
+                m_state = State::TERMINATED;
             }
 
             /// Returns the lowest cost (from cost field) of the 4 cells
@@ -385,7 +415,7 @@ namespace ai
 
                     Cell cell = Utils::localToGrid(m_chunkID,lcell);
 
-                    ck::Vector2i dir = direction(m_flow.get(lcell.x,lcell.y).direction);
+                    ck::Vector2i dir = direction(m_flowTile->flow().get(lcell.x,lcell.y).direction);
 
                     glVertex3f( (cell.x + 0.5f) * csize, (cell.y+ 0.5f) * csize, height+5);
                     glVertex3f( (cell.x+ 0.5f) * csize + dir.x*0.5f*csize, (cell.y+ 0.5f) * csize + dir.y*0.5f*csize, height+5);
@@ -418,11 +448,13 @@ namespace ai
 
             BufferChunk m_buffer;
 
-            FlowChunk m_flow;
+            FlowTile_ptr m_flowTile;
 
             LocalCellArray m_goals;
 
             LocalCellDeque m_waveFront;
+
+            State m_state;
 
             static const Cell s_endCell;
         };

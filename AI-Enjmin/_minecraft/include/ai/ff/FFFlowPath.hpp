@@ -1,7 +1,7 @@
+       ///
+///  FFFlowPath.hpp
 ///
-///  FlowField.hpp
-///
-///  Created by Baptiste Dupy on 10/08/2014.
+///  Created by Baptiste Dupy on 15/08/2014.
 ///  Contact:
 ///          Mail:       <baptiste.dupy@gmail.com>
 ///          GitHub:     trfd <https://github.com/trfd>
@@ -25,10 +25,35 @@
 ///
 ///
 
-#ifndef AI_FlowField_hpp
-#define AI_FlowField_hpp
+#ifndef AI_FF_FlowPath_hpp
+#define AI_FF_FlowPath_hpp
 
-#include "FFWorld.hpp"
-#include "FFFlowFieldPathFinder.hpp"
+#include "FFUtils.hpp"
+#include "FFFlowTile.hpp"
 
-#endif //AI_FlowField_hpp
+namespace ai
+{
+    namespace ff
+    {
+       template<typename _Config>
+       class FlowPath
+       {
+       public:
+           typedef Utils<_Config> Utils;
+
+           void addTile(FlowTile_ptr<_Config> tile)
+           {
+               m_tiles[tile->chunk()].first = true;
+               m_tiles[tile->chunk()].second = tile;
+           }
+       
+       private:
+           std::pair<bool, FlowTile*> m_tiles[Utils::chunkCount];
+       };
+
+       template<typename _Config>
+       using FlowPath_ptr =  std::shared_ptr<FlowPath<_Config>>;
+    }
+}
+
+#endif //AI_FF_FlowPath_hpp
