@@ -170,6 +170,8 @@ namespace ai
 
             NodeList& nodeList() { return m_nodes; }
 
+            inline void clear(){ m_nodes.clear(); }
+
         private:
             
             /// Parent graph

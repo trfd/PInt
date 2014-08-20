@@ -316,6 +316,9 @@ namespace ai
                 }
                 }
                 
+                if(!search.pathfinder)
+                    search.startSearch();
+
                 switch(search.pathfinder->state())
                 {
                 case ASPathFinder::TERMINATED:

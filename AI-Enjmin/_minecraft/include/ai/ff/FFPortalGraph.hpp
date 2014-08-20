@@ -105,7 +105,7 @@ namespace ai
             /// Returns cost of adjacent nodes
             inline virtual float cost(Index fromIdx_, Index toIdx_) override
             {
-                return distance(fromIdx_,toIdx_);
+                return max(0.1f,distance(fromIdx_,toIdx_));
             }
 
             inline float distance(Index fromIdx_, Index toIdx_)

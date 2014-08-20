@@ -105,6 +105,11 @@ namespace ai
 
             void restart(Index startIndx_, Index targetIndx_)
             {
+                m_openSet.clear();
+                m_closedSet.clear();
+
+                m_resultPath.clear();
+
                 m_startIndex = startIndx_; 
                 m_targetIndex = targetIndx_;
 
@@ -216,11 +221,11 @@ namespace ai
                 // Index is typedef for size_t
                 Index minIdx  = UINT_MAX; //std::numeric_limits<Index>::max(); 
 
-                // O(N) can be reduced to O(log N) by sorting out the list
+                // O(N) can be reduced to O(log N) by sorting out the open set
              
                 for(Index idx : m_openSet)
                 {
-                    if(minCost>m_totalCost[idx] && m_totalCost[idx]!=0)
+                    if(minCost>m_totalCost[idx] && m_totalCost[idx] != 0.f)
                     {
                         minCost = m_totalCost[idx];
                         minIdx = idx; 
@@ -266,12 +271,14 @@ namespace ai
                     int tmpCost = m_pastCost[currIndex] + m_graph->cost(currIndex,*it);
 
                     bool neighborIsOpen = isInOpenSet(*it);
-
-                    if(!neighborIsOpen || tmpCost < m_pastCost[*it])
+                    //std::cout << "CurrIndex: " << currIndex << std::boolalpha << "neighbor: " << *it << " isOpen:" << neighborIsOpen << "tmpCost" << tmpCost << "\n";
+                    if(!neighborIsOpen || ( m_pastCost[*it] != 0 && tmpCost < m_pastCost[*it]))
                     {
                         m_pathMap[*it] = currIndex;
                         m_pastCost[*it] = tmpCost;
                         m_totalCost[*it] = tmpCost + m_graph->estimate(*it,m_targetIndex);
+                        
+                        ck_assert(m_totalCost[*it] != 0.f);
 
                         if(!neighborIsOpen)
                             m_openSet.insert(*it);
