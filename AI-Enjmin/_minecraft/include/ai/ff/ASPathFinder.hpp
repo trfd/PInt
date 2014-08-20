@@ -85,6 +85,8 @@ namespace ai
               m_callback(this , &ASPathFinder::emptyCallback)
             {
                 ck_assert(startIndx_ != targetIndx_);
+                ck_assert(startIndx_ < m_graph->count());
+                ck_assert(targetIndx_ < m_graph->count());
 
                 m_currState = RUNNING;
 
@@ -100,6 +102,28 @@ namespace ai
             }
 
             #pragma endregion
+
+            void restart(Index startIndx_, Index targetIndx_)
+            {
+                m_startIndex = startIndx_; 
+                m_targetIndex = targetIndx_;
+
+                ck_assert(startIndx_ != targetIndx_);               
+                ck_assert(startIndx_ < m_graph->count());
+                ck_assert(targetIndx_ < m_graph->count());
+
+                m_currState = RUNNING;
+
+                std::fill(m_pastCost.begin(), m_pastCost.end(), 0);
+                std::fill(m_estimCost.begin(), m_estimCost.end(), 0);
+                std::fill(m_totalCost.begin(), m_totalCost.end(), 0);
+
+                m_pastCost[m_startIndex] = 0;
+                m_estimCost[m_startIndex] = m_graph->estimate(m_startIndex,m_targetIndex);
+                m_totalCost[m_startIndex] = m_pastCost[m_startIndex] + m_estimCost[m_startIndex];
+
+                m_openSet.insert(m_startIndex);
+            }
 
             #pragma region Accessors
 

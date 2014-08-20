@@ -102,15 +102,84 @@ namespace ai
 
             struct PortalPathSearch
             {   
+                struct SingleSearch
+                {
+                    // PortalList index of 
+                    Index fromIndex;
+                    Index toIndex;
+                };
+
                 PathRequest* pathRequest;
 
-                ASPathFinder pathfinder;
+                SingleSearch currSearch;
+                
+                typename Utils::PortalList fromPortals;
+                typename Utils::PortalList toPortals;
+
+                std::vector<ASPath<Index>> results;
+
+                RequestState state;
+
+                World<_Config>* world;
+                ASPathFinder* pathfinder = nullptr;
 
                 template<typename... Args_>
-                PortalPathSearch(PathRequest* pathReq_,Args_&&... args_)
-                : pathRequest(pathReq_),
-                pathfinder(std::forward<Args_>(args_)...)
-                {}
+                PortalPathSearch(World<_Config>* world_,PathRequest* pathReq_,ChunkID from_,ChunkID to_)
+                : world(world_), pathRequest(pathReq_)
+                {
+                    std::vector<FrontierID> fromFrontiers = Utils::allFrontiers(from_);
+                    std::vector<FrontierID> toFrontiers = Utils::allFrontiers(to_);
+
+                    for(FrontierID front : fromFrontiers)
+                        fromPortals.insert(fromPortals.end(),world->portals(front).begin(), world->portals(front).end());
+
+                    for(FrontierID front : toFrontiers)
+                        toPortals.insert(toPortals.end(),world->portals(front).begin(), world->portals(front).end());
+                }
+
+                void startSearch()
+                {
+                    currSearch.fromIndex = 0;
+                    currSearch.toIndex = 0;
+
+                    if(fromPortals.size() == 0 || toPortals.size() == 0)
+                    {
+                        state = RequestState::FAILURE;
+                        return;
+                    }
+
+                    pathfinder = new ASPathFinder(&world->portalGraph(), 
+                        world->portalGraph().indexOfData(fromPortals[currSearch.fromIndex]),
+                        world->portalGraph().indexOfData(toPortals  [currSearch.toIndex  ]));
+                }
+
+                void nextSearch()
+                {
+                    ck_assert(pathfinder->state() != ASPathFinder::RUNNING);
+
+                    if(pathfinder->state() == ASPathFinder::TERMINATED)
+                        results.push_back(pathfinder->path());
+
+                    currSearch.toIndex++;
+
+                    if(currSearch.toIndex >= toPortals.size())
+                    {
+                        currSearch.toIndex = 0;
+                        currSearch.fromIndex++;
+
+                        if(currSearch.fromIndex >= fromPortals.size())
+                        {
+                            state = RequestState::SUCCESS;
+                            return;
+                        }
+                    }
+
+                    pathfinder->restart(
+                        world->portalGraph().indexOfData(fromPortals[currSearch.fromIndex]),
+                        world->portalGraph().indexOfData(toPortals  [currSearch.toIndex  ]));
+                    
+                }
+
             };
 
             struct PathIntegrationRequest;
@@ -170,6 +239,7 @@ namespace ai
                 FlowPath_ptr newPath (new FlowPath());
 
                 m_pendingPathRequests.emplace(from_,std::vector<Cell>({to_}),newPath);
+                m_pendingPathRequests.back().state = RequestState::PENDING;
 
                 return newPath;
             }
@@ -189,6 +259,9 @@ namespace ai
 
             void stepPathRequest()
             {
+                if(m_pendingPathRequests.size() == 0)
+                    return;
+
                 PathRequest& req = m_pendingPathRequests.front();
 
                 ck_assert(req.state != RequestState::INVALID_STATE);
@@ -213,29 +286,58 @@ namespace ai
 
             void stepPortalPathSearch()
             {
+                if(m_pendingPortalPathSearches.size() == 0)
+                    return;
+
                 PortalPathSearch& search = m_pendingPortalPathSearches.front();
-                
-                switch(search.pathfinder.state())
+
+                switch(search.state)
                 {
-                case ASPathFinder::FAILURE:
+                case RequestState::RUNNING:
+                    break;
+                case RequestState::PENDING:
+                {
+                    search.state = RequestState::RUNNING;
+                    search.startSearch();
+                    break;
+                }
+                case RequestState::SUCCESS:
+                {
+                    pushIntegrationRequest(search);
+                    m_pendingPortalPathSearches.pop();
+                    return;
+                }
+                case RequestState::FAILURE:
                 {
                     search.pathRequest->state = RequestState::FAILURE;
                     terminate(*search.pathRequest);
-                    break;
+                    m_pendingPortalPathSearches.pop();
+                    return;
                 }
-                case ASPathFinder::TERMINATED:
+                }
+                
+                switch(search.pathfinder->state())
                 {
-                    pushIntegrationRequest(search);
+                case ASPathFinder::TERMINATED:
+                case ASPathFinder::FAILURE:
+                {
+                    // Single Portal path search ended
+                    search.nextSearch();
+
+                    // If last search has been reached state would change
+                    // then relaunch step to pass the new state on
+                    if(search.state != RequestState::RUNNING)
+                        stepPortalPathSearch();
                     break;
                 }
                 case ASPathFinder::RUNNING:
                 {
                     // Perform pathfinder step
-                    search.pathfinder.step();
+                    search.pathfinder->step();
                     
                     // if pathfinding has failed or succeeded
                     // relaunch step to pass the new state on
-                    if(search.pathfinder.state() != ASPathFinder::RUNNING)
+                    if(search.pathfinder->state() != ASPathFinder::RUNNING)
                         stepPortalPathSearch();
                     break;
                 }
@@ -244,6 +346,9 @@ namespace ai
 
             void stepIntegration()
             {
+                if(m_pendingIntegrationRequests.size() == 0)
+                    return;
+
                 PathIntegrationRequest& intr = m_pendingIntegrationRequests.front();
 
                 if(intr.tileRequests.size() == 0)
@@ -310,29 +415,34 @@ namespace ai
                 req_.state = RequestState::RUNNING;
                 req_.phase = RequestPhase::PORTAL_PATH;
 
-                // Find best portal for cells "from" and "to"
-                Portal_ptr fromPortal = m_world->portalForCell(req_.from);
-                Portal_ptr toPortal = m_world->portalForCells(req_.to.begin(),req_.to.end());
-
-                PortalGraph& graph = m_world->portalGraph();
-
-                Index idxFrom = graph.indexOfData(fromPortal);
-                Index idxTo = graph.indexOfData(toPortal);
-
-                ck_assert(idxFrom != INT_MAX);
-                ck_assert(idxTo   != INT_MAX);
+                ChunkID idFrom = Utils::chunkOfCell(req_.from);
+                ChunkID idTo   = Utils::chunkOfCell(req_.to[0]);
 
                 // Emplace new portal path search from fromPortal to toPortal
                 // (using their indices in the graph)
-                m_pendingPortalPathSearches.emplace(&req_, &graph,idxFrom,idxTo);
+                m_pendingPortalPathSearches.emplace(m_world,&req_,idFrom,idTo);
             }
 
-            inline void pushIntegrationRequest(const PortalPathSearch& search_)
+            inline void pushIntegrationRequest(PortalPathSearch& search_)
             {
+                // Select best portal search result
+
+                int minSize = INT_MAX;
+                ASPath<Index>* path_addr = nullptr;
+
+                for(ASPath<Index>& path : search_.results)
+                {
+                    if(path.nodeList().size() < minSize)
+                    {
+                        path_addr = &path;
+                        minSize = path.nodeList().size();
+                    }
+                }
+
                 // Emplace a new integration request
 
                 m_pendingIntegrationRequests.emplace(m_world,search_.pathRequest,
-                   m_world->portalGraph().makePortalPath(search_.pathfinder.path()));
+                   m_world->portalGraph().makePortalPath(*path_addr));
 
                 PathIntegrationRequest& newIntr = m_pendingIntegrationRequests.back();
 

@@ -88,6 +88,7 @@ namespace ai
             /// of a chunk
             inline static ChunkID chunkID(ChunkCoord const& chCoord)
             {
+                ck_assert(isValidChunk(chCoord));
                 return chCoord.x + chCoord.y * chunkRowCount;
             }
 
@@ -95,13 +96,30 @@ namespace ai
             /// of a chunk.(Arguments are ChunkCoord)
             inline static ChunkID chunkID(int cx_,int cy_)
             {
+                ck_assert(isValidChunk(ChunkCoord(cx_,cy_)));
                 return cx_ + cy_ * chunkRowCount;
             }
 
             /// Returns the ChunkID of the neightbor chunk in direction dir_
             inline static ChunkID nextChunk(ChunkID chId_,Direction dir_)
             {
-                return chunkID(chunkCoordinates(chId_)+direction(dir_));
+                ChunkCoord coord = chunkCoordinates(chId_)+direction(dir_);
+
+                if(!isValidChunk(coord))
+                    return g_badChunk;
+
+                return chunkID(coord);
+            }
+
+            /// Returns the ChunkID of the neightbor chunk in direction dir_
+            inline static ChunkID nextChunk(ChunkID chId_,UniDirection udir_)
+            {
+                ChunkCoord coord = chunkCoordinates(chId_)+direction(udir_);
+
+                if(!isValidChunk(coord))
+                    return g_badChunk;
+
+                return chunkID(coord);
             }
 
             /// Returns the Direction that corresponds to
@@ -266,6 +284,29 @@ namespace ai
                 return std::make_pair(chunkID(x1,y1),chunkID(x2,y2));
             }
 
+            /// Returns the list of frontier of chunk "chunk_"
+            static std::vector<FrontierID> allFrontiers(ChunkID chunk_)
+            {
+                ChunkCoord coord = chunkCoordinates(chunk_);
+
+                std::vector<FrontierID> frResult;
+                
+                for(UniDirection udir = UniDirection::UP ;
+                    udir <= UniDirection::RIGHT ; udir++)
+                {
+                    ChunkID idNext = nextChunk(chunk_,udir);
+
+                    if(idNext != g_badChunk)
+                    {
+                        FrontierID fr = frontier(chunk_,idNext);
+
+                        if(fr != g_badFrontier)
+                            frResult.push_back(fr);
+                    }
+                }
+                return frResult;
+            }
+
             /// Converts a local cell of Chunk ch_ to a global grid cell.
             inline static Cell localToGrid(ChunkID ch_,const LocalCell& lCell_)
             {
@@ -342,6 +383,26 @@ namespace ai
             inline static bool isValidGridCell(const Cell& gcell_)
             {
                 return (gcell_.x >= 0 && gcell_.y >= 0 && gcell_.x < gridWidth && gcell_.y < gridHeight);
+            }
+
+            /// Returns whether or not a ChunkCoord is in the grid 
+            /// WARNING: this is not the same as isValidChunk(const ChunkID&)
+            /// ChunkCoord can be invalid and produce a valid ChunkID
+            /// WARNING: passing unvalid ChunkCoord to ChunkID may produce 
+            /// unpredictable errors
+            inline static bool isValidChunk(const ChunkCoord& coord_)
+            {
+                return (coord_.x >=0 && coord_.y >=0 && coord_.x < chunkRowCount && coord_.y < chunkColumnCount); 
+            }
+
+            /// Returns whether or not a ChunkID is in the grid 
+            /// WARNING: this is not the same as isValidChunk(const ChunkCoord&)
+            /// ChunkCoord can be invalid and produce a valid ChunkID
+            /// WARNING: passing unvalid ChunkCoord to ChunkID may produce 
+            /// unpredictable errors
+            inline static bool isValidChunk(const ChunkID& chID_)
+            {
+                return (chID_>=0 && chID_<chunkCount); 
             }
 
             /// Create a portal ID using entrance origins and size
