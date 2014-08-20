@@ -153,9 +153,10 @@ namespace ai
 
                 void addExitCellsToGoals(const Portal::Entrance& entr_)
                 {
-                    for(int x = entr_.cells.origin.x ; x < entr_.cells.size.width ; x++)
-                        for(int y = entr_.cells.origin.y ; y < entr_.cells.size.height ; y++)
-                            m_goals.push_back(Utils::indexOfLocalCell(Utils::gridToLocal(m_chunk,x,y)));
+                    for(int x = 0 ; x < entr_.cells.size.width ; x++)
+                        for(int y = 0 ; y < entr_.cells.size.height ; y++)
+                            m_goals.push_back(Utils::indexOfLocalCell(
+                                Utils::gridToLocal(m_chunk,entr_.cells.origin.x + x, entr_.cells.origin.y + y)));
                 }
 
                 void fillGoals(const std::vector<LocalCell>& lcells_)

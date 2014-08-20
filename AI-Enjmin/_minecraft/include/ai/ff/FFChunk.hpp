@@ -60,7 +60,6 @@ namespace ai
                 loadFrom(addr_ptr);
             }
 
-
             virtual ~Chunk(){}
 
             /// Copy the data at address passed to the chunk

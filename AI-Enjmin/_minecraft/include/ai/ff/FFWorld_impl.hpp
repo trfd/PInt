@@ -60,16 +60,7 @@ namespace ai
             
             }
             
-            for(int i = 0 ; i < frontierCount ; i++)
-            {
-                auto pairID = Utils::chunksOfFrontier(i);
-            
-                Border bord1 = Utils::borderOfFrontierInChunk(i,pairID.first);
-                Border bord2 = Utils::borderOfFrontierInChunk(i,pairID.second);
-            
-                std::cout << " Frointier: " << i << " Chunk: " << pairID.first << "Border :" << bord1 << "\n";
-                std::cout << " Frointier: " << i << " Chunk: " << pairID.second << "Border :" << bord2 << "\n";
-            }
+        
                     
 #ifdef __ENABLE_DEBUG_DRAW__
               Debug::addToRender(ck::makeFunctor(this,&World::drawGrid));
@@ -451,14 +442,15 @@ namespace ai
                                                    (*entr_sec_it)->portal.ptr());
                          }
                          else
-                             std::cout << "ASPathFinder fails...\n";
+                             std::cout << "ASPathFinder fails: Chunk "<<chID<<" is not connected.\
+                              Current implementation does not support disconnected chunk graphs\n";
                     }
                 }
             }
 
             m_portalGraph.computeAllNeighbors();
-
-            ASPathFinder pf(&m_portalGraph,0,16);
+            
+       /*     ASPathFinder pf(&m_portalGraph,0,16);
 
             pf.burnSteps();
 
@@ -468,7 +460,7 @@ namespace ai
                 std::cout << "Found graph path\n";
             }
             else
-                std::cout << "Did not Found graph path\n";
+                std::cout << "Did not Found graph path\n";*/
 
             //testIntegrator = new Integrator<_Config>(this, 10, {  Cell(7,8),Cell(8,8),Cell(8,7),Cell(7,6) });
             //testIntegrator->resetBuffer();

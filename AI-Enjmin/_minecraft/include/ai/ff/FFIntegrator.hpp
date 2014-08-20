@@ -113,6 +113,7 @@ namespace ai
             void resetBuffer()
             {
                 m_buffer.clear();
+                m_waveFront.clear();
 
                 for(LocalCellIndex& cell : m_goals)
                 {
@@ -134,6 +135,8 @@ namespace ai
 
                 stepWaveFront();
 
+                std::vector<std::pair<Cell,Cost>> costBuffer;
+
                 for(LocalCell& cell : m_waveFront)
                 {
                     Cost cheapCost = cheapestCostAround(cell);
@@ -142,7 +145,14 @@ namespace ai
                     ck_assert(cheapCost < g_maxCost);
                     ck_assert(cheapICost < g_maxIntegratedCost);
 
-                    bufferAt(cell).sumCost = cheapCost + cheapICost;
+                    //bufferAt(cell).sumCost = cheapCost + cheapICost;
+
+                    costBuffer.push_back(std::make_pair(cell,cheapCost + cheapICost));
+                }
+
+                for(auto costPair : costBuffer)
+                {
+                    bufferAt(costPair.first).sumCost = costPair.second;
                 }
 
                 if(m_waveFront.size() == 0 || 
@@ -179,15 +189,18 @@ namespace ai
 
                     Cost cost = costAt(dir + cell_);
                        
-                    // Warning cost field can have 0 value
-                    // thus increase all value of 1
-                    if(cost < g_maxCost)
-                        cost++; 
+                    //// Warning cost field can have 0 value
+                    //// thus increase all value of 1
+                    //if(cost < g_maxCost)
+                    //    cost++; 
 
-                    if(cost < minCost)
+                    if(cost != 0 && cost < minCost)
                        minCost = cost;
                 }
                 
+                if(minCost == g_maxCost)
+                    return 1;
+
                 return minCost;
             }
 

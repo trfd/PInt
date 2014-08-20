@@ -248,8 +248,7 @@ namespace ai
 
                 if(lCoord.x == rCoord.x)
                 {
-                    return ((2 * chunkRowCount - 1) * min(lCoord.y,rCoord.y) + chunkRowCount - 1 +
-                            lCoord.x,rCoord.x);
+                    return ((2 * chunkRowCount - 1) * min(lCoord.y,rCoord.y) + chunkRowCount - 1 + lCoord.x);
                 }
                 else if(lCoord.y == rCoord.y)
                 {

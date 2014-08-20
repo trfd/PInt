@@ -48,7 +48,12 @@ namespace ai
         {
             friend ck::utils::Singleton<FlowFieldPathFinder<_Config>>;
 
-            FlowFieldPathFinder(){}
+            FlowFieldPathFinder()
+            {
+#ifdef __ENABLE_DEBUG_DRAW__
+              Debug::addToRender(ck::makeFunctor(this,&FlowFieldPathFinder::draw));
+#endif
+            }
 
         public:
             
@@ -228,11 +233,27 @@ namespace ai
                     }
                     
                     tileRequests.emplace(this,data_);
+                    tileRequests.back().state = RequestState::PENDING;
                 }
 
             };
             
             static FlowFieldPathFinder* instance(){ return  ck::utils::Singleton<FlowFieldPathFinder<_Config>>::instance(); }
+
+            void draw()
+            {
+                float csize = 10.f;
+                float height = 200.f;
+
+                if(m_pendingIntegrationRequests.size() == 0)
+                    return;
+
+                Integrator& intr = m_pendingIntegrationRequests.front().integrator;
+
+                intr.drawBuffer(csize,height);
+                intr.drawWaveFront(csize,height);
+                intr.drawFlow(csize,height);
+            }
 
             FlowPath_ptr path(Cell from_, Cell to_)
             {
@@ -254,7 +275,7 @@ namespace ai
 
             void terminate(const PathRequest& pathReq_)
             {
-                //...
+                std::cout << "Finish Path Request\n";
             }
 
             void stepPathRequest()
