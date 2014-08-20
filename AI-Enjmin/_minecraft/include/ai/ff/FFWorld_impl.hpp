@@ -31,7 +31,7 @@
 #include "ai/CKAssert.hpp"
 
 #include "FFUtils.hpp"
-#include "FFIntegrator.hpp"
+//#include "FFIntegrator.hpp"
 
 #include "Tests.hpp"
 
@@ -336,11 +336,11 @@ namespace ai
             }
             glEnd();
 
-            testIntegrator->drawBuffer(csize,height);
+            //testIntegrator->drawBuffer(csize,height);
         
-            testIntegrator->drawWaveFront(csize,height);
+            //testIntegrator->drawWaveFront(csize,height);
 
-            testIntegrator->drawFlow(csize,height);
+            //testIntegrator->drawFlow(csize,height);
         }
 
         #pragma endregion 
@@ -470,8 +470,8 @@ namespace ai
             else
                 std::cout << "Did not Found graph path\n";
 
-            testIntegrator = new Integrator<_Config>(this, 10, {  Cell(7,8),Cell(8,8),Cell(8,7),Cell(7,6) });
-            testIntegrator->resetBuffer();
+            //testIntegrator = new Integrator<_Config>(this, 10, {  Cell(7,8),Cell(8,8),Cell(8,7),Cell(7,6) });
+            //testIntegrator->resetBuffer();
         }
 
         template<typename _Config>
@@ -596,7 +596,7 @@ namespace ai
                     org += walk_dir;
             }
         }
-
+        
     }
 
 }

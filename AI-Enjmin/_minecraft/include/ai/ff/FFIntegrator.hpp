@@ -31,7 +31,7 @@
 
 #include "FFChunk.hpp"
 #include "FFTypes.hpp"
-#include "FFWorld.hpp"
+//#include "FFWorld.hpp"
 
 namespace ai
 {
@@ -76,7 +76,7 @@ namespace ai
             #pragma endregion 
 
             Integrator(World<_Config>* world_)
-            : m_world(world_), 
+            : m_world(world_)
             {}
 
             inline State state(){ return m_state; }

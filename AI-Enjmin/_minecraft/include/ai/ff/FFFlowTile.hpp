@@ -40,7 +40,7 @@ namespace ai
         template<typename _Config>
         class FlowTile
         {
-            
+        public:   
             #pragma region Typedefs/Constants
 
             typedef Utils<_Config> Utils;
@@ -217,54 +217,54 @@ namespace ai
             inline ChunkID chunk(){ return m_data.chunk(); }
 
             inline FlowChunk& flow(){ return m_flow; }
-            /*
-            inline std::string hexIDString()
-            {
-                FlowTile::hexIDString(m_id.id);
-            }
+            
+            //inline std::string hexIDString()
+            //{
+            //    FlowTile::hexIDString(m_id.id);
+            //}
 
-            inline std::string filename()
-            {
-                return hexIDString()+"_"+m_world->hexIDString()+"."+std::to_string(chunkSize)+".bft";
-            }
-            */
+            //inline std::string filename()
+            //{
+            //    return hexIDString()+"_"+m_world->hexIDString()+"."+std::to_string(chunkSize)+".bft";
+            //}
+            
             #pragma endregion
 
             #pragma region Serialization
-            /*
-            inline void deserialize(const std::string& rootDir_)
-            {
-                std::streampos size;
-                
-                std::ifstream file (rootDir_+"/"+filename(), ios::in|ios::binary|ios::ate);
-                if (file.is_open())
-                {
-                  size = file.tellg();
+            
+            //inline void deserialize(const std::string& rootDir_)
+            //{
+            //    std::streampos size;
+            //    
+            //    std::ifstream file (rootDir_+"/"+filename(), ios::in|ios::binary|ios::ate);
+            //    if (file.is_open())
+            //    {
+            //      size = file.tellg();
 
-                  if(size != sizeof(FlowCell) * chunkSize)
-                    throw std::exception();
+            //      if(size != sizeof(FlowCell) * chunkSize)
+            //        throw std::exception();
 
-                  file.seekg(0, ios::beg);
-                  file.read(m_flow.data(), size);
-                  file.close();
-                }
-                else throw std::exception();
-            }
+            //      file.seekg(0, ios::beg);
+            //      file.read(m_flow.data(), size);
+            //      file.close();
+            //    }
+            //    else throw std::exception();
+            //}
 
-            inline void serialize(const std::string& rootDir_)
-            {
-                std::streampos size;
-                
-                std::ofstream file(rootDir_+"/"+filename(), ios::in|ios::binary|ios::ate);
-                if (file.is_open())
-                {
-                  file.seekg(0, ios::beg);
-                  file.read(m_flow.data(), size);
-                  file.close();
-                }
-                else throw std::exception();
-            }
-            */
+            //inline void serialize(const std::string& rootDir_)
+            //{
+            //    std::streampos size;
+            //    
+            //    std::ofstream file(rootDir_+"/"+filename(), ios::in|ios::binary|ios::ate);
+            //    if (file.is_open())
+            //    {
+            //      file.seekg(0, ios::beg);
+            //      file.read(m_flow.data(), size);
+            //      file.close();
+            //    }
+            //    else throw std::exception();
+            //}
+            
             #pragma endregion
             
         private:
@@ -274,11 +274,11 @@ namespace ai
             Data m_data;
 
             FlowChunk m_flow;
-            
+
         };
 
         template<typename _Config>
-        using FlowTile_ptr = std::shared<FlowTile<_Config>>;
+        using FlowTile_ptr = std::shared_ptr<FlowTile<_Config>>;
 
     }
 }

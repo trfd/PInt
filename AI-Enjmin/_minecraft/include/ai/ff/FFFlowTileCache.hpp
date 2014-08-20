@@ -28,6 +28,8 @@
 #ifndef AI_FF_FlowTileCache_hpp
 #define AI_FF_FlowTileCache_hpp
 
+#include <map>
+
 #include "FFFlowTile.hpp"
 
 namespace ai
@@ -39,8 +41,10 @@ namespace ai
         {
             #pragma region Typedefs/Constants
 
-            typedef Utils<_Config>      Utils;
-            typedef FlowTile<_Config>   FlowTile;
+            typedef Utils<_Config>        Utils;
+            typedef FlowTile<_Config>     FlowTile;
+            typedef FlowTile_ptr<_Config> FlowTile_ptr;
+            typedef typename FlowTile::ID FlowTileID;
 
             static const int chunkWidth  = _Config::chunkWidth;
             static const int chunkHeight = _Config::chunkHeight;
@@ -50,17 +54,17 @@ namespace ai
 
             typedef Chunk<FlowCell,chunkWidth,chunkHeight> FlowChunk;
 
-            std::map<uint64_t,FlowTile_ptr>           FlowTileMap;
-            std::map<uint64_t,FlowTile_ptr>::iterator FlowTileMap_it;
+            typedef std::map<uint64_t,FlowTile_ptr>           FlowTileMap;
+            typedef typename std::map<uint64_t,FlowTile_ptr>::iterator FlowTileMap_it;
 
             #pragma endregion 
 
-            inline bool canAccess(FlowTile::ID id) const
+            inline bool canAccess(FlowTileID id) const
             {
                 return (m_tiles.find(id.id) != m_tiles.end());
             }
 
-            inline FlowTile_ptr<_Config>& tileForID(FlowTile::ID id)
+            inline FlowTile_ptr& tileForID(FlowTileID id)
             {
                 FlowTileMap_it it = m_tiles.find(id.id);
 
@@ -70,7 +74,7 @@ namespace ai
                 return *it;
             }
 
-            void addTile(const FlowTile_ptr<_Config>& tile)
+            void addTile(const FlowTile_ptr& tile)
             {
                 m_tiles[tile->id()] = tile;
             }

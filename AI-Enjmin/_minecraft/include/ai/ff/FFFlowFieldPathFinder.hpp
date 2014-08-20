@@ -34,29 +34,29 @@
 #include "ai/CKUSingleton.hpp"
 #include "ai/CKFunctor.hpp"
 
-#include "ai/ff//FFIntegrator.hpp"
-#include "ai/ff/FFFlowTile.hpp"
-#include "ai/ff/FFFlowTileCache.hpp"
-
+#include "FFFlowPath.hpp"
+#include "FFFlowTile.hpp"
+#include "FFFlowTileCache.hpp"
+#include "FFIntegrator.hpp"
 
 namespace ai
 {
     namespace ff
     {
-       
         template<typename _Config>
         class FlowFieldPathFinder : public ck::utils::Singleton<FlowFieldPathFinder<_Config>>
         {
-
             friend ck::utils::Singleton<FlowFieldPathFinder<_Config>>;
 
             FlowFieldPathFinder(){}
-        public:
 
+        public:
+            
             #pragma region Typedefs/Constants
 
             typedef Utils<_Config>        Utils;
             typedef FlowTile<_Config>     FlowTile;
+            typedef FlowTile_ptr<_Config> FlowTile_ptr;
             typedef FlowPath<_Config>     FlowPath;
             typedef FlowPath_ptr<_Config> FlowPath_ptr;
 
@@ -93,8 +93,9 @@ namespace ai
 
                 FlowPath_ptr path;
                 
-                PathRequest(const Cell& from_, const Cell& to_, FlowPath_ptr path_)
-                : from(from_), to(to_), path(path_)
+                template<typename _T>
+                PathRequest(const Cell& from_, _T&& to_,const FlowPath_ptr& path_)
+                : from(from_), to(std::forward<_T>(to_)), path(path_)
                 {}
             };
 
@@ -117,9 +118,9 @@ namespace ai
             {
                 PathIntegrationRequest* pathIntegrationRequest;
                 RequestState state;
-                FlowTile::Data tileData;
+                typename FlowTile::Data tileData;
 
-                TileIntegrationRequest(PathIntegrationRequest* pIR_, const FlowTile::Data& data_)
+                TileIntegrationRequest(PathIntegrationRequest* pIR_, const typename FlowTile::Data& data_)
                 : pathIntegrationRequest(pIR_), tileData(data_)
                 {}
 
@@ -135,14 +136,14 @@ namespace ai
 
                 std::queue<TileIntegrationRequest> tileRequests;
 
-                PortalPathSearch(PathRequest* pathReq_,const PortalPath& ppath_)
+                PathIntegrationRequest(PathRequest* pathReq_,const PortalPath& ppath_)
                 : pathRequest(pathReq_),
                 portalPath(ppath_)
                 {}
                 
                 /// Push a tile request to the queue if tile
                 /// doesn't exist in the cache
-                inline void pushTileRequest(FlowTileCache* cache_ ,const FlowTile::Data& data_)
+                inline void pushTileRequest(FlowTileCache<_Config>* cache_ ,const typename FlowTile::Data& data_)
                 {
                     // Check if data is already in cache
                     if(cache_->canAccess(data_.id()))
@@ -157,14 +158,14 @@ namespace ai
                 }
 
             };
-            /*
-            static FlowField* instance(){ return  ck::utils::Singleton<FlowFieldPathFinder<_Config>>::instance(); }
+            
+            static FlowFieldPathFinder* instance(){ return  ck::utils::Singleton<FlowFieldPathFinder<_Config>>::instance(); }
 
             FlowPath_ptr path(Cell from_, Cell to_)
             {
                 FlowPath_ptr newPath (new FlowPath());
 
-                m_pendingPathRequests.emplace(from,to,newPath);
+                m_pendingPathRequests.emplace(from_,std::vector<Cell>({to_}),newPath);
 
                 return newPath;
             }
@@ -389,7 +390,7 @@ namespace ai
 
                 m_cache.addTile(tile);
             }
-            */
+            
 
             #pragma region Accessors
 
@@ -408,6 +409,7 @@ namespace ai
             std::queue<PortalPathSearch> m_pendingPortalPathSearches;
 
             std::queue<PathIntegrationRequest> m_pendingIntegrationRequests;
+            
 
         };
     }

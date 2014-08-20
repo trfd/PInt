@@ -39,16 +39,19 @@ namespace ai
        class FlowPath
        {
        public:
-           typedef Utils<_Config> Utils;
+        
+           typedef Utils<_Config>        Utils;
+           typedef FlowTile<_Config>     FlowTile;
+           typedef FlowTile_ptr<_Config> FlowTile_ptr;
 
-           void addTile(FlowTile_ptr<_Config> tile)
+           void addTile(FlowTile_ptr tile)
            {
                m_tiles[tile->chunk()].first = true;
                m_tiles[tile->chunk()].second = tile;
            }
        
        private:
-           std::pair<bool, FlowTile*> m_tiles[Utils::chunkCount];
+           std::pair<bool, FlowTile_ptr> m_tiles[Utils::chunkCount];
        };
 
        template<typename _Config>

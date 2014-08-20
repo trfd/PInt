@@ -47,6 +47,7 @@ namespace ai
 {
     namespace ff
     {
+        
         template<typename _Config>
         class Utils;
 
@@ -74,7 +75,7 @@ namespace ai
         class World
         {
         public:
-
+            
             #pragma region Typedefs/Constants
 
             typedef Utils<_Config> Utils;
@@ -192,7 +193,7 @@ namespace ai
             ASPath<Portal_ptr> portalPathTest;
 
             Integrator<_Config>* testIntegrator;
-            
+          
         };
     }
 }
