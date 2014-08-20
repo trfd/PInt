@@ -114,7 +114,7 @@ namespace ai
             {
                 m_buffer.clear();
 
-                for(LocalCell& cell : m_goals)
+                for(LocalCellIndex& cell : m_goals)
                 {
                     addToWaveFront(cell);
                 }
@@ -426,6 +426,11 @@ namespace ai
 
         private:
 
+            inline void addToWaveFront(Index cellIndex_)
+            {
+                addToWaveFront(Utils::localCellAtIndex(cellIndex_));
+            }
+
             /// Adds a cell to wave front if not already wavefront
             /// That is sets its "waveFront" flag in the buffer to true
             ///  and adds it the waveFront cell list
@@ -450,7 +455,7 @@ namespace ai
 
             FlowTile_ptr m_flowTile;
 
-            LocalCellArray m_goals;
+            LocalCellIndexArray m_goals;
 
             LocalCellDeque m_waveFront;
 

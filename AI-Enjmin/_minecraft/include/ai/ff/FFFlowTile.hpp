@@ -55,7 +55,7 @@ namespace ai
 
             typedef std::vector<Portal::Entrance> EntranceArray;
             typedef std::vector<EntranceID>       EntranceIDArray;
-            typedef std::vector<uint16_t>         LocalCellIndexArray;
+            
 
             #pragma endregion 
             
@@ -112,13 +112,27 @@ namespace ai
 
                 #pragma endregion
 
+                #pragma region Operators Overload
+
+                inline bool operator==(const Data& rhs_) const
+                {
+                    return (m_id.id == rhs_.m_id.id && m_chunk == rhs_.m_chunk && m_goals == rhs_.m_goals);
+                }
+
+                inline bool operator!=(const Data& rhs_) const
+                {
+                    return (m_id.id != rhs_.m_id.id || m_chunk != rhs_.m_chunk || m_goals != rhs_.m_goals);
+                }
+
+                #pragma endregion
+
                 #pragma region Data-Accessors
 
-                inline ID id() { return m_id; }
+                inline ID id() const { return m_id; }
 
-                inline ChunkID chunk() { return m_chunk; }
+                inline ChunkID chunk() const { return m_chunk; }
 
-                inline LocalCellIndexArray& goals() { return m_goals; }
+                inline const LocalCellIndexArray& goals() const { return m_goals; }
 
                 #pragma endregion
 
@@ -141,7 +155,7 @@ namespace ai
                 {
                     for(int x = entr_.cells.origin.x ; x < entr_.cells.size.width ; x++)
                         for(int y = entr_.cells.origin.y ; y < entr_.cells.size.height ; y++)
-                            m_goals.push_back(Utils::indexOfLocalCell(Utils::gridToLocalCell(m_chunk,x,y)));
+                            m_goals.push_back(Utils::indexOfLocalCell(Utils::gridToLocal(m_chunk,x,y)));
                 }
 
                 void fillGoals(const std::vector<LocalCell>& lcells_)
@@ -172,15 +186,12 @@ namespace ai
             /// to goal cells.
             /// Arrays passed needs to be sorted into ascending order.
             inline static ID makeID(ChunkID chID_, 
-                                    const EntranceIDArray& inEntr_,
                                     const LocalCellIndexArray& goalCells_)
             {
                 ID id;
 
                 id.chunkHash = ck::utils::hash<32>::get(chID_);
-                id.inHash    = ck::utils::hash<16>::get(inEntr_);
 
-                id.finalTile = true;
                 id.goalHash = ck::utils::hash<16>::get(goalCells_);
 
                 return id;

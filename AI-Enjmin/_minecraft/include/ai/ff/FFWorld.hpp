@@ -137,6 +137,12 @@ namespace ai
             inline bool isPathable(Cell const& cell_);
 
             inline PortalGraph& portalGraph();
+
+            Portal_ptr& portalForCell(const Cell& cell_){ throw std::exception(); }
+
+            template<typename _InputIterator>
+            Portal_ptr& portalForCells(const _InputIterator& itCellBegin_,
+                                       const _InputIterator& itCellEnd_){ throw std::exception(); }
            
             #pragma endregion
 

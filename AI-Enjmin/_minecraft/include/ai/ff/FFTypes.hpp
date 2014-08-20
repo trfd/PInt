@@ -214,6 +214,9 @@ namespace ai
         typedef ck::Vector2i Cell;
         typedef ck::Vector2i LocalCell;
 
+        typedef size_t   CellIndex;
+        typedef uint16_t LocalCellIndex;
+
         typedef ck::Size2i CellSize;
 
         typedef ck::CellRect CellRect;
@@ -260,6 +263,8 @@ namespace ai
         typedef LocalCellList::iterator  LocalCellList_it;
         typedef std::deque<LocalCell>    LocalCellDeque;
         typedef LocalCellDeque::iterator LocalCellDeque_it;
+
+        typedef std::vector<uint16_t>         LocalCellIndexArray;
 
         struct BufferCell
         {

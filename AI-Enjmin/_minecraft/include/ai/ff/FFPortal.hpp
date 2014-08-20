@@ -89,8 +89,10 @@ namespace ai
 
             #pragma region Entrance
 
-            struct EntranceData
+            class EntranceData
             {
+            public:
+
                 /// Entrance ids are built using the local index
                 /// of the entrance's origin cell and its size.
                 /// The size is either the width or height
@@ -126,8 +128,10 @@ namespace ai
             };
 
             /// Half of portal that resides on one chunk
-            struct Entrance : public EntranceData
+            class Entrance : public EntranceData
             {
+            public:
+
                 Portal& portal;
 
                 Entrance(Portal& portal_,const EntranceData& data_)
@@ -149,6 +153,11 @@ namespace ai
                     if(lhs_.chunk != rhs_.chunk)
                         return false;
                     return CellRect::intersects(lhs_.cells,rhs_.cells);
+                }
+
+                Entrance& operator= (const Entrance& ref_)
+                {
+                    return Entrance(portal, *this);
                 }
             };
 

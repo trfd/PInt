@@ -772,6 +772,10 @@ int main(int argc, char* argv[])
     ai::ff::World<Config> world;
 
     world.endChanges();
+    
+    ai::ff::FlowFieldPathFinder<Config>::instance()->setWorld(&world);
+
+    GameManager::instance()->scheduleUpdate(0.f, ai::ff::FlowFieldPathFinder<Config>::instance(), &ai::ff::FlowFieldPathFinder<Config>::step);
 
     ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0), 
                                                    ai::ff::Cell(50,50));

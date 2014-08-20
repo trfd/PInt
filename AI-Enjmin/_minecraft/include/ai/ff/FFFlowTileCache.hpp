@@ -39,6 +39,8 @@ namespace ai
         template<typename _Config>
         class FlowTileCache
         {
+        public:
+
             #pragma region Typedefs/Constants
 
             typedef Utils<_Config>        Utils;
@@ -71,12 +73,12 @@ namespace ai
                 if(it == m_tiles.end())
                     throw std::exception();
 
-                return *it;
+                return it->second;
             }
 
             void addTile(const FlowTile_ptr& tile)
             {
-                m_tiles[tile->id()] = tile;
+                m_tiles[tile->id().id] = tile;
             }
 
         private:

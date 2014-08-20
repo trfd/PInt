@@ -59,6 +59,7 @@ namespace ai
             typedef FlowTile_ptr<_Config> FlowTile_ptr;
             typedef FlowPath<_Config>     FlowPath;
             typedef FlowPath_ptr<_Config> FlowPath_ptr;
+            typedef Integrator<_Config>   Integrator;
 
             static const int chunkWidth  = _Config::chunkWidth;
             static const int chunkHeight = _Config::chunkHeight;
@@ -132,13 +133,14 @@ namespace ai
 
                 PortalPath portalPath;
 
-                Integrator<_Config> integrator;
+                Integrator integrator;
 
                 std::queue<TileIntegrationRequest> tileRequests;
 
-                PathIntegrationRequest(PathRequest* pathReq_,const PortalPath& ppath_)
+                PathIntegrationRequest(World<_Config>* world, PathRequest* pathReq_,const PortalPath& ppath_)
                 : pathRequest(pathReq_),
-                portalPath(ppath_)
+                portalPath(ppath_),
+                integrator(world)
                 {}
                 
                 /// Push a tile request to the queue if tile
@@ -148,13 +150,15 @@ namespace ai
                     // Check if data is already in cache
                     if(cache_->canAccess(data_.id()))
                     {
-                        ck_assert(data_ == m_cache.tileForID(data_.id())->data());
-                        newIntr.pathRequest->path.addTile(cache_.tileForID(data_.id()));
+                        FlowTile_ptr& nTile = cache_->tileForID(data_.id());
+
+                        ck_assert(data_ == nTile->data());
+                        pathRequest->path->addTile(nTile);
+
+                        return;
                     }
-                    else
-                    {
-                        newIntr.emplace(this,data_);
-                    }
+                    
+                    tileRequests.emplace(this,data_);
                 }
 
             };
@@ -170,7 +174,7 @@ namespace ai
                 return newPath;
             }
 
-            void step()
+            void step(float dt)
             {
                 // should use a timer
                 stepPathRequest();
@@ -215,8 +219,8 @@ namespace ai
                 {
                 case ASPathFinder::FAILURE:
                 {
-                    search.pathRequest.state = RequestState::FAILURE;
-                    terminate(search.pathRequest);
+                    search.pathRequest->state = RequestState::FAILURE;
+                    terminate(*search.pathRequest);
                     break;
                 }
                 case ASPathFinder::TERMINATED:
@@ -231,7 +235,7 @@ namespace ai
                     
                     // if pathfinding has failed or succeeded
                     // relaunch step to pass the new state on
-                    if(search.pathFinder.state() != ASPathFinder::RUNNING)
+                    if(search.pathfinder.state() != ASPathFinder::RUNNING)
                         stepPortalPathSearch();
                     break;
                 }
@@ -244,7 +248,7 @@ namespace ai
 
                 if(intr.tileRequests.size() == 0)
                 {
-                    terminate(intr.pathRequest);
+                    terminate(*intr.pathRequest);
                     return;
                 }
 
@@ -261,8 +265,8 @@ namespace ai
                     break;
                 case RequestState::FAILURE:
                 {
-                    intr.pathRequest.state = RequestState::FAILURE;
-                    terminate(intr.pathRequest);
+                    intr.pathRequest->state = RequestState::FAILURE;
+                    terminate(*intr.pathRequest);
                     return;
                 }
                 case RequestState::SUCCESS:
@@ -273,81 +277,79 @@ namespace ai
                 }
                 }
 
-                switch(tileIntr.integrator.state())
+                switch(intr.integrator.state())
                 {
-                case Intregrator<_Config>::FAILURE:
+                case Integrator::State::FAILURE:
                 {
-                    intr.pathRequest.state = RequestState::FAILURE;
-                    terminate(intr.pathRequest);
+                    intr.pathRequest->state = RequestState::FAILURE;
+                    terminate(*intr.pathRequest);
                     break;
                 }
-                case Intregrator<_Config>::TERMINATED:
+                case Integrator::State::TERMINATED:
                 {
                     completeTileIntegration(tileIntr);
                     intr.tileRequests.pop();
                     break;
                 }
-                case Intregrator<_Config>::RUNNING:
+                case Integrator::RUNNING:
                 {
                     // Perform Integrator step
-                    tileIntr.integrator.stepCostIntegration();
+                    intr.integrator.stepCostIntegration();
                     
                     // if Integrator has failed or succeeded
                     // relaunch step to pass the new state on
-                    if(tileIntr.integrator.state() != Intregrator<_Config>::RUNNING)
+                    if(intr.integrator.state() != Integrator::RUNNING)
                         stepIntegration();
                     break;
                 }
                 }
             }
             
-            inline void pushPortalPathSearch(const PathRequest& req_)
+            inline void pushPortalPathSearch(PathRequest& req_)
             {
                 req_.state = RequestState::RUNNING;
                 req_.phase = RequestPhase::PORTAL_PATH;
 
                 // Find best portal for cells "from" and "to"
                 Portal_ptr fromPortal = m_world->portalForCell(req_.from);
-                Portal_ptr toPortal = m_world->portalForCells(req_.to);
+                Portal_ptr toPortal = m_world->portalForCells(req_.to.begin(),req_.to.end());
 
                 PortalGraph& graph = m_world->portalGraph();
 
-                Index idxFrom = graph.indexOf(fromPortal);
-                Index idxTo = graph.indexOf(toPortal);
+                Index idxFrom = graph.indexOfData(fromPortal);
+                Index idxTo = graph.indexOfData(toPortal);
 
                 ck_assert(idxFrom != INT_MAX);
                 ck_assert(idxTo   != INT_MAX);
 
                 // Emplace new portal path search from fromPortal to toPortal
                 // (using their indices in the graph)
-                m_pendingPortalPathSearches.emplace(&req_, graph,idxFrom,idxTo);
+                m_pendingPortalPathSearches.emplace(&req_, &graph,idxFrom,idxTo);
             }
 
             inline void pushIntegrationRequest(const PortalPathSearch& search_)
             {
                 // Emplace a new integration request
 
-                m_pendingIntegrationRequests.emplace(search_.pathRequest,
+                m_pendingIntegrationRequests.emplace(m_world,search_.pathRequest,
                    m_world->portalGraph().makePortalPath(search_.pathfinder.path()));
 
                 PathIntegrationRequest& newIntr = m_pendingIntegrationRequests.back();
 
-                ChunkID currChunk = Utils::chunkOfCell(newIntr.pathRequest.from);
-
-                FlowTile::Data fdata;
+                ChunkID currChunk = Utils::chunkOfCell(newIntr.pathRequest->from);
 
                 // Create Tile Request for each Portal Path step
                 // each step request a flow going to the next portal entrance
                 // that lies in current chunk
-                for(auto it = portalPath.begin() ; it != portalPath.end() ; ++it)
+                for(auto it = newIntr.portalPath.begin() ; it != newIntr.portalPath.end() ; ++it)
                 {
                     // Build data using next entrance and chunk
-                    fData = FlowTile::Data(currChunk , {(*it)->entrance(currChunk)});
+                    FlowTile::Data fData = FlowTile::Data(currChunk , {(*it)->entrance(currChunk)});
 
                     // Check if tile is not in cache 
                     // if already cached add tile to path
                     // otherwise push request
-                    newIntr.pushTileRequest(m_cache,fData);
+                    newIntr.pushTileRequest(&m_cache,fData);
                     
                     currChunk = (*it)->otherChunk(currChunk);
                 }
@@ -356,7 +358,7 @@ namespace ai
 
                 std::vector<LocalCell> lcells;
 
-                for(Cell cell : newIntr.pathRequest.to)
+                for(Cell cell : newIntr.pathRequest->to)
                 {
                     lcells.push_back(Utils::toLocal(cell).second);
                 }
@@ -366,15 +368,15 @@ namespace ai
                 // Check if tile is not in cache 
                 // if already cached add tile to path
                 // otherwise push request
-                newIntr.pushTileRequest(m_cache,FlowTile::Data(currChunk ,lcells));
+                newIntr.pushTileRequest(&m_cache,FlowTile::Data(currChunk ,lcells));
                 
             }
 
-            void startTileIntegration(const TileIntegrationRequest& tileIntr_)
+            void startTileIntegration(TileIntegrationRequest& tileIntr_)
             {
-                Integrator<_Config>& intregrator = tileIntr_.pathIntegrationRequest.integrator;
+                Integrator& integrator = tileIntr_.pathIntegrationRequest->integrator;
 
-                if(integrator.state() == Integrator<_Config>::State::RUNNING)
+                if(integrator.state() == Integrator::State::RUNNING)
                     throw std::exception();
 
                 integrator.run(FlowTile_ptr(new FlowTile(m_world,tileIntr_.tileData)));
@@ -384,17 +386,17 @@ namespace ai
 
             void completeTileIntegration(const TileIntegrationRequest& tileIntr_)
             {
-                FlowTile_ptr tile = tileIntr_.pathIntegrationRequest->integrator->tile();
+                FlowTile_ptr tile = tileIntr_.pathIntegrationRequest->integrator.tile();
                 
                 tileIntr_.pathIntegrationRequest->pathRequest->path->addTile(tile);
 
                 m_cache.addTile(tile);
             }
-            
 
             #pragma region Accessors
 
-            World<_Config>& world() { return m_world; }
+            World<_Config>* world() { return m_world; }
+            void setWorld(World<_Config>* world_) { m_world = world_; }
 
             #pragma endregion 
             
@@ -402,7 +404,7 @@ namespace ai
 
             FlowTileCache<_Config> m_cache;
 
-            World<_Config> m_world;
+            World<_Config>* m_world;
             
             std::queue<PathRequest> m_pendingPathRequests;
 

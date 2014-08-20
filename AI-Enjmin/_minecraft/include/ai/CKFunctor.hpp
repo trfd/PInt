@@ -1,5 +1,5 @@
 ///  
-///  CKFunctor.hpp
+///  Functor.hpp
 ///  part of Cytok Library.
 ///
 ///  Cytok Library the core and tools library for the CytokEngine.
@@ -32,15 +32,12 @@
 
 #include <utility>
 
-//TODO: Refactor to allow usage of smart pointer
-// in the same way as regular pointer are used
-
 namespace ck
 {
 	template
     <
-        typename _ReturnType,
-        typename... _Args
+    typename _ReturnType,
+    typename... _Args
     >
     class FunctorImpl
     {
@@ -50,12 +47,15 @@ namespace ck
         virtual ~FunctorImpl(){}
         
         virtual FunctorImpl* copy() = 0;
+        
+        inline bool virtual operator==(FunctorImpl* rhs_) = 0;
+        inline bool virtual operator!=(FunctorImpl* rhs_) = 0;
     };
     
     template
     <
-        typename _ReturnType,
-        typename... _Args
+    typename _ReturnType,
+    typename... _Args
     >
     class FunctorPtrImpl : public FunctorImpl<_ReturnType,_Args...>
     {
@@ -77,18 +77,44 @@ namespace ck
         {
             return (*_funct)(std::forward<_Args>(args)...);
         }
-    
+        
         virtual FunctorImpl<_ReturnType,_Args...>* copy()
         {
             return new FunctorPtrImpl<_ReturnType,_Args...>(_funct);
+        }
+        
+        inline bool virtual operator==(FunctorImpl<_ReturnType,_Args...>* rhs_) override
+        {
+            if(typeid(*this) != typeid(*rhs_))
+                return false;
+            
+            return operator==(*static_cast<FunctorPtrImpl*>(rhs_));
+        }
+        
+        inline bool virtual operator!=(FunctorImpl<_ReturnType,_Args...>* rhs_) override
+        {
+            if(typeid(*this) == typeid(*rhs_))
+                return false;
+            
+            return operator==(*static_cast<FunctorPtrImpl*>(rhs_));
+        }
+        
+        inline bool operator==(const FunctorPtrImpl& rhs_)
+        {
+            return (_funct == rhs_._funct);
+        }
+        
+        inline bool operator!=(const FunctorPtrImpl& rhs_)
+        {
+            return (_funct != rhs_._funct);
         }
     };
     
     template
     <
-        typename _MemClass ,
-        typename _ReturnType,
-        typename... _Args
+    typename _MemClass ,
+    typename _ReturnType,
+    typename... _Args
     >
     class FunctorMethodPtrImpl : public FunctorImpl<_ReturnType,_Args...>
     {
@@ -102,11 +128,11 @@ namespace ck
         FunctorMethodPtrImpl(const FunctorMethodPtrImpl& f)
         : _targetPtr(f._targetPtr) , _method(f._method)
         {}
-
+        
         
         FunctorMethodPtrImpl(_MemClass* target , MethodPtr method)
         : _targetPtr(target) ,
-          _method(method)
+        _method(method)
         {}
         
         inline virtual _ReturnType operator()(_Args&&... args)
@@ -118,12 +144,38 @@ namespace ck
         {
             return new FunctorMethodPtrImpl<_MemClass,_ReturnType,_Args...>(_targetPtr,_method);
         }
+        
+        inline bool virtual operator==(FunctorImpl<_ReturnType,_Args...>* rhs_) override
+        {
+            if(typeid(*this) != typeid(*rhs_))
+                return false;
+            
+            return operator==(*static_cast<FunctorMethodPtrImpl*>(rhs_));
+        }
+        
+        inline bool virtual operator!=(FunctorImpl<_ReturnType,_Args...>* rhs_) override
+        {
+            if(typeid(*this) == typeid(*rhs_))
+                return false;
+            
+            return operator!=(*static_cast<FunctorMethodPtrImpl*>(rhs_));
+        }
+        
+        inline bool operator==(const FunctorMethodPtrImpl& rhs_)
+        {
+            return (_targetPtr == rhs_._targetPtr && _method == rhs_._method);
+        }
+        
+        inline bool operator!=(const FunctorMethodPtrImpl& rhs_)
+        {
+            return (_targetPtr != rhs_._targetPtr || _method != rhs_._method);
+        }
     };
     
     template
     <
-        typename _ReturnType,
-        typename... _Args
+    typename _ReturnType,
+    typename... _Args
     >
     class Functor
     {
@@ -151,29 +203,42 @@ namespace ck
             _impl = NULL;
         }
         
-        inline _ReturnType operator()(_Args&&... args)
+        // Allow type deduction by adding an extra template
+        // level, otherwise accept only rvalue reference of _Args
+        template<typename... _CArgs>
+        inline _ReturnType operator()(_CArgs&&... args)
         {
             return (*_impl)(std::forward<_Args>(args)...);
+        }
+        
+        inline bool operator==(const Functor& rhs_)
+        {
+            return (*_impl == rhs_._impl);
+        }
+        
+        inline bool operator!=(const Functor& rhs_)
+        {
+            return (*_impl != rhs_._impl);
         }
         
     };
     
     template
     <
-        typename _BaseClass,
-        typename _ReturnType,
-        typename... _Args
+    typename _BaseClass,
+    typename _ReturnType,
+    typename... _Args
     >
     Functor<_ReturnType,_Args...> makeFunctor(_BaseClass* ptr,
-                                        _ReturnType(_BaseClass::*fPtr)(_Args...))
+                                              _ReturnType(_BaseClass::*fPtr)(_Args...))
     {
         return Functor<_ReturnType,_Args...>(ptr,fPtr);
     }
     
     template
     <
-        typename _ReturnType,
-        typename... _Args
+    typename _ReturnType,
+    typename... _Args
     >
     Functor<_ReturnType,_Args...> makeFunctor(_ReturnType(*fPtr)(_Args...))
     {
@@ -183,25 +248,26 @@ namespace ck
     
     template
     <
-        typename _BaseClass,
-        typename _ReturnType,
-        typename... _Args
+    typename _BaseClass,
+    typename _ReturnType,
+    typename... _Args
     >
     Functor<_ReturnType,_Args...>* makeNewFunctor(_BaseClass* ptr,
-											_ReturnType(_BaseClass::*fPtr)(_Args...))
+                                                  _ReturnType(_BaseClass::*fPtr)(_Args...))
     {
         return new Functor<_ReturnType,_Args...>(ptr,fPtr);
     }
     
     template
     <
-        typename _ReturnType,
-        typename... _Args
+    typename _ReturnType,
+    typename... _Args
     >
     Functor<_ReturnType,_Args...>* makeNewFunctor(_ReturnType(*fPtr)(_Args...))
     {
         return new Functor<_ReturnType,_Args...>(fPtr);
     }
+    
 }
 
 #endif

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "CKUSingleton.hpp"
+#include "CKFunctor.hpp"
 
 #include "GameObject.hpp"
 
@@ -34,8 +35,24 @@ private:
 
 public:
 
-    typedef std::vector<GameObject_sptr> ObjectList;
-    typedef ObjectList::iterator ObjectList_it;
+    
+
+    struct ScheduleTask
+    {
+        typedef ck::Functor<void,float> Callback;
+        // Time between each step
+        float stepTime;
+        float lastStepTime;
+        Callback callback; 
+
+        ScheduleTask(const Callback& c_,float t_)
+        : stepTime(t_), lastStepTime(0.f), callback(c_)
+        {}
+    };
+
+    typedef std::vector<ScheduleTask>       ScheduleTaskList;
+    typedef std::vector<GameObject_sptr>    ObjectList;
+    typedef ObjectList::iterator            ObjectList_it;
 
     inline static GameManager* instance() { return ck::utils::Singleton<GameManager>::instance(); }
 
@@ -65,8 +82,52 @@ public:
         m_objects.erase(it);
     }
 
+    /// Schedule a functor to be called at regular time interval
+    /// Time is the target time in second between two calls
+    // Note that task can not be update faster than game loop rate
+    // then scheduling with time between steps = 0 insure to
+    // update every frame
+    inline void scheduleUpdate(const ScheduleTask::Callback& call_, float time_ = 0.f)
+    {
+        m_registeredUpdates.emplace_back(call_,time_);
+    }
+
+    /// Schedule a functor to be called at regular time interval
+    /// Time is the target time in second between two calls
+    // Note that task can not be update faster than game loop rate
+    // then scheduling with time between steps = 0 insure to
+    // update every frame
+    template<typename... Args_>
+    inline void scheduleUpdate(float time_,Args_&&... args_)
+    {
+        m_registeredUpdates.emplace_back(ck::makeFunctor(std::forward<Args_>(args_)...),time_);
+    }
+
+    inline void unscheduleUpdate(const ScheduleTask::Callback& call_)
+    {
+        for(ScheduleTaskList::iterator it = m_registeredUpdates.begin() ;
+            it != m_registeredUpdates.end() ;)
+        {
+            if(it->callback == call_)
+                it = m_registeredUpdates.erase(it);
+            else
+                ++it;
+        }
+    }
+
     void update(float dt)
     {
+        for(ScheduleTask& task : m_registeredUpdates)
+        {
+            task.lastStepTime += dt;
+            
+            if(task.lastStepTime >= task.stepTime)
+            {
+                task.callback(task.lastStepTime);
+                task.lastStepTime = 0.f;
+            }
+        }
+
         for(GameObject_sptr ptr : m_objects)
         {
             ptr->update(dt);
@@ -84,6 +145,8 @@ public:
 private:
 
     ObjectList m_objects;
+
+    ScheduleTaskList m_registeredUpdates;
 };
 
 #pragma endregion

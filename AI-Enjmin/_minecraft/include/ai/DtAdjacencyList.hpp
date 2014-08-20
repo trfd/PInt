@@ -168,6 +168,18 @@ namespace ck
                     return std::distance(m_list.begin() , it);
                 }
 
+                template<typename _U>
+                size_t indexOfData(_U&& d_)
+                {
+                   for(auto it = m_list.begin() ;
+                       it != m_list.end() ; ++it)
+                    {
+                        if((*it)->data() == d_)
+                            return std::distance(m_list.begin(), it);
+                    }
+                    return UINT_MAX;
+                }
+
                 Node* nodeAt(int idx)
                 {
                     return m_list[idx];

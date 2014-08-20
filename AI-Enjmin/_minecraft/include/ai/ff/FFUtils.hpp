@@ -299,8 +299,8 @@ namespace ai
             {
                 std::pair<ChunkID,LocalCell> pair;
                 
-                pair.first = chunkID(gCell_ / chunkWidth , 
-                                     gCell_ / chunkHeight);
+                pair.first = chunkID(gCell_.x / chunkWidth , 
+                                     gCell_.y / chunkHeight);
                 
                 pair.second.x = gCell_.x % chunkWidth;
                 pair.second.y = gCell_.y % chunkHeight;
@@ -309,17 +309,28 @@ namespace ai
             }
 
             /// Return the index of a cell local to a chunk
-            inline static Index indexOfLocalCell(const LocalCell& lcell_)
+            inline static LocalCellIndex indexOfLocalCell(const LocalCell& lcell_)
             {
                 return lcell_.x + lcell_.y * chunkWidth;
             }
 
             /// Returns the index of a grid cell
-            inline static Index indexOfCell(const Cell& gcell_)
+            inline static CellIndex indexOfCell(const Cell& gcell_)
             {
                 return gcell_.x + gcell_.y * gridWidth;
             }
         
+            /// Returns the cell corresponding to the cell grid's index
+            inline static Cell cellAtIndex(const CellIndex& idx_)
+            {
+                return Cell(idx_ % gridWidth , idx_ / gridWidth);
+            }
+
+            /// Returns the local cell corresponding to the local cell chunk's index
+            inline static LocalCell localCellAtIndex(const LocalCellIndex& idx_)
+            {
+                return Cell(idx_ % chunkWidth , idx_ / chunkWidth);
+            }
 
             /// Returns whether or not a local cell is not out of its chunk's bounds
             inline static bool isValidLocalCell(const LocalCell& lcell_)
