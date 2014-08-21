@@ -20,6 +20,8 @@ class WorldMap : public Singleton < WorldMap >
 
     WorldMap() 
     {
+        //m_testMesh.addCube(btVector3(300, 300, 300), btVector3(10,30,50) , NYColor(1.f,0,0,1.0f));
+        //m_testMesh.toVbo();
     }
 
 public:
@@ -66,6 +68,10 @@ public:
        
         m_grassMesh.render();
 
+        m_mushroomMesh.render();
+
+        m_bushMesh.render();
+
 	    glPopMatrix();
     }
 
@@ -75,6 +81,9 @@ public:
         srand(seed_);
         
         int areaCount = rand() % 10 + 10;
+        int mushroomCount = rand() % 25 + 25;
+
+        // Tall Grass
 
         for(int i = 0 ; i < areaCount ; i++)
         {
@@ -86,7 +95,36 @@ public:
             generateTallGrassArea(x,y);
         }
 
+        // Mushrooms
+
+        for(int i = 0 ; i < mushroomCount ; i++)
+        {
+            int idx = rand() % count;
+
+            int x = idx % MAT_SIZE_CUBES;
+            int y = idx / MAT_SIZE_CUBES;
+
+            MapCell mc = cellAt(x,y);
+
+            if(mc == MapCell::GROUND || mc == MapCell::DIRT)
+            {
+                generateMushroom(x,y);
+            }
+        }
+
+        for(int i = 0 ; i < mushroomCount ; i++)
+        {
+            int idx = rand() % count;
+
+            int x = idx % MAT_SIZE_CUBES;
+            int y = idx / MAT_SIZE_CUBES;
+
+            generateBush(x,y);
+        }
+
         m_grassMesh.toVbo();
+        m_mushroomMesh.toVbo();
+        m_bushMesh.toVbo();
     }
 
     void generateTallGrassArea(int x_, int y_)
@@ -144,12 +182,38 @@ public:
 
     void generateMushroom(int x_, int y_)
     {
+        int count = rand() % 5 + 1;
 
+        for(int i = 0 ; i < count ; i++)
+        {
+            addMushroomMesh(x_,y_);
+        }
+        
+        m_cells[x_+y_*MAT_SIZE_CUBES] = MapCell::MUSHROOM;
     }
 
     void generateBush(int x_, int y_)
     {
+        int radius = rand() % 20 + 10;
+        int count = rand() % 20 + 5;
+        for(int i = 0 ; i < count ; i++)
+        {
+            int nx = x_ + rand()%(radius>>2) - radius;
+            int ny = y_ + rand()%(radius>>2) - radius;
 
+            if(nx < 0 || ny < 0 || nx >= width || ny >= height )
+                continue;
+
+            MapCell mc = cellAt(nx,ny);
+
+            if(mc != MapCell::GROUND && mc != MapCell::DIRT)
+                continue;
+
+            addBushMesh(nx,ny);
+
+            m_cells[nx+ny*MAT_SIZE_CUBES] = MapCell::BUSH;
+        }
+        
     }
 
     inline int static cellHeight(const Cell& cell_)
@@ -280,13 +344,64 @@ public:
 
     }
 
+    void addMushroomMesh(int x_, int y_)
+    {
+        float x0 = (x_+ ((float)rand())/ RAND_MAX) * NYCube::CUBE_SIZE;
+        float y0 = (y_+ ((float)rand())/ RAND_MAX) * NYCube::CUBE_SIZE;
+        float z0 = worldHeight(x0,y0);
+
+        float trunkSize = ((float)rand()) / RAND_MAX * 13 + 4;
+        float trunkWidth = ((float)rand()) / RAND_MAX * 3 + 1;
+
+        float hatWidth = ((float)rand()) / RAND_MAX * trunkWidth + 5;
+        float hatSize = ((float)rand()) / RAND_MAX;
+
+        m_mushroomMesh.addCube(btVector3(x0, y0, z0 + trunkSize*0.5f), btVector3(trunkWidth, trunkWidth, trunkSize), NYColor(0.96f,0.91f,0.71f,1.f));
+
+        m_mushroomMesh.addCube(btVector3(x0, y0, z0 + trunkSize), btVector3(hatWidth, hatWidth, hatSize), NYColor(0.13f,0.91f,0.67f,1.f));
+    }
+
+    void addBushMesh(int x_, int y_)
+    {
+        float x0 = (x_+ 0.5f) * NYCube::CUBE_SIZE;
+        float y0 = (y_+ 0.5f) * NYCube::CUBE_SIZE;
+        float z0 = worldHeight(x0,y0);
+
+        float trunkSize = ((float)rand()) / RAND_MAX * 30 + 4;
+        float trunkWidth = ((float)rand()) / RAND_MAX * 0.1f * NYCube::CUBE_SIZE +  0.4f * NYCube::CUBE_SIZE;
+
+        float leafMaxWidth = ((float)rand()) / RAND_MAX * 20.f + 10.f;
+        float leafHeight   =  ((float)rand()) / RAND_MAX * 5 + 2;
+
+        int leafCount = rand() % 4;
+        float reduceCoef = ((float)rand()) / RAND_MAX * 0.5f;
+
+        m_bushMesh.addCube(btVector3(x0, y0, z0 + trunkSize*0.5f), btVector3(trunkWidth, trunkWidth, trunkSize), NYColor(0.41f,0.07f,0.07f,1.f));
+
+        float leafWidth = 0.5f * leafMaxWidth;
+        m_bushMesh.addCube(btVector3(x0, y0, z0 + trunkSize + leafHeight*0.5f), btVector3(leafWidth, leafWidth, leafHeight), NYColor(0.84f,0.25f,0.13f,1.f));
+
+        leafWidth = 0.8f * leafMaxWidth;
+        m_bushMesh.addCube(btVector3(x0, y0, z0 + trunkSize + leafHeight*1.5f), btVector3(leafWidth, leafWidth, leafHeight), NYColor(0.84f,0.25f,0.13f,1.f));
+
+        leafWidth = leafMaxWidth;
+        for(int i = 0 ; i < leafCount ; i++)
+        {
+            m_bushMesh.addCube(btVector3(x0, y0, z0 + trunkSize+leafHeight*(i+2.5f)), btVector3(leafWidth, leafWidth, leafHeight), NYColor(0.84f,0.25f,0.13f,1.f));
+            leafWidth = reduceCoef * leafWidth;
+        }
+   }
+        
+
 private:
 
     MapCell m_cells[MAT_SIZE_CUBES*MAT_SIZE_CUBES];
 
     Mesh m_grassMesh;
 
-    Mesh m_testMesh;
+    Mesh m_mushroomMesh;
+
+    Mesh m_bushMesh;
 
     NYWorld* m_nyworld;
 };

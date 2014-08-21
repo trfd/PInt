@@ -99,9 +99,9 @@ class NYChunk
 									color[2] =   0.0f/255.0f;
 									break;
 								case CUBE_HERBE:
-									color[0] =   1.0f/255.0f;
-									color[1] = 112.0f/255.0f;
-									color[2] =  12.0f/255.0f;
+									color[0] =   0.f/255.0f;//color[0] =   1.0f/255.0f;
+									color[1] =  165.0f/255.0f;//color[1] = 112.0f/255.0f;
+									color[2] =  94.0f/255.0f;//color[2] =  12.0f/255.0f;
 									break;
 								case CUBE_EAU:						
 									color[0] =   0.0f/255.0f;

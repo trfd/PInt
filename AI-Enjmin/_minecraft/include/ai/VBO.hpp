@@ -18,6 +18,10 @@ struct Color
     float g;
     float b;
 
+    Color()
+    : r(0.f), g(0.f), b(0.f)
+    {}
+
     Color(float r_,float g_, float b_)
     : r(r_), g(g_), b(b_)
     {}
@@ -30,6 +34,10 @@ struct Vertex
     float x;
     float y;
     float z;
+
+     Vertex()
+     :x(0.f), y(0.f), z(0.f)
+     {}
 
     Vertex(float x_,float y_, float z_)
     : x(x_), y(y_), z(z_)
@@ -67,6 +75,9 @@ struct Triangle
     _T v1;
     _T v2;
     _T v3;
+
+    Triangle()
+    {}
 
     Triangle(const _T& v_)
     : v1(v_), v2(v_), v3(v_)
@@ -164,17 +175,88 @@ struct Mesh
     void addCube(const btVector3& loc_, const btVector3& size_ , const NYColor& color_)
     {
         Color c(color_.R,color_.V,color_.B);
+      
+        Vertex loc(loc_.x(), loc_.y(), loc_.z());
+        Vertex size(size_.x(), size_.y(), size_.z());
+
         // Face - Z
         colors.emplace_back(c);
+        colors.emplace_back(c);
         normals.emplace_back(Normal(0,0,-1));
-        vertices.emplace_back(Vertex(loc_.x - 0.5f * size_.x , loc_.y - 0.5f * size_.y , loc_.z - 0.5f * size_.z),
-                              Vertex(loc_.x + 0.5f * size_.x , loc_.y - 0.5f * size_.y , loc_.z - 0.5f * size_.z),
-                              Vertex(loc_.x - 0.5f * size_.x , loc_.y + 0.5f * size_.y , loc_.z - 0.5f * size_.z));
+        normals.emplace_back(Normal(0,0,-1));
+        vertices.emplace_back(Vertex(loc.x - 0.5f * size.x , loc.y - 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z - 0.5f * size.z));
         
-        vertices.emplace_back(Vertex(loc_.x + 0.5f * size_.x , loc_.y - 0.5f * size_.y , loc_.z - 0.5f * size_.z),
-                              Vertex(loc_.x - 0.5f * size_.x , loc_.y + 0.5f * size_.y , loc_.z - 0.5f * size_.z),
-                              Vertex(loc_.x + 0.5f * size_.x , loc_.y + 0.5f * size_.y , loc_.z - 0.5f * size_.z));
+        vertices.emplace_back(Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z));
 
+        // Face  Z
+        colors.emplace_back(c);
+        colors.emplace_back(c);
+        normals.emplace_back(Normal(0,0,1));
+        normals.emplace_back(Normal(0,0,1));
+        vertices.emplace_back(Vertex(loc.x - 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z + 0.5f * size.z));
+                                                                                                
+        vertices.emplace_back(Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y + 0.5f * size.y , loc.z + 0.5f * size.z));
+
+        // Face  -Y
+        colors.emplace_back(c);
+        colors.emplace_back(c);
+        normals.emplace_back(Normal(0,-1,0));
+        normals.emplace_back(Normal(0,-1,0));
+        vertices.emplace_back(Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y - 0.5f * size.y , loc.z - 0.5f * size.z));
+                                                                                                
+        vertices.emplace_back(Vertex(loc.x - 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z));
+
+        // Face  Y
+        colors.emplace_back(c);
+        colors.emplace_back(c);
+        normals.emplace_back(Normal(0,1,0));
+        normals.emplace_back(Normal(0,1,0));
+        vertices.emplace_back(Vertex(loc.x + 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z + 0.5f * size.z));
+                                                                                          
+        vertices.emplace_back(Vertex(loc.x + 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y + 0.5f * size.y , loc.z + 0.5f * size.z));
+
+    
+        // Face  -X
+        colors.emplace_back(c);
+        colors.emplace_back(c);
+        normals.emplace_back(Normal(-1,0,0));
+        normals.emplace_back(Normal(-1,0,0));
+        vertices.emplace_back(Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y - 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z));
+                                                                                        
+        vertices.emplace_back(Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x - 0.5f * size.x , loc.y + 0.5f * size.y , loc.z + 0.5f * size.z));
+
+        // Face  X
+        colors.emplace_back(c);
+        colors.emplace_back(c);
+        normals.emplace_back(Normal(1,0,0));
+        normals.emplace_back(Normal(1,0,0));
+        vertices.emplace_back(Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z));
+                                                                                          
+        vertices.emplace_back(Vertex(loc.x + 0.5f * size.x , loc.y - 0.5f * size.y , loc.z + 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y + 0.5f * size.y , loc.z - 0.5f * size.z),
+                              Vertex(loc.x + 0.5f * size.x , loc.y + 0.5f * size.y , loc.z + 0.5f * size.z));
 
     }
 };
