@@ -26,6 +26,7 @@
 // AI
 #include "ai/GameManager.hpp"
 #include "ai/Debug.hpp"
+#include "ai/WorldMap.hpp"
 
 #include "ai/ff/FlowField.hpp"
 
@@ -184,6 +185,8 @@ void renderObjects(void)
 	glPushMatrix();	
 	g_world->render_world_vbo();
 	glPopMatrix();
+
+    WorldMap::instance()->render();
 
 	//Rendu de l'avatar
 	if(g_flyCam)
@@ -766,20 +769,27 @@ int main(int argc, char* argv[])
 	//On start
 	g_timer->start();
 
-    /////Tests
+    // Pathfinder setup
 
-    typedef ai::ff::DefaultWorldConfig<64,64> Config;
+    typedef ai::ff::DefaultWorldConfig<160,160> Config;
     ai::ff::World<Config> world;
 
-    world.endChanges();
+    //world.endChanges();
     
     ai::ff::FlowFieldPathFinder<Config>::instance()->setWorld(&world);
 
     GameManager::instance()->scheduleUpdate(0.05f, ai::ff::FlowFieldPathFinder<Config>::instance(), &ai::ff::FlowFieldPathFinder<Config>::step);
 
-    ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0),ai::ff::Cell(10,40));
+    //ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0),ai::ff::Cell(10,40));
     
-    ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0),ai::ff::Cell(60,60));
+    //ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0),ai::ff::Cell(60,60));
+
+    // Custom World setup
+
+    WorldMap::instance()->createFrom(g_world);
+    WorldMap::instance()->generateBiome(0);
+
+    WorldMap::instance()->fillPathfinderWorld(&world);
 
 	glutMainLoop(); 
 

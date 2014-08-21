@@ -83,7 +83,7 @@ class NYBasicPhysicEngine
 		btGImpactMeshShape * calcTriMeshShape(float * vertices, int nbVertices,int stride)
 		{
 			btTriangleMesh * trimesh = new btTriangleMesh();
-			Log::log(Log::ENGINE_INFO,("Building trimesh shape of " + toString(nbVertices) + " vertices").c_str());
+			//Log::log(Log::ENGINE_INFO,("Building trimesh shape of " + toString(nbVertices) + " vertices").c_str());
 			
 			for (int i = 0; i < nbVertices; i+=3)
 			{
@@ -185,7 +185,7 @@ class NYBasicPhysicEngine
 			//On l'ajoute au monde
 			DynamicsWorld->addRigidBody(body);
 
-			Log::log(Log::ENGINE_INFO,("Adding body 0x" + toString(body)).c_str());
+			//Log::log(Log::ENGINE_INFO,("Adding body 0x" + toString(body)).c_str());
 
 			return body;
 		}

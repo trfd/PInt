@@ -17,7 +17,7 @@ typedef uint8 NYCollision;
 #define NY_COLLIDE_BACK   0x20
 #define NY_COLLIDE_IN     0x40
 
-#define MAT_SIZE 3 //en nombre de chunks
+#define MAT_SIZE 10 //en nombre de chunks
 #define MAT_HEIGHT 2 //en nombre de chunks
 #define MAT_SIZE_CUBES (MAT_SIZE * NYChunk::CHUNK_SIZE)
 #define MAT_HEIGHT_CUBES (MAT_HEIGHT * NYChunk::CHUNK_SIZE)

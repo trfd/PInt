@@ -157,6 +157,7 @@ namespace ai
             case UniDirection::DOWN_RIGHT: return (Direction::DOWN | Direction::RIGHT);
 
             case UniDirection::NONE : return Direction::NONE;
+            default: return Direction::NONE;
             }
         }
 

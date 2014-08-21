@@ -288,6 +288,7 @@ namespace ai
 
                     nSteps++;
                 }
+
 #ifdef __DEBUG_PRINT__
                 std::cout << "Batch " << nSteps << " steps\n";
 #endif

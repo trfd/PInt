@@ -31,12 +31,10 @@
 #include "ai/CKAssert.hpp"
 
 #include "FFUtils.hpp"
-//#include "FFIntegrator.hpp"
+
 
 #include "Tests.hpp"
 
-#define __USE_SAFE_PORTAL_INSERT__
-#define __ENABLE_DEBUG_DRAW__
 
 namespace ai
 {
@@ -51,14 +49,15 @@ namespace ai
                 m_costGrid.setChunk(CostChunk_ptr(new CostChunk()),idx);
             }
             
-            for(int i= 0 ; i<gridWidth*gridHeight ; i++)
+            
+            /*for(int i= 0 ; i<gridWidth*gridHeight ; i++)
             { 
                 int c = 0;
                 if(test::map[i])
                     c = 255;
                 m_costGrid.set(c, i % gridWidth, i / gridHeight);
             
-            }
+            }*/
 
 #ifdef __ENABLE_DEBUG_DRAW__
               Debug::addToRender(ck::makeFunctor(this,&World::drawGrid));
@@ -116,6 +115,8 @@ namespace ai
             {
                 for(int y = 0 ; y < gridHeight ; y++)
                 {      
+                    if(m_costGrid.get(x,y) == 0)
+                        continue;
                     //glColor(m_costGrid.get(x,y) , 0 , 0);
                     glColor3ub(m_costGrid.get(x,y) , 0 , 0);
 
@@ -129,6 +130,8 @@ namespace ai
             glEnd();
 
             //// Draw Portals
+
+            return;
             
 
             glBegin(GL_LINES);
@@ -365,10 +368,6 @@ namespace ai
 
             if(prev == cost_)
                 return;
-
-            // Mark corresponding chunk as dirty
-            ChunkID chID = m_costGrid.indexOfChunkAt(x_,y_);
-            m_chunkPortalsMap[chID]->cellHasChanged(prev,cost_,x_,y_);
 
             m_costGrid.set(cost_, x_, y_);
         }

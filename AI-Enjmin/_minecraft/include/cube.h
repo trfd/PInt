@@ -4,10 +4,10 @@
 
 enum NYCubeType
 {
-	CUBE_HERBE,
-	CUBE_EAU,
-	CUBE_TERRE, 
-	CUBE_AIR
+	CUBE_HERBE = 0,
+	CUBE_EAU   = 1,
+	CUBE_TERRE = 2, 
+	CUBE_AIR   = 3
 };
 
 class NYCube

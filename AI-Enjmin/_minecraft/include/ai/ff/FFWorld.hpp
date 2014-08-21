@@ -41,7 +41,7 @@
 #include "FFPortalGraph.hpp"
 
 #define __USE_SAFE_PORTAL_INSERT__
-#define __ENABLE_DEBUG_DRAW__
+//#define __ENABLE_DEBUG_DRAW__
 
 namespace ai
 {
