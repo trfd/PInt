@@ -59,9 +59,7 @@ namespace ai
                 m_costGrid.set(c, i % gridWidth, i / gridHeight);
             
             }
-            
-        
-                    
+
 #ifdef __ENABLE_DEBUG_DRAW__
               Debug::addToRender(ck::makeFunctor(this,&World::drawGrid));
               Debug::addKeyDownListener('n',ck::makeFunctor(this,&World::stepIntegrator));
@@ -312,7 +310,7 @@ namespace ai
             glEnd();
 
 
-            glBegin(GL_LINES);
+  /*          glBegin(GL_LINES);
             glColor3f(1,0,1);
             Cell prev = (*portalPathTest.begin())->entrance1().cells.origin;
 
@@ -325,7 +323,7 @@ namespace ai
 
                 prev = cell;
             }
-            glEnd();
+            glEnd();*/
 
             //testIntegrator->drawBuffer(csize,height);
         

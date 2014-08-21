@@ -38,19 +38,45 @@ namespace ai
        template<typename _Config>
        class FlowPath
        {
+         
        public:
         
            typedef Utils<_Config>        Utils;
            typedef FlowTile<_Config>     FlowTile;
            typedef FlowTile_ptr<_Config> FlowTile_ptr;
 
+           FlowPath()
+           {
+               std::memset(m_tiles,0,sizeof(m_tiles));
+           }
+
            void addTile(FlowTile_ptr tile)
            {
                m_tiles[tile->chunk()].first = true;
                m_tiles[tile->chunk()].second = tile;
            }
-       
-       private:
+
+           void setFailure() { m_failure = true; }
+
+           bool isFailure(){ return m_failure; }
+
+           Direction direction(const Cell& cell_)
+           {
+               if(m_failure)
+                    return Direction::NONE;
+               
+               std::pair<ChunkID, LocalCell> lcell = Utils::toLocal(cell_);
+
+               if(!m_tiles[lcell.first].first)
+                return Direction::NONE;
+
+               return m_tiles[lcell.first].second->flow()[lcell.second].direction;
+           }
+
+       private:  
+           
+           bool m_failure = false;
+
            std::pair<bool, FlowTile_ptr> m_tiles[Utils::chunkCount];
        };
 

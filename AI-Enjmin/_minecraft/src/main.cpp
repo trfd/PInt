@@ -775,10 +775,11 @@ int main(int argc, char* argv[])
     
     ai::ff::FlowFieldPathFinder<Config>::instance()->setWorld(&world);
 
-    GameManager::instance()->scheduleUpdate(0.2f, ai::ff::FlowFieldPathFinder<Config>::instance(), &ai::ff::FlowFieldPathFinder<Config>::step);
+    GameManager::instance()->scheduleUpdate(0.05f, ai::ff::FlowFieldPathFinder<Config>::instance(), &ai::ff::FlowFieldPathFinder<Config>::step);
 
-    ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0), 
-                                                   ai::ff::Cell(50,40));
+    ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0),ai::ff::Cell(10,40));
+    
+    ai::ff::FlowFieldPathFinder<Config>::instance()->path(ai::ff::Cell(0, 0),ai::ff::Cell(60,60));
 
 	glutMainLoop(); 
 

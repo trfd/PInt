@@ -39,6 +39,8 @@
 #include "FFFlowTileCache.hpp"
 #include "FFIntegrator.hpp"
 
+//#define __DEBUG_PRINT__
+
 namespace ai
 {
     namespace ff
@@ -127,6 +129,13 @@ namespace ai
 
                 World<_Config>* world;
                 ASPathFinder* pathfinder = nullptr;
+
+                ~PortalPathSearch()
+                {
+                    if(pathfinder)
+                        delete pathfinder;
+                }
+
 
                 template<typename... Args_>
                 PortalPathSearch(World<_Config>* world_,PathRequest* pathReq_,ChunkID from_,ChunkID to_)
@@ -267,15 +276,39 @@ namespace ai
 
             void step(float dt)
             {
-                // should use a timer
-                stepPathRequest();
-                stepPortalPathSearch();
-                stepIntegration();
+                clock_t start = clock();
+               
+                int nSteps = 0;
+
+                while(((float)(clock() - start))/CLOCKS_PER_SEC < m_frameDuration )
+                {
+                    stepPathRequest();
+                    stepPortalPathSearch();
+                    stepIntegration();
+
+                    nSteps++;
+                }
+#ifdef __DEBUG_PRINT__
+                std::cout << "Batch " << nSteps << " steps\n";
+#endif
             }
 
             void terminate(const PathRequest& pathReq_)
             {
-                std::cout << "Finish Path Request\n";
+                switch(pathReq_.state)
+                {
+                case RequestState::FAILURE:
+                {
+                    std::cout << "FFPF failed\n";
+                    pathReq_.path->setFailure();
+                    break;
+                }
+                case RequestState::SUCCESS:
+                    std::cout << "FFPF succeeded\n";
+                    break;
+                }
+                
+                m_pendingPathRequests.pop();
             }
 
             void stepPathRequest()
@@ -299,7 +332,7 @@ namespace ai
                 case RequestState::FAILURE:
                 {
                     terminate(req);
-                    m_pendingPathRequests.pop();
+                    
                     break;
                 }
                 }
@@ -377,7 +410,9 @@ namespace ai
 
                 if(intr.tileRequests.size() == 0)
                 {
+                    intr.pathRequest->state = RequestState::SUCCESS;
                     terminate(*intr.pathRequest);
+                    m_pendingIntegrationRequests.pop();
                     return;
                 }
 
@@ -445,6 +480,8 @@ namespace ai
                 // Emplace new portal path search from fromPortal to toPortal
                 // (using their indices in the graph)
                 m_pendingPortalPathSearches.emplace(m_world,&req_,idFrom,idTo);
+
+                m_pendingPortalPathSearches.back().state = RequestState::PENDING;
             }
 
             inline void pushIntegrationRequest(PortalPathSearch& search_)
@@ -461,6 +498,13 @@ namespace ai
                         path_addr = &path;
                         minSize = path.nodeList().size();
                     }
+                }
+
+                if(!path_addr)
+                {
+                    search_.pathRequest->state = RequestState::FAILURE;
+                    terminate(*search_.pathRequest);
+                    return;
                 }
 
                 // Emplace a new integration request
@@ -513,6 +557,19 @@ namespace ai
                 if(integrator.state() == Integrator::State::RUNNING)
                     throw std::exception();
 
+                // Re-check cache
+                // tile could have been integrated since request creation
+                if(m_cache.canAccess(tileIntr_.tileData.id()))
+                {
+                    FlowTile_ptr& nTile = m_cache.tileForID(tileIntr_.tileData.id());
+
+                    ck_assert(tileIntr_.tileData == nTile->data());
+                    tileIntr_.pathIntegrationRequest->pathRequest->path->addTile(nTile);
+                    tileIntr_.pathIntegrationRequest->tileRequests.pop();
+                    stepIntegration();
+                    return;
+                }
+
                 integrator.run(FlowTile_ptr(new FlowTile(m_world,tileIntr_.tileData)));
 
                 tileIntr_.state = RequestState::RUNNING;
@@ -535,6 +592,8 @@ namespace ai
             #pragma endregion 
             
         private:
+
+            float m_frameDuration = 0.02;
 
             FlowTileCache<_Config> m_cache;
 
