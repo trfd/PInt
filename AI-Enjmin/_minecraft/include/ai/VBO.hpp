@@ -41,29 +41,8 @@ struct Vertex
 
     Vertex(float x_,float y_, float z_)
     : x(x_), y(y_), z(z_)
-    {}
-
-    Vertex operator+ (const Vertex& a) const
-    {
-        return Vertex(x+a.x,y+a.y,z+a.z);
-    }
-    
-    Vertex operator- (const Vertex& a) const
-    {
-        return Vertex(x-a.x,y-a.y,z-a.z);
-    }
-    
+    {}  
 };
-
-Vertex operator*(float a, const Vertex& v)
-{
-    return Vertex(a*v.x,a*v.y,a*v.z);
-}
-
-Vertex operator*(const Vertex& v,float a)
-{
-    return Vertex(a*v.x,a*v.y,a*v.z);
-}
 
 typedef Vertex Normal;
 

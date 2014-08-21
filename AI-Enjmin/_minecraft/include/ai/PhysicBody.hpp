@@ -14,7 +14,7 @@ public:
     virtual void init() override
     {
         m_body = NYBasicPhysicEngine::getInstance()
-            ->addBoxObject(true, NYVert3Df(1, 1, 1), NYVert3Df(200, 200, 200), 100);
+            ->addBoxObject(true, NYVert3Df(10, 10, 10), NYVert3Df(200, 200, 200), 100);
 
         m_body->setDamping(.3f,0.1f);
         setTransform();

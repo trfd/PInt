@@ -9,13 +9,9 @@ void CubeRenderer::onRender()
     btVector3& rotAxis = _gameObject->transform().getRotation().getAxis();
 
     glPushMatrix();
-    glTranslatef(pos.x(),
-                 pos.y(),
-                 pos.z());
+    glTranslatef(pos.x(), pos.y(),pos.z());
     glRotatef(_gameObject->transform().getRotation().getAngle(),
-              rotAxis.x(),
-              rotAxis.y(),
-              rotAxis.z());
+              rotAxis.x(),rotAxis.y(),rotAxis.z());
     glScalef(m_scale.x(), m_scale.y(), m_scale.z());
     drawCube();
     glPopMatrix();

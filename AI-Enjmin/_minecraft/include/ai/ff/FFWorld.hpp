@@ -146,9 +146,6 @@ namespace ai
             Portal_ptr& portalForCells(const _InputIterator& itCellBegin_,
                                        const _InputIterator& itCellEnd_){ throw std::exception(); }
 
-           
-             
-           
             #pragma endregion
 
             inline void beginChanges(){}
