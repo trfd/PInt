@@ -183,22 +183,11 @@ namespace ai
             return ck::Vector2i(dir_x(dir), dir_y(dir));
         }
 
-        // Preincrement
-        UniDirection& operator++(UniDirection& udir_)
-        {
-            return udir_ = (UniDirection)((uint8_t)udir_+1);
-        }
-        
-        // PostIncrement
-        UniDirection& operator++(UniDirection& udir_,int)
-        {
-            UniDirection cResult(udir_);
+        //// Preincrement
+        UniDirection& operator++(UniDirection& udir_);
 
-            operator++(udir_);          
-
-            return cResult;      
-        }
-
+        //// PostIncrement
+        UniDirection& operator++(UniDirection& udir_,int);
 
         #pragma endregion
 

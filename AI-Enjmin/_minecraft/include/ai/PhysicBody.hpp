@@ -10,12 +10,15 @@
 class  PhysicBody : public GameComponent
 {
 public:
+    
+    PhysicBody(const NYVert3Df& size_)
+    : m_size(size_)
+    {}
 
     virtual void init() override
     {
-        
         m_body = NYBasicPhysicEngine::getInstance()
-            ->addBoxObject(true, NYVert3Df(10, 10, 10), NYVert3Df(200, 200, 200), 10);
+            ->addBoxObject(true, m_size, NYVert3Df(200, 200, 200), 10);
 
         m_body->setDamping(.0f,0.0f);
         m_body->setFriction(0.5f);
@@ -28,7 +31,9 @@ public:
 
     virtual void onUpdate(float dt) override;
 
-    btRigidBody& body(){ return *m_body; }
+    inline btRigidBody& body(){ return *m_body; }
+
+    inline btVector3 boxSize(){ return btVector3(m_size.X,m_size.Y,m_size.Z); }
 
 private:
 
@@ -40,6 +45,8 @@ private:
     //btVector3 m_velocity;
 
     float m_mass;
+
+    NYVert3Df m_size;
 
 };
 

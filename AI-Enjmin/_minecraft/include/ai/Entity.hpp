@@ -31,7 +31,7 @@ void createEntity(btVector3 const& loc_)
 {
     GameObject_sptr test = GameManager::instance()->create<GameObject>();
 
-    test->emplaceComponent<PhysicBody>(GameObject::PHYSIC_UPDATE_PRIORITY);
+    test->emplaceComponent<PhysicBody>(GameObject::PHYSIC_UPDATE_PRIORITY,NYVert3Df(10,10,10));
 
     MeshRenderer* renderer = test->emplaceComponent<MeshRenderer>(GameObject::DEFAULT_UPDATE_PRIORITY);
 
