@@ -1,5 +1,5 @@
 ///
-///  BTBehaviourTree.hpp
+///  BTAction.hpp
 ///
 ///  Created by Baptiste Dupy on 10/08/2014.
 ///  Contact:
@@ -25,68 +25,38 @@
 ///
 ///
 
-#ifndef AI_BT_BehaviourTree_hpp
-#define AI_BT_BehaviourTree_hpp
+#ifndef AI_BT_Action_hpp
+#define AI_BT_Action_hpp
 
+#include "../CKFunctor.hpp"
 #include "BTBehaviour.hpp"
 
 namespace ai
 {
 	namespace bt
 	{
-		class Behaviour;
+        typedef  ck::Functor<void> ActionFunctor;
 
-		#pragma region BehaviourTree
+		#pragma region Action
 
-		class BehaviourTree
+		class Action
+		: public Behaviour
 		{
 		public:
+			
+			Action(const ActionFunctor& cond_);
 
-            #pragma region Constructor/Destructor
+		protected:
 
-            BehaviourTree()
-            : m_root(NULL)
-            {}
-
-            BehaviourTree(const BehaviourTree& ref)
-            : m_root(ref.m_root)
-            {}
-
-            BehaviourTree(Behaviour* bh)
-            : m_root(bh)
-            {}
-
-            virtual ~BehaviourTree()
-            {
-            }
-
-            BehaviourTree& operator=(const BehaviourTree& ref)
-            {
-               m_root = ref.m_root;
-
-               return *this;
-            }
-
-            #pragma endregion
-
-            void step()
-            {
-                if(!m_root)
-                    return;
-
-                m_root->step();
-            }
+			virtual BehaviourState doStep() override;
 
 		private:
 
-			Behaviour* m_root = NULL;
-
+			ActionFunctor m_func;
 		};
 
 		#pragma endregion
 	}
-
 }
 
-#endif //AI_BT_BehaviourTree_hpp
-
+#endif //AI_BT_Action_hpp

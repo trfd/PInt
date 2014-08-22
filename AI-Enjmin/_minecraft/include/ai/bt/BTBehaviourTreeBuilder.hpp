@@ -28,6 +28,8 @@
 #ifndef AI_BT_BehaviourTreeBuilder_hpp
 #define AI_BT_BehaviourTreeBuilder_hpp
 
+#include <stack>
+
 #include "BTComposite.hpp"
 #include "BTBehaviourTree.hpp"
 
@@ -35,59 +37,56 @@ namespace ai
 {
     namespace bt
     {
-        class IBuilder_impl
+        class INodeHolder
         {
         public:
-            virtual ~IBuilder_impl(){}
+            virtual ~INodeHolder(){}
             virtual bool canAdd() = 0;
-            virtual void add(Behaviour* parent_, Behaviour* child_) = 0;
+            virtual void add(Behaviour* child_) = 0;
+            Behaviour* node;
         };
 
         template<typename _T>
-        class ChildrenBuilder_impl
-            : public IBuilder_impl
+        class BranchHolder : public INodeHolder
         {
         public:
             virtual bool canAdd() override { return true; }
-            virtual void add(Behaviour* parent_, Behaviour* child_) override
+            virtual void add(Behaviour* child_) override
             {
-                static_cast<_T*>(parent_)->addChild(child_);
+                static_cast<_T*>(node)->addChild(child_);
             }
         };
 
         template<typename _T>
-        class LeafBuilder_impl
-            : public IBuilder_impl
+        class LeafHolder : public INodeHolder
         {
         public:
             virtual bool canAdd() override {
                 return false;
             }
-            virtual void add(Behaviour* parent_, Behaviour* child_) override
+            virtual void add(Behaviour* child_) override
             {
                 // this type of behaviour doesn't support children
+                static_assert(true,"Building error");
             }
         };
 
+        template<typename _T>
+        INodeHolder* __makeHolder(_T* node_)
+        {
+            typedef std::conditional<std::is_base_of<IComposite,_T>::value,BranchHolder<_T>,LeafHolder<_T>>::type HolderType;
+            HolderType* newHolder = new HolderType;
+            newHolder->node = node_;
+            
+            return newHolder;
+        }
 
         class BehaviourTreeBuilder
         {
         public:
 
-            BehaviourTreeBuilder(IComposite* root_)
-            : m_root(root_),
-            m_impl(new ChildrenBuilder_impl<IComposite>())
-            {}
-           
-            template<typename _T>
-            BehaviourTreeBuilder(_T* root_)
-            : m_root(root_),
-            m_impl(new LeafBuilder_impl<_T>())
-            {}
-
             virtual ~BehaviourTreeBuilder()
             {
-                delete m_impl;
             }
 
             Behaviour* root() { return m_root; }
@@ -95,32 +94,54 @@ namespace ai
             template<typename _Type,typename... _Args>
             BehaviourTreeBuilder& add(_Args&&... args)
             {
-                _Type* newNode = new _Type(std::forward<Args>(args)...);
-               
-                if(m_impl->canAdd())
+                _Type* newNode = new _Type(std::forward<_Args>(args)...);
+
+                if(!m_root)
                 {
-                    m_impl->add(m_root, newNode);
-                    BehaviourTreeBuilder newBhBuilder(newNode);
-                    newBhBuilder.m_parent = this;
-                    return newBhBuilder;
+                    m_root = newNode;
+                    m_currNode = __makeHolder(newNode);
+                    m_nodeStack.push(m_currNode);
                 }
+                else
+                    add(newNode);
+                
                 return *this;
             }
-
+            
             BehaviourTreeBuilder& parent()
             {
-                return *m_parent;
+                m_nodeStack.pop();
+                m_currNode = m_nodeStack.top();
+                return *this;
             }
-
+            
             BehaviourTree end()
             {
                 return BehaviourTree(m_root);
             }
 
         private:
-            Behaviour* m_root;
-            BehaviourTreeBuilder* m_parent = NULL;
-            IBuilder_impl* m_impl;
+
+            template<typename _Type>
+            void add(_Type* newNode)
+            {
+                m_currNode->add(newNode);
+
+                INodeHolder* newholder = __makeHolder(newNode);
+
+                if(newholder->canAdd())
+                {
+                    m_currNode = newholder;
+                    m_nodeStack.push(m_currNode);
+                }
+                else
+                    delete newholder;
+            }
+
+            Behaviour* m_root = nullptr;
+            std::stack<INodeHolder*> m_nodeStack;
+            INodeHolder* m_currNode = nullptr;
+
         };
     }
 }

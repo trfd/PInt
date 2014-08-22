@@ -33,6 +33,9 @@
 #include "ai/bt/BTFilter.hpp"
 #include "ai/bt/BTParallel.hpp"
 #include "ai/bt/BTMonitor.hpp"
+#include "ai/bt/BTAction.hpp"
+
+
 
 namespace ai
 {
@@ -62,12 +65,14 @@ namespace ai
 		BehaviourState
 		Behaviour::step()
 		{
+#ifdef __DEBUG_BEHAVIOUR_TREE__
             std::cout << typeid(*this).name() << "\n";
+#endif
 
 			if(m_state == BehaviourState::INVALID)
 				initialize();
 
-			//m_state = doStep();
+			m_state = doStep();
 
 			if(m_state != BehaviourState::RUNNING)
 				terminate();
@@ -209,6 +214,20 @@ namespace ai
             this->addChild(b_);
         }
 
+        #pragma endregion
+
+        #pragma region Action
+
+        Action::Action(const ActionFunctor& cond_)
+		: m_func(cond_)
+		{}
+
+		BehaviourState 
+		Action::doStep()
+		{
+            m_func();
+            return BehaviourState::SUCCESS;
+		}
         #pragma endregion
 	}
 }

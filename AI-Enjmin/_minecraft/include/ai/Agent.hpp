@@ -7,8 +7,13 @@
 
 #include "WorldMap.hpp"
 
+#include "bt/BehaviourTree.hpp"
+
+using namespace ai::bt;
+
 class Agent : public GameComponent
 {
+public:
     virtual void init() override
     {
         m_body = _gameObject->findComponent<PhysicBody>();
@@ -27,16 +32,7 @@ class Agent : public GameComponent
 
     virtual void onUpdate(float dt) override
     {
-        if(timer <= 0 )
-        { 
-            goTo(btVector3(rand() % 500, rand() % 500, rand()%500));
-            timer = 10.f;
-        }
-
-        timer -= dt;
-
-        moveTowardTarget();
-
+        m_behaviours.step();
     }
 
     void moveTowardTarget()
@@ -130,6 +126,9 @@ class Agent : public GameComponent
         return up;
     }
 
+    inline BehaviourTree& behaviours(){ return m_behaviours; }
+    inline void setBehaviours(const BehaviourTree& bt_){ m_behaviours = bt_; }
+
 private:
 
     float timer = 0; // Test
@@ -137,6 +136,8 @@ private:
     btVector3 m_targetPoint;
 
     PhysicBody* m_body;
+
+    BehaviourTree m_behaviours;
 
     float m_velocity = 50.f;
 

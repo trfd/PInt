@@ -7,6 +7,22 @@
 #include "ai/PhysicBody.hpp"
 #include "ai/Agent.hpp"
 
+using namespace ai::bt;
+
+int hungryGauge = 1000;
+bool isHungry()
+{
+    --hungryGauge;
+    std::cout << "Is Hungry: (" << hungryGauge << "); " << std::boolalpha <<  (hungryGauge<0)<<"\n";
+    return (hungryGauge<0);
+}
+
+void moveToFood()
+{
+    std::cout << "Move to food: \n";
+    hungryGauge = 1000;
+}
+
 void createMesh(MeshRenderer* rd)
 {
     // Body
@@ -39,9 +55,30 @@ void createEntity(btVector3 const& loc_)
 
     test->transform().setOrigin(loc_);
 
-    test->emplaceComponent<Agent>(GameObject::DEFAULT_UPDATE_PRIORITY);
-}
+    Agent* testAgent = test->emplaceComponent<Agent>(GameObject::DEFAULT_UPDATE_PRIORITY);
 
+    /*
+    Sequence* seq = new Sequence();
+
+    seq->addChild(new Condition(ck::makeFunctor(&isHungry)));
+    seq->addChild(new Action(ck::makeFunctor(&moveToFood)));
+
+
+    testAgent->setBehaviours(BehaviourTree(seq));
+    */
+
+    BehaviourTreeBuilder btb;
+    btb = btb.add<Sequence>()
+                .add<Condition>(ck::makeFunctor(&isHungry))
+                .add<Action>(ck::makeFunctor(&moveToFood));
+        
+
+    testAgent->setBehaviours(BehaviourTreeBuilder()
+    .add<Sequence>()
+        .add<Condition>(ck::makeFunctor(&isHungry))
+        .add<Action>(ck::makeFunctor(&moveToFood))
+    .end());
+}
 
 
 #endif // __ENTITY__
