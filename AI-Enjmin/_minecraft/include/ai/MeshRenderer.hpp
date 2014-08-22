@@ -53,7 +53,7 @@ public:
 
         glPushMatrix();
         glTranslatef(pos.x(),pos.y(),pos.z());
-        glRotatef(_gameObject->transform().getRotation().getAngle(),
+        glRotatef(_gameObject->transform().getRotation().getAngle() * 180.f/3.14f,
                   rotAxis.x(), rotAxis.y(),rotAxis.z());
         glScalef(m_scale.x(), m_scale.y(), m_scale.z());
         m_mesh.render();
@@ -73,6 +73,7 @@ private:
     btVector3 m_offset;
 
     btVector3 m_scale;
+
 
 };
 

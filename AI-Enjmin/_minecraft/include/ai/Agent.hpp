@@ -5,6 +5,8 @@
 
 #include "GameComponent.hpp"
 
+//#include "WorldMap.hpp"
+
 class Agent : public GameComponent
 {
     virtual void init() override
@@ -15,12 +17,14 @@ class Agent : public GameComponent
             throw std::exception();
     }
 
-    void goTo(btVector3 const& targ_)
+    void goTo(const btVector3& targ_)
     {
         Log::log(Log::ENGINE_INFO, ("Goto: "+Debug::toString(targ_)).c_str());
         Debug::drawLine(_gameObject->transform().getOrigin(), targ_,NYColor(1.f,0.f,1.f,1.f),2.f);
         m_targetPoint = targ_;
+
     }
+
 
     virtual void onUpdate(float dt) override
     {
@@ -32,18 +36,64 @@ class Agent : public GameComponent
 
         timer -= dt;
 
-        btVector3 rel = m_targetPoint - _gameObject->transform().getOrigin();
+        moveTowardTarget();
 
-        rel.setZ(0);
+    }
+
+    void moveTowardTarget()
+    {
+        btVector3 rel = m_targetPoint - _gameObject->transform().getOrigin();
 
         rel.normalize();
 
-        rel = 10*rel;
+        rel = m_velocity*rel;
 
-        rel.setZ(m_body->body().getLinearVelocity().z());
+        rel.setZ(-m_mass);
+
+        // Jump
+
+        if(obstacleAhead())
+        {
+            rel.setZ(rel.z() + m_jumpForce);
+        }
 
         m_body->body().setLinearVelocity(rel);
 
+        face(m_targetPoint);
+    }
+
+    bool obstacleAhead()
+    {
+        btVector3 aheadLook(0,5,-3);
+
+        btVector3 worldPos = _gameObject->transform().getOrigin() + aheadLook;
+        return false;
+      /*  NYCubeType cube = WorldMap::instance()->nyworld()->getCube( worldPos.x() / MAT_SIZE_CUBES,
+                                                            worldPos.y() / MAT_SIZE_CUBES,
+                                                            worldPos.z() / MAT_SIZE_CUBES)->_Type;
+
+        return (cube != NYCubeType::CUBE_AIR || cube != NYCubeType::CUBE_EAU);*/
+    }
+    
+    void face(const btVector3& point_)
+    {
+        btVector3 rel = point_ - _gameObject->transform().getOrigin();
+
+        btTransform tr;
+        m_body->body().getMotionState()->getWorldTransform(tr);
+       
+        btQuaternion quat(btVector3(0, 0, 1), atan2(rel.y(),rel.x())+ M_PI_2);
+        tr.setRotation(quat);
+
+        m_body->body().getMotionState()->setWorldTransform(tr);
+    }
+
+    inline btVector3 forward()
+    {
+        btVector3 forw(1,0,0);
+        btQuaternion q = _gameObject->transform().getRotation();
+        forw.rotate(q.getAxis(),q.getAngle());
+        return forw;
     }
 
 private:
@@ -53,6 +103,12 @@ private:
     btVector3 m_targetPoint;
 
     PhysicBody* m_body;
+
+    float m_velocity = 50.f;
+
+    float m_mass = 50.f;
+
+    float m_jumpForce = 70.f;
 };
 
 #endif //__Agent_hpp__

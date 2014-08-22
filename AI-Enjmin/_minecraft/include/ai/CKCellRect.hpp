@@ -30,7 +30,7 @@
 #ifndef CYTOK_CellRect_hpp
 #define CYTOK_CellRect_hpp
 
-
+#include <sstream>
 #include <algorithm>
 #include "ai/CKAssert.hpp"
 #include <vector>

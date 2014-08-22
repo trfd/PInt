@@ -277,6 +277,7 @@ public:
         pfWorld_->endChanges();
     }
 
+    inline NYWorld* nyworld(){ return m_nyworld; }
 
     Cost cost(const MapCell& cell_)
     {

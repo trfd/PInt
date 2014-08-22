@@ -2,6 +2,7 @@
 #include "ai/GameObject.hpp"
 #include "ai/PhysicBody.hpp"
 
+#define GRAVITY 1
 
 void PhysicBody::onUpdate(float dt)
 {

@@ -13,11 +13,14 @@ public:
 
     virtual void init() override
     {
+        
         m_body = NYBasicPhysicEngine::getInstance()
-            ->addBoxObject(true, NYVert3Df(10, 10, 10), NYVert3Df(200, 200, 200), 100);
+            ->addBoxObject(true, NYVert3Df(10, 10, 10), NYVert3Df(200, 200, 200), 10);
 
-        m_body->setDamping(.3f,0.1f);
+        m_body->setDamping(.0f,0.0f);
+        m_body->setFriction(0.5f);
         setTransform();
+        
     }
 
     /// Sets rigid body transform to _gameObject's transform 
@@ -30,6 +33,13 @@ public:
 private:
 
     btRigidBody* m_body;
+
+    
+    //btVector3 m_force;
+    //btVector3 m_acceleration;
+    //btVector3 m_velocity;
+
+    float m_mass;
 
 };
 

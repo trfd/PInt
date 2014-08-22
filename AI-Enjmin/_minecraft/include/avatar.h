@@ -146,6 +146,8 @@ class NYAvatar
 					force += Cam->_NormVec * 50;
 			}
 
+            force.Z = 0.f;
+
 			if(Jump)
 			{
 				force += NYVert3Df(0,0,1) * 50.0f;// / elapsed;
