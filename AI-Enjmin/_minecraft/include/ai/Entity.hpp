@@ -53,7 +53,7 @@ void createEntity(btVector3 const& loc_)
 
     createMesh(renderer);
 
-    test->transform().setOrigin(loc_);
+    test->setPosition(loc_);
 
     Agent* testAgent = test->emplaceComponent<Agent>(GameObject::DEFAULT_UPDATE_PRIORITY);
 

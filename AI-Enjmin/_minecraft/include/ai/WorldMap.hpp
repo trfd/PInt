@@ -1,27 +1,33 @@
 #ifndef __WorldMap_hpp__
 #define __WorldMap_hpp__
 
+#include <list>
+
+#include "Pathfinding.hpp"
+
 #include "CKUSingleton.hpp"
 
-#include "ff/FFTypes.hpp"
-
 #include "../world.h"
-
-#include "ff/FFWorld.hpp"
-
 #include "VBO.hpp"
 
 using namespace ck::utils;
 using namespace ai::ff;
 
-class WorldMap : public Singleton < WorldMap >
+template<typename _Ctx>
+struct GridRegistrator
+{
+    typedef _Ctx Type;
+};
+
+class GameObject;
+
+class WorldMap : public Singleton < WorldMap > , GridRegistrator<WorldMap>
 {
     friend Singleton<WorldMap>;
 
     WorldMap() 
     {
-        //m_testMesh.addCube(btVector3(300, 300, 300), btVector3(10,30,50) , NYColor(1.f,0,0,1.0f));
-        //m_testMesh.toVbo();
+
     }
 
 public:
@@ -41,9 +47,11 @@ public:
         MUSHROOM    = 6
     };
 
-    static const int width  = MAT_SIZE_CUBES;
-    static const int height = MAT_SIZE_CUBES;
+    static const int width  = c_worldSize;
+    static const int height = c_worldSize;
     static const int count  = width * height;
+
+    #pragma region Initialization
 
     void createFrom(NYWorld* world_)
     {
@@ -53,14 +61,32 @@ public:
 
         for(int i = 0 ; i < count ; i++)
         {
-            c.x = i % MAT_SIZE_CUBES;
-            c.y = i / MAT_SIZE_CUBES;
+            c.x = i % c_worldSize;
+            c.y = i / c_worldSize;
 
             m_cells[i] = (MapCell) (m_nyworld->getCube(c.x,c.y, cellHeight(c)-1)->_Type);
 
             //ck_assert(m_cells[i] != MapCell::AIR);
         }
     }
+
+    template<typename _Config>
+    void fillPathfinderWorld(World<_Config>* pfWorld_)
+    {
+        pfWorld_->beginChanges();
+
+        for(int i = 0 ; i < count ; i++)
+        {
+            pfWorld_->setCostAt(cost(m_cells[i]), i % c_worldSize, i / c_worldSize);
+        }
+
+        pfWorld_->endChanges();
+    }
+
+    #pragma endregion
+
+    inline NYWorld* nyworld(){ return m_nyworld; }
+
 
     void render()
     {
@@ -75,6 +101,7 @@ public:
 	    glPopMatrix();
     }
 
+    #pragma region Generation
 
     void generateBiome(int seed_ = 0)
     {
@@ -89,8 +116,8 @@ public:
         {
             int idx = rand() % count;
 
-            int x = idx % MAT_SIZE_CUBES;
-            int y = idx / MAT_SIZE_CUBES;
+            int x = idx % c_worldSize;
+            int y = idx / c_worldSize;
 
             generateTallGrassArea(x,y);
         }
@@ -101,8 +128,8 @@ public:
         {
             int idx = rand() % count;
 
-            int x = idx % MAT_SIZE_CUBES;
-            int y = idx / MAT_SIZE_CUBES;
+            int x = idx % c_worldSize;
+            int y = idx / c_worldSize;
 
             MapCell mc = cellAt(x,y);
 
@@ -116,8 +143,8 @@ public:
         {
             int idx = rand() % count;
 
-            int x = idx % MAT_SIZE_CUBES;
-            int y = idx / MAT_SIZE_CUBES;
+            int x = idx % c_worldSize;
+            int y = idx / c_worldSize;
 
             generateBush(x,y);
         }
@@ -131,7 +158,7 @@ public:
     {
         int count = 1;
         std::deque<Cell> gen = { Cell(x_,y_) };
-        m_cells[x_ + y_ * MAT_SIZE_CUBES] = MapCell::TALL_GRASS;
+        m_cells[x_ + y_ * c_worldSize] = MapCell::TALL_GRASS;
         addTallGrassMesh(Cell(x_,y_));
 
         while(gen.size() > 0)
@@ -189,7 +216,7 @@ public:
             addMushroomMesh(x_,y_);
         }
         
-        m_cells[x_+y_*MAT_SIZE_CUBES] = MapCell::MUSHROOM;
+        m_cells[x_+y_*c_worldSize] = MapCell::MUSHROOM;
     }
 
     void generateBush(int x_, int y_)
@@ -211,95 +238,9 @@ public:
 
             addBushMesh(nx,ny);
 
-            m_cells[nx+ny*MAT_SIZE_CUBES] = MapCell::BUSH;
+            m_cells[nx+ny*c_worldSize] = MapCell::BUSH;
         }
         
-    }
-
-    inline int static cellHeight(const Cell& cell_)
-    {
-        return cellHeight(cell_.x,cell_.y);
-    }
-
-    inline int static cellHeight(int x_, int y_)
-    {
-        if(!instance()->m_nyworld)
-            throw std::exception();
-
-        return instance()->m_nyworld->_MatriceHeights[x_][y_];
-    }
-
-    inline static float worldHeight(float x_, float y_)
-    {
-        return cellHeight((int)(x_ / NYCube::CUBE_SIZE), (int)(y_/NYCube::CUBE_SIZE))*NYCube::CUBE_SIZE;
-    }
-
-    inline static MapCell cellAt(const Cell& cell_)
-    {
-        return cellAt(cell_.x,cell_.y);
-    }
-
-    inline static MapCell cellAt(float x_,float y_)
-    {
-        return cellAt((int)(x_ / NYCube::CUBE_SIZE), (int)(y_/NYCube::CUBE_SIZE));
-    }
-
-    inline static MapCell cellAt(int x_, int y_)
-    {
-        return instance()->m_cells[x_ + y_ * MAT_SIZE_CUBES];
-    }
-
-    inline static void setCellAt(const Cell& cell_,const MapCell& mc_)
-    {
-        setCellAt(cell_.x,cell_.y,mc_);
-    }
-
-    inline static void setCellAt(float x_,float y_,const MapCell& mc_)
-    {
-        setCellAt((int)(x_ / NYCube::CUBE_SIZE), (int)(y_/NYCube::CUBE_SIZE),mc_);
-    }
-
-    inline static void setCellAt(int x_, int y_,const MapCell& mc_)
-    {
-        instance()->m_cells[x_ + y_ * MAT_SIZE_CUBES] = mc_;
-    }
-
-    template<typename _Config>
-    void fillPathfinderWorld(World<_Config>* pfWorld_)
-    {
-        pfWorld_->beginChanges();
-
-        for(int i = 0 ; i < count ; i++)
-        {
-            pfWorld_->setCostAt(cost(m_cells[i]), i % MAT_SIZE_CUBES, i / MAT_SIZE_CUBES);
-        }
-
-        pfWorld_->endChanges();
-    }
-
-    inline NYWorld* nyworld(){ return m_nyworld; }
-
-    Cost cost(const MapCell& cell_)
-    {
-        switch(cell_)
-        {
-        case MapCell::DIRT:
-        case MapCell::GROUND:
-            return 0x00;
-
-        case MapCell::BUSH:
-        case MapCell::MUSHROOM:
-            return 0x01;
-
-        case MapCell::WATER:
-            return 0xFF;
-
-        case MapCell::TALL_GRASS:
-            return 0x0F;
-
-        default:
-            return 0x00;
-        }
     }
 
 #define TALL_GRASS_OFFSET 1.f
@@ -393,10 +334,134 @@ public:
         }
    }
         
+    #pragma endregion
+
+    #pragma region Heigths
+
+    inline int static cellHeight(const Cell& cell_)
+    {
+        return cellHeight(cell_.x,cell_.y);
+    }
+
+    inline int static cellHeight(int x_, int y_)
+    {
+        if(!instance()->m_nyworld)
+            throw std::exception();
+
+        return instance()->m_nyworld->_MatriceHeights[x_][y_];
+    }
+
+    inline static float worldHeight(float x_, float y_)
+    {
+        return cellHeight((int)(x_ / NYCube::CUBE_SIZE), (int)(y_/NYCube::CUBE_SIZE))*NYCube::CUBE_SIZE;
+    }
+
+    #pragma endregion
+
+    #pragma region MapCells
+
+    inline static MapCell cellAt(const Cell& cell_)
+    {
+        return cellAt(cell_.x,cell_.y);
+    }
+
+    inline static MapCell cellAt(float x_,float y_)
+    {
+        return cellAt((int)(x_ / NYCube::CUBE_SIZE), (int)(y_/NYCube::CUBE_SIZE));
+    }
+
+    inline static MapCell cellAt(int x_, int y_)
+    {
+        return instance()->m_cells[x_ + y_ * c_worldSize];
+    }
+
+    inline static void setCellAt(const Cell& cell_,const MapCell& mc_)
+    {
+        setCellAt(cell_.x,cell_.y,mc_);
+    }
+
+    inline static void setCellAt(float x_,float y_,const MapCell& mc_)
+    {
+        setCellAt((int)(x_ / NYCube::CUBE_SIZE), (int)(y_/NYCube::CUBE_SIZE),mc_);
+    }
+
+    inline static void setCellAt(int x_, int y_,const MapCell& mc_)
+    {
+        instance()->m_cells[x_ + y_ * c_worldSize] = mc_;
+    }
+
+    Cost cost(const MapCell& cell_)
+    {
+        switch(cell_)
+        {
+        case MapCell::DIRT:
+        case MapCell::GROUND:
+            return 0x00;
+
+        case MapCell::BUSH:
+        case MapCell::MUSHROOM:
+            return 0x01;
+
+        case MapCell::WATER:
+            return 0xFF;
+
+        case MapCell::TALL_GRASS:
+            return 0x0F;
+
+        default:
+            return 0x00;
+        }
+    }
+
+    #pragma endregion
+
+    /// Returns the index of grid's cell of world coordinates location
+    inline int indexForLocation(const btVector3& vec_)
+    {
+        ck_assert(vec_.x() >= 0 && vec_.y() >= 0 && vec_.x() < c_worldSize && vec_.y() < c_worldSize);
+
+        int x = vec_.x() / NYCube::CUBE_SIZE;
+        int y = vec_.y() / NYCube::CUBE_SIZE;
+        
+        return x + y * c_worldSize;
+    }
+
+    /// Grid registration reduces complexity of spatial tests
+    /// between game objects from O(N^2) to O(N)
+    #pragma region GridRegistration
+
+    /// Associates an object to its location on grid
+    /// In order to make unregistering efficient ( O(1) )
+    /// and safe, a list iterator copy is stored in the game object
+    /// during registration. 
+    void registerOnGrid(GameObject* go_);
+   
+    /// De-associates an object from its location on grid
+    void unregisterFromGrid(GameObject* go_);
+
+    /// Return the list of object registered on the grid
+    /// around location in world coordinate
+    /// rad_ is the number of cell to look around
+    /// the lookup zone is actually a square
+    std::list<GameObject*> registeredObjectAt(const btVector3& loc_,int rad_ = 1);
+
+    /// Return the list of object registered on the grid
+    /// around location in world coordinate
+    /// size_ defines the size of lookup zone around loc_ (loc_ is the center of rectangle)
+    /// offset_ is the offset between location and the actual center of lookup zone
+    std::list<GameObject*> registeredObjectAt(const btVector3& loc_,const CellSize& size_ , const ck::Vector2i& offset_ = Cell(0,0));
+
+    /// Return the list of object registered on the grid
+    /// for cell in the (top-left) rectangle (grid coordinates)
+    std::list<GameObject*> registeredObjectAt(const CellRect& rect);
+
+    #pragma endregion
 
 private:
 
-    MapCell m_cells[MAT_SIZE_CUBES*MAT_SIZE_CUBES];
+    std::list<GameObject*> m_gridObjects[c_worldSize*c_worldSize];
+
+    MapCell m_cells[c_worldSize*c_worldSize];
 
     Mesh m_grassMesh;
 

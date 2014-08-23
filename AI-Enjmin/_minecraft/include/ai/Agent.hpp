@@ -9,11 +9,14 @@
 
 #include "bt/BehaviourTree.hpp"
 
+#include "ff/FFFlowPath.hpp"
+
 using namespace ai::bt;
 
 class Agent : public GameComponent
 {
 public:
+
     virtual void init() override
     {
         m_body = _gameObject->findComponent<PhysicBody>();
@@ -24,24 +27,31 @@ public:
 
     void goTo(const btVector3& targ_)
     {
-        Log::log(Log::ENGINE_INFO, ("Goto: "+Debug::toString(targ_)).c_str());
-        Debug::drawLine(_gameObject->transform().getOrigin(), targ_,NYColor(1.f,0.f,1.f,1.f),2.f);
-        m_targetPoint = targ_;
-
+        _targetPoint = targ_;
     }
 
     virtual void onUpdate(float dt) override
     {
+        updateVision();
+
         m_behaviours.step();
     }
 
+    virtual void updateVision()
+    {
+        ck::Vector2i offset = gridForward() * _visionForwardOffset;
+        
+        _objectSeen = WorldMap::instance()->registeredObjectAt(_gameObject->position(),_visionZone,offset);
+    }
+
+
     void moveTowardTarget()
     {
-        btVector3 rel = m_targetPoint - _gameObject->transform().getOrigin();
+        btVector3 rel = _targetPoint - _gameObject->transform().getOrigin();
 
         rel.normalize();
 
-        rel = m_velocity*rel;
+        rel = _velocity*rel;
 
         rel.setZ(-m_mass);
 
@@ -54,7 +64,7 @@ public:
 
         m_body->body().setLinearVelocity(rel);
 
-        face(m_targetPoint);
+        face(_targetPoint);
     }
 
     bool obstacleAhead()
@@ -72,11 +82,25 @@ public:
         x += round(cos(angle));
         y += round(sin(angle));
         
-        Debug::drawLine(pos,btVector3(x+0.5f,y+0.5f,z+0.5f) * NYCube::CUBE_SIZE);
+        Debug::drawLine(pos,btVector3(x+0.5f,y+0.5f,z+1.f) * NYCube::CUBE_SIZE);
 
         NYCubeType cube = WorldMap::instance()->nyworld()->getCube(x,y,z)->_Type;
 
         return (cube != NYCubeType::CUBE_AIR);
+    }
+
+    inline ck::Vector2i gridForward()
+    {
+        btVector3 forw = forward();
+
+        float angle = roundf(atan2(forw.y(),forw.x()) * 4.f / M_PI) * M_PI_4;
+
+        return ck::Vector2i((int)round(cos(angle)) ,(int)round(sin(angle)));
+    }
+
+    Direction gridForwardDirection()
+    {
+        return direction(gridForward());
     }
     
     inline float groundHeight()
@@ -108,7 +132,7 @@ public:
 
     inline btVector3 forward()
     {
-        btVector3 forw = m_targetPoint - _gameObject->transform().getOrigin();
+        btVector3 forw = _targetPoint - _gameObject->transform().getOrigin();
         forw.setZ(0);
         forw.normalize();
         return forw;
@@ -129,21 +153,34 @@ public:
     inline BehaviourTree& behaviours(){ return m_behaviours; }
     inline void setBehaviours(const BehaviourTree& bt_){ m_behaviours = bt_; }
 
+
+protected:
+
+    std::list<GameObject*> _objectSeen;
+
+    btVector3 _targetPoint;
+
+    FFPath_ptr _path;
+
+    /// Vision rectangle
+    CellSize _visionZone;
+    
+    /// Offset of vision rectangle 
+    int _visionForwardOffset; 
+
+    
+    float _velocity = 50.f;
+
 private:
-
-    float timer = 0; // Test
-
-    btVector3 m_targetPoint;
 
     PhysicBody* m_body;
 
     BehaviourTree m_behaviours;
 
-    float m_velocity = 50.f;
-
     float m_mass = 50.f;
 
     float m_jumpForce = 20.f;
+
 };
 
 #endif //__Agent_hpp__

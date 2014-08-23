@@ -76,10 +76,6 @@ int main(void)
 
 	std::cout << "Start Unit Testing: \n";
 
-    ai::bt::BehaviourTree bt =
-        BehaviourTreeBuilder(new DebugBehaviour()).end();
-
-    bt.step();
 
 #ifdef PERMANENT_PROMPT
 	while (true)

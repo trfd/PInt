@@ -128,6 +128,10 @@ namespace ck
         {
             return Vector2(x*a.width,y*a.height);
         }
+        Vector2 operator* (float sc) const
+        {
+            return Vector2(x*sc,y*sc);
+        }
         Vector2& operator+= (const Size2<_T>& a)
         {
             x += a.width;

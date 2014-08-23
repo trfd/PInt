@@ -116,6 +116,25 @@ namespace ai
             return ck::Vector2i(dir_x(dir), dir_y(dir));
         }
 
+        inline Direction direction(const ck::Vector2i& vec)
+        {
+            if((vec.x != 1 && vec.x != 0 && vec.x != -1) || 
+               (vec.y != 1 && vec.y != 0 && vec.y != -1) )
+                return Direction::NONE;
+            
+            int x,y;
+
+            x = y = 0;
+
+            if(vec.x == 1 || vec.x == -1)
+                x = (((vec.y+1)>>1)<<1) | 0x01; 
+
+            if(vec.y == 1 || vec.y == -1)
+                y = (((vec.y+1)>>1)<<3) | 0x04;
+
+            return (Direction)(x | y);
+        }
+
         #pragma endregion
 
 

@@ -33,6 +33,8 @@
 #ifndef CYTOK_GEN_DtAdjacencyList_hpp
 #define CYTOK_GEN_DtAdjacencyList_hpp
 
+#include <vector>
+
 namespace ck
 {
     namespace gen

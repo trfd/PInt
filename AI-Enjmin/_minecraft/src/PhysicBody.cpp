@@ -7,16 +7,23 @@
 
 void PhysicBody::onUpdate(float dt)
 {
-    m_body->getMotionState()->getWorldTransform(_gameObject->transform());
+    btTransform tr;
+    m_body->getMotionState()->getWorldTransform(tr);
 
-    btVector3 pos = _gameObject->transform().getOrigin();
+    // Check if not under the map
+
+    btVector3 pos = tr.getOrigin();
 
     if(pos.z() - m_size.Z*0.5f < WorldMap::worldHeight(pos.x(), pos.y()))
     {
         pos.setZ(WorldMap::worldHeight(pos.x(), pos.y())+m_size.Z*0.5f);
         
-        _gameObject->transform().setOrigin(pos);
+        tr.setOrigin(pos);
     }
+
+    // Update game object transform;
+
+    _gameObject->setTransform(tr);
 }
 
 void PhysicBody::setTransform()
