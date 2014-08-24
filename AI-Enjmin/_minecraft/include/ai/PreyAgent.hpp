@@ -2,16 +2,17 @@
 #ifndef _AI_PreyAgent_hpp_
 #define _AI_PreyAgent_hpp_
 
+
 #include "Agent.hpp"
-#include "AgentCluster.hpp"
-#include "TreeFood.hpp"
+
+#include "Cluster.hpp"
+#include "ClusterManager.hpp"
 
 #define __HUNGER_FULL__      100.f
 #define __HUNGER_THRESHOLD__ 40.f
 #define __FOOD_POWER__       20.f
 #define __HUNGER_RATE__      0.05f
 #define __HUNGER_KILL_RATE__ 0.1f
-#define __CLUSTER_RADIUS__   100.f
 #define __WANDER_RADIUS__   200.f
 
 #define __FLOCK_COHESION_COEF__     1.0f
@@ -20,9 +21,8 @@
 #define __FLOCK_SEPARATION_RADIUS__ 10.f
 
 
-typedef std::shared_ptr<AgentCluster> AgentCluster_ptr;
 
-class PreyAgent : public Agent
+class PreyAgent : public Agent, public IClusterObject
 {
 public:
  
@@ -97,6 +97,19 @@ public:
         m_foodSpotSeen = WorldMap::instance()->cellsOfType(WorldMap::MapCell::TREE,_gameObject->position(),_visionZone,ck::Vector2i(0,0));
     }
 
+    #pragma region IClusterObject Interface
+
+    inline const btVector3& position() { return _gameObject->position(); }
+
+    inline void setCluster(const Cluster_ptr& cl_)
+    {
+        m_currCluster = cl_;
+    }
+
+    inline Cluster_ptr cluster() { return m_currCluster; }
+
+    #pragma endregion
+
     void updateCluster()
     {
         if(!m_currCluster.get())
@@ -125,8 +138,9 @@ public:
         if(!agent)
             return;
 
-        m_currCluster = std::make_shared<AgentCluster>(this,agent,__CLUSTER_RADIUS__);
-        agent->m_currCluster = m_currCluster;
+
+        PreyClusterManager::instance()->createCluster(this,agent);
+
     }
 
     void checkLeaveGroup()
@@ -145,17 +159,7 @@ public:
         if(!m_currCluster.get())
             return;
 
-        m_currCluster->unregisterAgent(this);
-
-        // Remove the last agent is alone
-        if(m_currCluster->agents().size() == 1)
-        {
-            PreyAgent* agent = static_cast<PreyAgent*>(m_currCluster->agents()[0]);
-            m_currCluster->unregisterAgent(agent);
-            agent->m_currCluster.reset();
-        }
- 
-        m_currCluster.reset();
+        PreyClusterManager::instance()->removeFromCluster(this);
     }
 
     #pragma region Condition
@@ -295,9 +299,9 @@ public:
             if(holder->m_targetCluster.get())
             {
                 if(holder->m_targetCluster->isIn(holder))
-                {
-                    holder->m_targetCluster->registerAgent(holder);
-                    holder->m_currCluster = holder->m_targetCluster;
+                {   
+                    PreyClusterManager::instance()->addToCluster(holder,holder->m_targetCluster);
+
                     holder->m_targetCluster.reset();
 
                 }
@@ -319,7 +323,7 @@ public:
             holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
             
             // If not leader of flock
-            if(holder != holder->m_currCluster->agents()[0])
+            if(holder != holder->m_currCluster->objects()[0])
             { 
                 btVector3 steer = __FLOCK_ALIGNMENT_COEF__  *  flockingAlignment()  + 
                                   __FLOCK_COHESION_COEF__   *  flockingCohesion()   +
@@ -355,12 +359,13 @@ public:
 
             btVector3 sum(0,0,0);
 
-            for(Agent* agent : holder->m_currCluster->agents())
+            for(IClusterObject* obj : holder->m_currCluster->objects())
             {
+                Agent* agent = static_cast<PreyAgent*>(obj);
                 sum += agent->gameObject()->position();
             }
             
-            sum = sum * (1.f / holder->m_currCluster->agents().size());
+            sum = sum * (1.f / holder->m_currCluster->objects().size());
 
             return (sum - holder->gameObject()->position());
         }
@@ -371,12 +376,13 @@ public:
 
             btVector3 sum(0,0,0);
 
-            for(Agent* agent : holder->m_currCluster->agents())
+            for(IClusterObject* obj : holder->m_currCluster->objects())
             {
+                Agent* agent = static_cast<PreyAgent*>(obj);
                  sum += agent->forward();
             }
 
-            return sum * (1.f / holder->m_currCluster->agents().size());
+            return sum * (1.f / holder->m_currCluster->objects().size());
         }
 
         btVector3 flockingSeparation()
@@ -387,8 +393,9 @@ public:
 
             int count = 0;
 
-            for(Agent* agent : holder->m_currCluster->agents())
+            for(IClusterObject* obj : holder->m_currCluster->objects())
             {
+                Agent* agent = static_cast<PreyAgent*>(obj);
                 if(agent->gameObject()->position().distance(holder->gameObject()->position()) < __FLOCK_SEPARATION_RADIUS__)
                 {
                     sum += agent->gameObject()->position();
@@ -492,16 +499,15 @@ private:
     float m_lifepoints  = 10.f; 
 
     Cell m_foodTarget;
-    AgentCluster_ptr m_targetCluster;
+    Cluster_ptr m_targetCluster;
 
     std::vector<Cell> m_knownFoodSpot;
 
     std::vector<Cell> m_foodSpotSeen;
 
-    AgentCluster_ptr m_currCluster;
+    Cluster_ptr m_currCluster;
 
 };
 
-const Cell PreyAgent::s_badFoodTarget =  Cell(-1,-1);
 
 #endif //_AI_PreyAgent_hpp_

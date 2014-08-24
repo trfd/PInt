@@ -1,8 +1,11 @@
 #ifndef __Agent_hpp__
 #define __Agent_hpp__
 
+#include <functional>
+
 #include "Debug.hpp"
 
+#include "GameObject.hpp"
 #include "GameComponent.hpp"
 
 #include "WorldMap.hpp"
@@ -10,6 +13,7 @@
 #include "bt/BehaviourTree.hpp"
 
 #include "ff/FFFlowPath.hpp"
+#include "PhysicBody.hpp"
 
 using namespace ai::bt;
 

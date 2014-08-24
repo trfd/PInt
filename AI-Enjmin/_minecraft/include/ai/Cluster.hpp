@@ -1,49 +1,61 @@
-#ifndef _AgentCluster_hpp_
-#define _AgentCluster_hpp_
+#ifndef _Cluster_hpp_
+#define _Cluster_hpp_
 
+#include <memory>
 #include <vector>
 
 #include "LinearMath/btTransform.h"
-
-#include "Agent.hpp"
+#include "GameManager.hpp"
+#include "CKAssert.hpp"
+#include "Debug.hpp"
 
 #define __DRAW_CLUSTERS__
 
-/// Clusters allow easy identification of agent groups
+class Cluster;
+
+typedef std::shared_ptr<Cluster> Cluster_ptr;
+
+class IClusterObject
+{
+public:
+    virtual const btVector3& position()        = 0;
+    virtual void setCluster(const Cluster_ptr&) = 0;
+    virtual Cluster_ptr cluster()        = 0;
+};
+
+/// Clusters allow easy identification of object groups
 /// with complexity O(N).
 /// Identification using only visual data would be of high order.
-class AgentCluster
+class Cluster : public std::enable_shared_from_this<Cluster>
 {
 public:
     
-    AgentCluster(Agent* ag1, Agent* ag2, float rad)
+    Cluster(float rad = 1.f)
     : m_radius(rad)
     {
-        m_agents.push_back(ag1);
-        m_agents.push_back(ag2);
-
-        m_center = 0.5f * ag1->gameObject()->position() +
-                   0.5f * ag2->gameObject()->position();
-
-        m_dirtyCenter = false;
-
-        GameManager::instance()->scheduleUpdate(0.05f,this,&AgentCluster::update);
-
-#ifdef __DRAW_CLUSTERS__
-
-        Debug::addToRender(ck::makeFunctor(this,&AgentCluster::draw));
-
-#endif //__DRAW_CLUSTERS__
-
+        init();
     }
 
-    ~AgentCluster()
+    void init()
+    {
+        m_dirtyCenter = false;
+
+        GameManager::instance()->scheduleUpdate(0.05f,this,&Cluster::update);
+
+#ifdef __DRAW_CLUSTERS__
+
+        Debug::addToRender(ck::makeFunctor(this,&Cluster::draw));
+
+#endif //__DRAW_CLUSTERS__
+    }
+
+    ~Cluster()
     {
 #ifdef __DRAW_CLUSTERS__
-        Debug::removeFromRender(ck::makeFunctor(this,&AgentCluster::draw));
+        Debug::removeFromRender(ck::makeFunctor(this,&Cluster::draw));
 #endif
-        ck_assert(m_agents.size() == 0);
-        GameManager::instance()->unscheduleUpdate(ck::makeFunctor(this,&AgentCluster::update));
+        ck_assert(m_objects.size() == 0);
+        GameManager::instance()->unscheduleUpdate(ck::makeFunctor(this,&Cluster::update));
     }
 
     void draw()
@@ -89,44 +101,48 @@ public:
         m_dirtyCenter = true; 
     }
    
-    void registerAgent(Agent* agent)
+    void registerObject(IClusterObject* object)
     {
-        ck_assert(agent);
+        ck_assert(object);
 
         // Check if already in
-        std::vector<Agent*>::iterator it = std::find(m_agents.begin(), m_agents.end() , agent);
+        std::vector<IClusterObject*>::iterator it = std::find(m_objects.begin(), m_objects.end() , object);
 
-        if(it != m_agents.end())
+        if(it != m_objects.end())
             return;
 
-        m_agents.push_back(agent);
+        m_objects.push_back(object);
+
+        object->setCluster(shared_from_this());
 
         m_dirtyCenter = true;
     }
 
-    void unregisterAgent(Agent* agent)
+    void unregisterObject(IClusterObject* object)
     {
-        ck_assert(agent);
+        ck_assert(object);
 
-        std::vector<Agent*>::iterator it = 
-            std::find(m_agents.begin(), m_agents.end() , agent);
+        std::vector<IClusterObject*>::iterator it = 
+            std::find(m_objects.begin(), m_objects.end() , object);
 
-        if(it == m_agents.end())
+        object->setCluster(nullptr);
+
+        if(it == m_objects.end())
             return;
 
-        m_agents.erase(it);
+        m_objects.erase(it);
 
         m_dirtyCenter = true;
     }
 
-    inline bool isIn(Agent* agent)
+    inline bool isIn(IClusterObject* object)
     {
-        return (agent->gameObject()->position().distance(m_center) <= m_radius);
+        return (object->position().distance(m_center) <= m_radius);
     }
 
-    const std::vector<Agent*>& agents()
+    const std::vector<IClusterObject*>& objects()
     {
-        return m_agents;
+        return m_objects;
     }
 
     void update(float dt)
@@ -135,11 +151,11 @@ public:
 
         int count = 0;
 
-        for(Agent* agent : m_agents)
+        for(IClusterObject* object : m_objects)
         {
             float weight = 1;
 
-            float dist = agent->gameObject()->position().distance(m_center);
+            float dist = object->position().distance(m_center);
 
             if(dist > m_radius)
                 weight = max(0 , - dist / m_radius + 2);
@@ -147,7 +163,7 @@ public:
             if(weight == 0.f)
                 continue;
                 
-            newCenter += weight *  agent->gameObject()->position();
+            newCenter += weight *  object->position();
             count++;
         }
 
@@ -171,7 +187,7 @@ private:
 
     float m_radius;
 
-    std::vector<Agent*> m_agents;
+    std::vector<IClusterObject*> m_objects;
 };
 
-#endif //_AgentCluster_hpp_
+#endif //_Cluster_hpp_
