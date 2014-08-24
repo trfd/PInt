@@ -85,6 +85,8 @@ void  PredatorAgent::AttackPreyAction::run()
     holder->m_hunger += __PREDATOR_FOOD_POWER__;
 
     holder->m_hunger = min(holder->m_hunger ,__PREDATOR_HUNGER_FULL__);
+
+    holder->_lifepoints += __PREDATOR_ATTACK_HEAL__;
 }
 
 #pragma endregion
@@ -117,7 +119,7 @@ void PredatorAgent::GotoPreyAction::run()
     holder->runAction(this);
     
     holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
-            
+        
     holder->_targetPoint = holder->m_preyTarget->gameObject()->position();
 }
 
@@ -125,6 +127,14 @@ void PredatorAgent::GotoPreyAction::run()
 
 
 #pragma region WanderAction
+
+
+void PredatorAgent::WanderAction::onStart()
+{
+    //holder->_path = FFPathFinder::instance()->path(WorldMap::toGridCoord(holder->_gameObject->position()),
+    //                                         Cell(rand()%c_worldSize,rand()%c_worldSize));
+}
+
 
 void  PredatorAgent::WanderAction::run()
 {
@@ -139,7 +149,8 @@ void  PredatorAgent::WanderAction::run()
     if(sub.length() <= 2*NYCube::CUBE_SIZE)
     { 
         float angle = avoidGroups();
-        btVector3 vec = holder->_gameObject->position() + btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
+        btVector3 vec = holder->_gameObject->position() + 
+            btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
         WorldMap::applyMapBoundaries(vec);
         holder->_targetPoint = vec;
     }

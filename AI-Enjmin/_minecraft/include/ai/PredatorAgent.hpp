@@ -1,6 +1,7 @@
 #ifndef _PredatorAgent_hpp_
 #define _PredatorAgent_hpp_
 
+#include "MeshRenderer.hpp"
 #include "Agent.hpp"
 
 #define __PREDATOR_DAMAGES__             5.f
@@ -10,7 +11,11 @@
 #define __PREDATOR_HUNGER_FULL__          100.f
 #define __PREDATOR_FOOD_POWER__           20.f
 #define __PREDATOR_HUNGER_KILL_RATE__      0.1f
-#define __PREDATOR_WANDER_RADIUS__         200.f  
+#define __PREDATOR_WANDER_RADIUS__        200.f  
+#define __PREDATOR_ATTACK_HEAL__          10.f
+#define __PREDATOR_LIFE_CAP__            200.f
+#define __PREDATOR_DEFAULT_VELOCITY__     60.f
+#define __PREDATOR_DEFAULT_LP__          100.f
 
 class PreyAgent;
 
@@ -26,11 +31,28 @@ public:
 
         _visionForwardOffset = 15;
 
-        _lifepoints = 100.f;
+        _lifepoints = __PREDATOR_DEFAULT_LP__;
 
-        _velocity = 60.f;
+        _velocity = __PREDATOR_DEFAULT_VELOCITY__;
 
         m_preyTarget = nullptr;
+
+        m_mesh = _gameObject->findComponent<MeshRenderer>();
+
+        m_body = _gameObject->findComponent<PhysicBody>();
+    }
+
+    virtual void respawn() override
+    {
+         Agent::respawn();
+
+         _lifepoints = __PREDATOR_DEFAULT_LP__;
+
+         _velocity = __PREDATOR_DEFAULT_VELOCITY__;
+
+         m_size = 1.0f;
+
+         m_preyTarget = nullptr;
     }
 
     virtual void onRender() override
@@ -42,16 +64,19 @@ public:
         glPushMatrix();
         glTranslatef(pos.x(),pos.y(),pos.z());
         glBegin(GL_QUADS);
-
-        float g;
-
-        if(!isHungry()) g = 0.f;
-        else if(isVeryHungry()) g = 1.f;
-        else g = 0.5f;
-
         
+        if(_isDead)
+            glColor3f(1.f,0.f,0.f);
+        else
+        {
+            float g;
 
-        glColor3f(0.f,g,0.f);
+            if(!isHungry()) g = 0.f;
+            else if(isVeryHungry()) g = 1.f;
+            else g = 0.5f;
+            glColor3f(0.f,g,0.f);
+        }
+        
 
         glVertex3f( -a , 0 , -a);
         glVertex3f(  a , 0 , -a);
@@ -76,14 +101,20 @@ public:
 
         m_hunger = max(0.f, m_hunger);
 
-        if(m_hunger == 0.f)
+        if(_lifepoints <= 0)
         {
-            m_lifepoints -= __PREDATOR_HUNGER_KILL_RATE__;
+            die();
+            return;
+        }
+        else
+        {
+            _velocity = __PREDATOR_DEFAULT_VELOCITY__ * (__PREDATOR_DEFAULT_LP__/_lifepoints);
 
-            if(m_lifepoints <= 0)
-            {
-               // std::cout << "Prey is died \n";
-            }
+            m_size = min(1.5f,_lifepoints/__PREDATOR_DEFAULT_LP__);
+
+            m_mesh->setScale(m_size);
+
+            m_body->setBoxSize(btVector3(10,10, 10 * m_size));
         }
     }
 
@@ -128,6 +159,8 @@ public:
 
     struct WanderAction : public BehaviourAction<PredatorAgent>
     {
+        virtual void onStart() override;
+
         virtual void run() override;
 
         /// Returns the angle opposite to the average of groups seen
@@ -138,9 +171,13 @@ public:
 private:
 
     float m_hunger      = __PREDATOR_HUNGER_FULL__; 
-    float m_lifepoints  = 100.f; 
-
+    float m_size;
+    
     PreyAgent* m_preyTarget;
+
+    MeshRenderer* m_mesh;
+
+    PhysicBody* m_body;
 
 };
 

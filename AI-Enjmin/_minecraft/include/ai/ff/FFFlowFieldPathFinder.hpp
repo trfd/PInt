@@ -294,6 +294,15 @@ namespace ai
 #endif
             }
 
+            #pragma region Accessors
+
+            World<_Config>* world() { return m_world; }
+            void setWorld(World<_Config>* world_) { m_world = world_; }
+
+            #pragma endregion 
+
+        private:
+
             void terminate(const PathRequest& pathReq_)
             {
                 switch(pathReq_.state)
@@ -585,12 +594,7 @@ namespace ai
                 m_cache.addTile(tile);
             }
 
-            #pragma region Accessors
-
-            World<_Config>* world() { return m_world; }
-            void setWorld(World<_Config>* world_) { m_world = world_; }
-
-            #pragma endregion 
+        
             
         private:
 

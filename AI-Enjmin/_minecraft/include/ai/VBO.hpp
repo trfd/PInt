@@ -1,6 +1,7 @@
 #ifndef __VBO_hpp__
 #define __VBO_hpp__
 
+#include "LinearMath/btTransform.h"
 #include "external/gl/glew.h"
 #include "external/gl/freeglut.h" 
 

@@ -60,17 +60,21 @@ namespace ai
 
            bool isFailure(){ return m_failure; }
 
-           Direction direction(const Cell& cell_)
+           UniDirection direction(const Cell& cell_)
            {
                if(m_failure)
-                    return Direction::NONE;
+                    return UniDirection::NONE;
                
                std::pair<ChunkID, LocalCell> lcell = Utils::toLocal(cell_);
 
                if(!m_tiles[lcell.first].first)
-                return Direction::NONE;
+                return UniDirection::NONE;
 
-               return m_tiles[lcell.first].second->flow()[lcell.second].direction;
+               std::pair<bool, FlowTile_ptr> pair = m_tiles[lcell.first];
+
+               FlowTile_ptr tile = pair.second;
+
+               return tile->flow().get(lcell.second.x,lcell.second.y).direction;
            }
 
        private:  

@@ -2,25 +2,32 @@
 #ifndef _AI_PreyAgent_hpp_
 #define _AI_PreyAgent_hpp_
 
-
 #include "Agent.hpp"
 
 #include "Cluster.hpp"
 #include "ClusterManager.hpp"
+
+#include "MeshRenderer.hpp"
 
 #define __HUNGER_FULL__      100.f
 #define __HUNGER_THRESHOLD__ 40.f
 #define __FOOD_POWER__       20.f
 #define __HUNGER_RATE__      0.05f
 #define __HUNGER_KILL_RATE__ 0.1f
-#define __WANDER_RADIUS__   200.f
+#define __WANDER_RADIUS__    200.f
 
 #define __FLOCK_COHESION_COEF__     1.0f
 #define __FLOCK_ALIGNMENT_COEF__    1.0f
 #define __FLOCK_SEPARATION_COEF__   1.5f
 #define __FLOCK_SEPARATION_RADIUS__ 10.f
 
+#define __PREY_DEFAULT_VELOCITY__   50.f
+#define __PREY_MAX_VELOCITY__       70.f
+#define __PREY_DEFAULT_LP__         50.f
+
 #define __PREY_PREDATOR_CLOSE__     7.f
+
+class PredatorAgent;
 
 class PreyAgent : public Agent, public IClusterObject
 {
@@ -36,9 +43,36 @@ public:
 
         _lifepoints = 50.f;
 
-        _velocity = 50.f;
+        _velocity = __PREY_DEFAULT_VELOCITY__;
 
         m_foodTarget = s_badFoodTarget;
+
+        m_mesh = _gameObject->findComponent<MeshRenderer>();
+
+        m_body = _gameObject->findComponent<PhysicBody>();
+    }
+
+    virtual void respawn() override
+    {
+         Agent::respawn();
+
+         _lifepoints = __PREY_DEFAULT_LP__;
+
+         _velocity = __PREY_DEFAULT_VELOCITY__;
+
+         m_size = 1.0f;
+
+         m_foodTarget = s_badFoodTarget;
+
+         m_currCluster.reset();
+    }
+
+    virtual void die() override
+    {
+        Agent::die();
+
+        if(m_currCluster.get())
+            PreyClusterManager::instance()->removeFromCluster(this);
     }
 
     virtual void onRender() override
@@ -51,10 +85,15 @@ public:
         glTranslatef(pos.x(),pos.y(),pos.z());
         glBegin(GL_QUADS);
 
-        float g = (isHungry() ? 1.f : 0.f);
-        float b = (isInGroup() ? 1.f : 0.f);
+        if(_isDead)
+            glColor3f(1.f,0.f,0.f);
+        else
+        {
+            float g = (isHungry() ? 1.f : 0.f);
+            float b = (isInGroup() ? 1.f : 0.f);
 
-        glColor3f(0.f,g,b);
+            glColor3f(0.f,g,b);
+        }
 
         glVertex3f( -a , 0 , -a);
         glVertex3f(  a , 0 , -a);
@@ -81,14 +120,21 @@ public:
 
         m_hunger = max(0.f, m_hunger);
 
-        if(m_hunger == 0.f)
+        if(_lifepoints <= 0)
         {
-            _lifepoints -= __HUNGER_KILL_RATE__;
+            die();
+        }
+        else
+        {
+            float velCoef = __PREY_MAX_VELOCITY__- __PREY_DEFAULT_VELOCITY__;
 
-            if(_lifepoints <= 0)
-            {
-               // std::cout << "Prey is died \n";
-            }
+            _velocity = min(__PREY_MAX_VELOCITY__,-velCoef*(_lifepoints/__PREY_DEFAULT_LP__)+__PREY_DEFAULT_VELOCITY__);
+
+            m_size = max(0.5f,_lifepoints/__PREY_DEFAULT_LP__);
+
+            m_mesh->setScale(m_size);
+
+            m_body->setBoxSize(btVector3(10,10, 10 * m_size));
         }
     }
 
@@ -144,7 +190,6 @@ public:
 
 
         PreyClusterManager::instance()->createCluster(this,agent);
-
     }
 
     void checkLeaveGroup()
@@ -168,331 +213,77 @@ public:
 
     #pragma region Condition
 
-    inline bool isHungry()
-    {
-       return (m_hunger <= __HUNGER_THRESHOLD__);
-    }
+    bool isHungry();
 
-    inline bool isCloseToFood()
-    {
-        Cell food = Cell(-1,-1);
+    bool isCloseToFood();
 
-        for(Cell& c : m_foodSpotSeen)
-        {
-            if(isCloseToFoodSpot(c))
-                food = c;       
-        }
+    bool isCloseToFoodSpot(const Cell& food);
 
-        if(food.x < 0 || food.y < 0 ) 
-            return false;
+    bool seeFood();
 
-        m_foodTarget = food;
+    bool isInGroup();
 
-        return true;
-    }
+    bool isCloseToGroup();
 
-    inline bool isCloseToFoodSpot(const Cell& food)
-    {
-        return (abs(Cell::distance2(food, WorldMap::toGridCoord(_gameObject->position()))) <= 2);
-    }
+    bool seeGroup();
 
-    inline bool seeFood()
-    {
-         if(m_foodTarget != s_badFoodTarget)
-            return true;
-
-         if(m_foodSpotSeen.size() == 0)
-            return false;
-
-         // Select the closest tree around
-
-         int minDist = INT_MAX;
-         int tmpDist;
-         for(Cell& fd : m_foodSpotSeen)
-         {
-             if((tmpDist = abs(Cell::distance2(fd, WorldMap::toGridCoord(_gameObject->position())))) < minDist)
-             {
-                minDist = tmpDist;
-                m_foodTarget = fd;
-             }
-         }
-
-         return true;
-    }
-
-    inline bool isInGroup()
-    {
-        if(!m_currCluster.get())
-            return false;
-
-        return m_currCluster->isIn(this);
-    }
-
-    inline bool isCloseToGroup()
-    {
-        PreyAgent* agent = findFirstObjectSeen<PreyAgent>(
-            [this](PreyAgent* agent) -> bool
-            { 
-                if(agent == this)
-                    return false;
-
-                if(!agent->isInGroup())
-                   return false;
-                return agent->m_currCluster->isIn(this);
-            });
-
-        if(!agent)
-            return false;
-
-        m_targetCluster = agent->m_currCluster;
-
-        return (agent != NULL);
-    }
-
-    inline bool seeGroup()
-    {
-        PreyAgent* agent = findFirstObjectSeen<PreyAgent>(
-            [this](PreyAgent* agent) -> bool
-            { 
-                 if(agent == this)
-                    return false;
-
-                return agent->isInGroup();
-            });
-
-        if(!agent)
-            return false;
-
-        m_targetCluster = agent->m_currCluster;
-        
-        return true;
-    }
+    bool seeClosePredator();
 
     #pragma endregion
 
+    struct FleeAction : public BehaviourAction<PreyAgent>
+    {
+        virtual void run() override;
+    };
+
     struct EatAction : public BehaviourAction<PreyAgent>
     {
-        virtual void run() override
-        {
-            holder->runAction(this);
+        virtual void run() override;
 
-            if(holder->m_foodTarget == s_badFoodTarget || 
-               !holder->isCloseToFoodSpot(holder->m_foodTarget))
-            {
-                std::cout << "Prey has no food tree close\n";
-                return;
-            }
-
-            holder->m_hunger += __FOOD_POWER__;
-
-            holder->m_hunger = min(holder->m_hunger ,__HUNGER_FULL__);
-        }
-
-        virtual void onTerminate() override
-        {
-            holder->m_foodTarget = s_badFoodTarget;
-        }
+        virtual void onTerminate() override;
     };
 
     struct JoinGroupAction : public BehaviourAction<PreyAgent>
     {
-        virtual void run() override
-        {
-            holder->runAction(this);
-
-            if(holder->m_targetCluster.get())
-            {
-                if(holder->m_targetCluster->isIn(holder))
-                {   
-                    PreyClusterManager::instance()->addToCluster(holder,holder->m_targetCluster);
-
-                    holder->m_targetCluster.reset();
-
-                }
-            }
-        }
+        virtual void run() override;
     };
 
     struct FlockAction : public BehaviourAction<PreyAgent>
     {
-        virtual void onStart() override
-        {
-            holder->_targetPoint = WorldMap::toWorldCoord(Cell(rand()%c_worldSize,rand()%c_worldSize));
-        }
+        virtual void onStart() override;
 
-        virtual void run() override
-        {
-            holder->runAction(this);
+        virtual void run() override;
+       
+        virtual void onTerminate() override;
 
-            holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
-            
-            // If not leader of flock
-            if(holder != holder->m_currCluster->objects()[0])
-            { 
-                btVector3 steer = __FLOCK_ALIGNMENT_COEF__  *  flockingAlignment()  + 
-                                  __FLOCK_COHESION_COEF__   *  flockingCohesion()   +
-                                  __FLOCK_SEPARATION_COEF__ *  flockingSeparation();
+        btVector3 flockingCohesion();
 
-                holder->_targetPoint =  holder->_gameObject->position() + steer;
-            }
-            else // If leader: wander
-            {
-                btVector3 sub = holder->_targetPoint - holder->_gameObject->position();
+        btVector3 flockingAlignment();
 
-                sub.setZ(0);
-
-                if(sub.length() <= 2*NYCube::CUBE_SIZE)
-                { 
-                    float angle = ((float)rand())/RAND_MAX * 2 * M_PI;
-                    btVector3 vec = holder->_gameObject->position() + btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
-                    WorldMap::applyMapBoundaries(vec);
-                    holder->_targetPoint = vec;
-                }
-            }
-           
-        }
-
-        virtual void onTerminate() override
-        {
-            holder->_currMovement = MovementType::STAND_STILL;
-        }
-
-        btVector3 flockingCohesion()
-        {
-            ck_assert(holder->m_currCluster.get());
-
-            btVector3 sum(0,0,0);
-
-            for(IClusterObject* obj : holder->m_currCluster->objects())
-            {
-                Agent* agent = static_cast<PreyAgent*>(obj);
-                sum += agent->gameObject()->position();
-            }
-            
-            sum = sum * (1.f / holder->m_currCluster->objects().size());
-
-            return (sum - holder->gameObject()->position());
-        }
-
-        btVector3 flockingAlignment()
-        {
-            ck_assert(holder->m_currCluster.get());
-
-            btVector3 sum(0,0,0);
-
-            for(IClusterObject* obj : holder->m_currCluster->objects())
-            {
-                Agent* agent = static_cast<PreyAgent*>(obj);
-                 sum += agent->forward();
-            }
-
-            return sum * (1.f / holder->m_currCluster->objects().size());
-        }
-
-        btVector3 flockingSeparation()
-        {
-            ck_assert(holder->m_currCluster.get());
-
-            btVector3 sum(0,0,0);
-
-            int count = 0;
-
-            for(IClusterObject* obj : holder->m_currCluster->objects())
-            {
-                Agent* agent = static_cast<PreyAgent*>(obj);
-                if(agent->gameObject()->position().distance(holder->gameObject()->position()) < __FLOCK_SEPARATION_RADIUS__)
-                {
-                    sum += agent->gameObject()->position();
-                    count++;
-                }
-            }
-
-            sum = sum * (1.f /count);
-
-            return (holder->gameObject()->position() - sum);
-        }
+        btVector3 flockingSeparation();
     };
 
     struct GotoFoodAction : public BehaviourAction<PreyAgent>
     {
-        virtual void onStart() override
-        {
-            holder->leaveGroup();
-        }
-        
+        virtual void onStart() override;
 
-        virtual void run() override
-        {
-            holder->runAction(this);
+        virtual void run() override;
 
-            if(holder->m_foodTarget == s_badFoodTarget)
-            {
-                std::cout << "Prey has no food target\n";
-                return;
-            }
-
-            holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
-            holder->_targetPoint = WorldMap::toWorldCoord(holder->m_foodTarget);
-        }
-
-        virtual void onTerminate() override
-        {
-            holder->_currMovement = MovementType::STAND_STILL;
-        }
-    };
+        virtual void onTerminate() override;
 
     struct GotoGroupAction : public BehaviourAction<PreyAgent>
     {
-        virtual void run() override
-        {
-            holder->runAction(this);
-
-            if(!holder->m_targetCluster.get())
-            {
-                std::cout << "Prey has no cluster target\n";
-                return;
-            }
-
-            holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
-            holder->_targetPoint = holder->m_targetCluster->center();
-        }
-
-        virtual void onTerminate() override
-        {
-            holder->_currMovement = MovementType::STAND_STILL;
-        }
+        virtual void run() override;
+        virtual void onTerminate() override;
     };
 
     struct WanderAction : public BehaviourAction<PreyAgent>
     {
-        virtual void onStart() override
-        {
-            holder->_targetPoint = WorldMap::toWorldCoord(Cell(rand()%c_worldSize,rand()%c_worldSize));
-        }
+        virtual void onStart() override;
 
-        virtual void run() override
-        {
-            holder->runAction(this);
+        virtual void run() override;
 
-            holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
-
-            btVector3 sub = holder->_targetPoint - holder->_gameObject->position();
-
-            sub.setZ(0);
-
-            if(sub.length() <= 2*NYCube::CUBE_SIZE)
-            { 
-                float angle = ((float)rand())/RAND_MAX * 2 * M_PI;
-                btVector3 vec = holder->_gameObject->position() + btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
-                WorldMap::applyMapBoundaries(vec);
-                holder->_targetPoint = vec;
-            }
-        }
-
-        virtual void onTerminate() override
-        {
-            holder->_currMovement = MovementType::STAND_STILL;
-        }
+        virtual void onTerminate() override;
     };
 
 private:
@@ -500,6 +291,8 @@ private:
     static const Cell s_badFoodTarget;
 
     float m_hunger      = __HUNGER_FULL__; 
+
+    float m_size = 1.0f;
 
     Cell m_foodTarget;
     Cluster_ptr m_targetCluster;
@@ -510,6 +303,11 @@ private:
 
     Cluster_ptr m_currCluster;
 
+    PredatorAgent* m_predatorTarget;
+
+    MeshRenderer* m_mesh;
+
+    PhysicBody* m_body;
 };
 
 

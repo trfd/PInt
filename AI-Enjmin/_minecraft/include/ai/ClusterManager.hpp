@@ -7,7 +7,7 @@
 
 class PreyAgent;
 
-#define __CLUSTER_SPLIT_SIZE__ 5
+#define __CLUSTER_SPLIT_SIZE__ 8
 #define __CLUSTER_RADIUS__   100.f
 
 class PreyClusterManager : ck::utils::Singleton<PreyClusterManager>
@@ -19,7 +19,7 @@ class PreyClusterManager : ck::utils::Singleton<PreyClusterManager>
 
     virtual void init() override
     {
-        GameManager::instance()->scheduleUpdate(0.05f,instance(),&PreyClusterManager::update);
+        GameManager::instance()->scheduleUpdate(0.01f,instance(),&PreyClusterManager::update);
     }
 
 public:

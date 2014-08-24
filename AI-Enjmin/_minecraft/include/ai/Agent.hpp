@@ -21,6 +21,8 @@ using namespace ai::bt;
 //#define __DEBUG_ACTION__
 #define _AI_FRAME_ 1.f/20.f 
 
+#define __DEAD_TIME__ 5.f
+
 class Agent : public GameComponent
 {
 public:
@@ -28,6 +30,7 @@ public:
     enum MovementType
     {
         STAND_STILL,
+        MOVE_STEERING,
         MOVE_LINE_OF_SIGHT,
         MOVE_FOLLOW_FLOW_PATH
     };
@@ -49,6 +52,13 @@ public:
 
     virtual void onUpdate(float dt) override
     {
+        
+        if(_isDead && ((float) (clock() - m_deadTimer))/ CLOCKS_PER_SEC >= __DEAD_TIME__)
+            respawn();
+
+        if(_isDead)
+            return;
+
         // Check if need to update AI
         clock_t time = clock();
 
@@ -62,6 +72,7 @@ public:
         // Update movement
 
         moveTowardTarget();
+
     }
 
     virtual void onAIUpdate(float dt)
@@ -102,6 +113,14 @@ public:
 
             rel = _velocity*rel;
         }
+        else if(_currMovement == MovementType::MOVE_STEERING || 
+               _currMovement == MovementType::MOVE_FOLLOW_FLOW_PATH)
+        {
+            if(_currMovement == MovementType::MOVE_FOLLOW_FLOW_PATH)
+                followPath();
+
+            rel = _targetDirection.normalized() * _velocity;
+        }
 
         rel.setZ(-m_mass);
 
@@ -115,6 +134,17 @@ public:
         m_body->body().setLinearVelocity(rel);
 
         face(_targetPoint);
+    }
+
+    void followPath()
+    {
+        if(!_path.get() || _path->isFailure())
+            return;
+
+        ck::Vector2i dir = direction(_path->direction(WorldMap::toGridCoord(_gameObject->position())));
+
+        _targetDirection.setX(dir.x);
+        _targetDirection.setY(dir.y);
     }
 
     bool obstacleAhead()
@@ -282,6 +312,17 @@ public:
         _lifepoints = max(0.f, _lifepoints-damages);
     }
 
+    virtual void die()
+    {
+        _isDead = true;
+        m_deadTimer = clock();
+    }
+
+    virtual void respawn()
+    {
+        _isDead = false;
+    }
+
 protected:
 
    #pragma region Action Management
@@ -319,7 +360,12 @@ protected:
 
     MovementType _currMovement;
 
+    /// Used in LINE_OF_SIGHT
     btVector3 _targetPoint = btVector3(800,800,300);
+
+    /// Used with STEERING
+    /// FLOW_PATH also set the target direction
+    btVector3 _targetDirection;
 
     FFPath_ptr _path;
 
@@ -329,9 +375,11 @@ protected:
     /// Offset of vision rectangle 
     int _visionForwardOffset; 
 
-    float _velocity ;
+    float _velocity;
 
     float _lifepoints;
+
+    bool _isDead;
 
     IBehaviourAction* _currentAction = nullptr;
 
@@ -346,6 +394,8 @@ private:
     float m_jumpForce = 20.f;
 
     clock_t lastUpdate = 0.f;
+
+    clock_t m_deadTimer;
 
 };
 

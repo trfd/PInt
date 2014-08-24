@@ -35,6 +35,11 @@ public:
 
     inline btVector3 boxSize(){ return btVector3(m_size.X,m_size.Y,m_size.Z); }
 
+    inline void setBoxSize(const btVector3& box)
+    {
+        m_size = NYVert3Df(box.x(), box.y(), box.z());
+    }
+
 private:
 
     btRigidBody* m_body;
