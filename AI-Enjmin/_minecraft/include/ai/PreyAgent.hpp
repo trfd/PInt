@@ -14,6 +14,11 @@
 #define __CLUSTER_RADIUS__   100.f
 #define __WANDER_RADIUS__   200.f
 
+#define __FLOCK_COHESION_COEF__     1.0f
+#define __FLOCK_ALIGNMENT_COEF__    1.0f
+#define __FLOCK_SEPARATION_COEF__   1.5f
+#define __FLOCK_SEPARATION_RADIUS__ 10.f
+
 
 typedef std::shared_ptr<AgentCluster> AgentCluster_ptr;
 
@@ -130,6 +135,14 @@ public:
             return;
 
         if(m_currCluster->isIn(this))
+            return;
+
+        leaveGroup();
+    }
+
+    void leaveGroup()
+    {
+        if(!m_currCluster.get())
             return;
 
         m_currCluster->unregisterAgent(this);
@@ -304,25 +317,99 @@ public:
             holder->runAction(this);
 
             holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
-
-            btVector3 sub = holder->_targetPoint - holder->_gameObject->position();
-
-            sub.setZ(0);
-
-            if(sub.length() <= 2*NYCube::CUBE_SIZE)
+            
+            // If not leader of flock
+            if(holder != holder->m_currCluster->agents()[0])
             { 
-                holder->_targetPoint = WorldMap::toWorldCoord(Cell(rand()%c_worldSize,rand()%c_worldSize));
+                btVector3 steer = __FLOCK_ALIGNMENT_COEF__  *  flockingAlignment()  + 
+                                  __FLOCK_COHESION_COEF__   *  flockingCohesion()   +
+                                  __FLOCK_SEPARATION_COEF__ *  flockingSeparation();
+
+                holder->_targetPoint =  holder->_gameObject->position() + steer;
             }
+            else // If leader: wander
+            {
+                btVector3 sub = holder->_targetPoint - holder->_gameObject->position();
+
+                sub.setZ(0);
+
+                if(sub.length() <= 2*NYCube::CUBE_SIZE)
+                { 
+                    float angle = ((float)rand())/RAND_MAX * 2 * M_PI;
+                    btVector3 vec = holder->_gameObject->position() + btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
+                    WorldMap::applyMapBoundaries(vec);
+                    holder->_targetPoint = vec;
+                }
+            }
+           
         }
 
         virtual void onTerminate() override
         {
             holder->_currMovement = MovementType::STAND_STILL;
         }
+
+        btVector3 flockingCohesion()
+        {
+            ck_assert(holder->m_currCluster.get());
+
+            btVector3 sum(0,0,0);
+
+            for(Agent* agent : holder->m_currCluster->agents())
+            {
+                sum += agent->gameObject()->position();
+            }
+            
+            sum = sum * (1.f / holder->m_currCluster->agents().size());
+
+            return (sum - holder->gameObject()->position());
+        }
+
+        btVector3 flockingAlignment()
+        {
+            ck_assert(holder->m_currCluster.get());
+
+            btVector3 sum(0,0,0);
+
+            for(Agent* agent : holder->m_currCluster->agents())
+            {
+                 sum += agent->forward();
+            }
+
+            return sum * (1.f / holder->m_currCluster->agents().size());
+        }
+
+        btVector3 flockingSeparation()
+        {
+            ck_assert(holder->m_currCluster.get());
+
+            btVector3 sum(0,0,0);
+
+            int count = 0;
+
+            for(Agent* agent : holder->m_currCluster->agents())
+            {
+                if(agent->gameObject()->position().distance(holder->gameObject()->position()) < __FLOCK_SEPARATION_RADIUS__)
+                {
+                    sum += agent->gameObject()->position();
+                    count++;
+                }
+            }
+
+            sum = sum * (1.f /count);
+
+            return (holder->gameObject()->position() - sum);
+        }
     };
 
     struct GotoFoodAction : public BehaviourAction<PreyAgent>
     {
+        virtual void onStart() override
+        {
+            holder->leaveGroup();
+        }
+        
+
         virtual void run() override
         {
             holder->runAction(this);
