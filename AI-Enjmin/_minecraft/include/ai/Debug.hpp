@@ -87,6 +87,14 @@ public:
         instance()->m_renderCallback.push_back(func_);
     }
 
+    static void removeFromRender(ck::Functor<void> const& func_)
+    {
+        auto it = std::find(instance()->m_renderCallback.begin(),instance()->m_renderCallback.end(),func_);
+
+        if(it != instance()->m_renderCallback.end())
+            instance()->m_renderCallback.erase(it);
+    }
+
     static void drawLine(btVector3 const& start_,
                          btVector3 const& end_,
                          NYColor const&  color_ = NYColor(1.f, 1.f, 1.f, 1.f),

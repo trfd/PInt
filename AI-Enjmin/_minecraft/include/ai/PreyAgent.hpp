@@ -12,6 +12,8 @@
 #define __HUNGER_RATE__      0.05f
 #define __HUNGER_KILL_RATE__ 0.1f
 #define __CLUSTER_RADIUS__   100.f
+#define __WANDER_RADIUS__   200.f
+
 
 typedef std::shared_ptr<AgentCluster> AgentCluster_ptr;
 
@@ -59,6 +61,7 @@ public:
         glPopMatrix();
     }
     
+
     virtual void onAIUpdate(float dt) override
     {
         updateCluster();
@@ -94,10 +97,7 @@ public:
         if(!m_currCluster.get())
             checkGroupCreation();
         else
-        {
-            m_currCluster->update();
             checkLeaveGroup();
-        }
     }
 
     void checkGroupCreation()
@@ -105,6 +105,9 @@ public:
         PreyAgent* agent = findFirstObjectSeen<PreyAgent>(
             [this](PreyAgent* agent) -> bool
             { 
+                if(agent == this)
+                   return false;
+
                 if(agent->isInGroup())
                    return false;
                 
@@ -130,6 +133,15 @@ public:
             return;
 
         m_currCluster->unregisterAgent(this);
+
+        // Remove the last agent is alone
+        if(m_currCluster->agents().size() == 1)
+        {
+            PreyAgent* agent = static_cast<PreyAgent*>(m_currCluster->agents()[0]);
+            m_currCluster->unregisterAgent(agent);
+            agent->m_currCluster.reset();
+        }
+ 
         m_currCluster.reset();
     }
 
@@ -200,6 +212,9 @@ public:
         PreyAgent* agent = findFirstObjectSeen<PreyAgent>(
             [this](PreyAgent* agent) -> bool
             { 
+                if(agent == this)
+                    return false;
+
                 if(!agent->isInGroup())
                    return false;
                 return agent->m_currCluster->isIn(this);
@@ -216,8 +231,11 @@ public:
     inline bool seeGroup()
     {
         PreyAgent* agent = findFirstObjectSeen<PreyAgent>(
-            [](PreyAgent* agent) -> bool
+            [this](PreyAgent* agent) -> bool
             { 
+                 if(agent == this)
+                    return false;
+
                 return agent->isInGroup();
             });
 
@@ -276,12 +294,30 @@ public:
 
     struct FlockAction : public BehaviourAction<PreyAgent>
     {
+        virtual void onStart() override
+        {
+            holder->_targetPoint = WorldMap::toWorldCoord(Cell(rand()%c_worldSize,rand()%c_worldSize));
+        }
+
         virtual void run() override
         {
             holder->runAction(this);
 
             holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
-            holder->_targetPoint = holder->m_currCluster->center() + btVector3(rand()%50-100, rand()%50-100 , 0);
+
+            btVector3 sub = holder->_targetPoint - holder->_gameObject->position();
+
+            sub.setZ(0);
+
+            if(sub.length() <= 2*NYCube::CUBE_SIZE)
+            { 
+                holder->_targetPoint = WorldMap::toWorldCoord(Cell(rand()%c_worldSize,rand()%c_worldSize));
+            }
+        }
+
+        virtual void onTerminate() override
+        {
+            holder->_currMovement = MovementType::STAND_STILL;
         }
     };
 
@@ -348,7 +384,10 @@ public:
 
             if(sub.length() <= 2*NYCube::CUBE_SIZE)
             { 
-                holder->_targetPoint = WorldMap::toWorldCoord(Cell(rand()%c_worldSize,rand()%c_worldSize));
+                float angle = ((float)rand())/RAND_MAX * 2 * M_PI;
+                btVector3 vec = holder->_gameObject->position() + btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
+                WorldMap::applyMapBoundaries(vec);
+                holder->_targetPoint = vec;
             }
         }
 

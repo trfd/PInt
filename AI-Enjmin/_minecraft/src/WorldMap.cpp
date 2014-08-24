@@ -43,15 +43,20 @@ std::vector<Cell> WorldMap::cellsOfType(const MapCell& mc_, const CellRect& rect
 
 void WorldMap::registerOnGrid(GameObject* go_)
 {
-    unregisterFromGrid(go_);
+    int idx = indexForLocation(go_->position());
 
-    int idx = indexForLocation(go_->transform().getOrigin());
+    if(__GRInt::gridRegistration(go_).isValid && __GRInt::gridRegistration(go_).cellIndex == idx)
+        return;
+
+    unregisterFromGrid(go_);
 
     if(idx < 0)
     {
         Log::log(Log::USER_ERROR, "GameObject out of grid");
         return;
     }
+
+    ck_assert(idx >= 0 && idx < c_worldSize*c_worldSize);
 
     m_gridObjects[idx].push_front(go_);
 
@@ -67,6 +72,8 @@ void WorldMap::unregisterFromGrid(GameObject* go_)
     
     // Insure is valid (not end of list or incorrect pointer)
     ck_assert(*(__GRInt::gridRegistration(go_).object_it) == go_); 
+
+    ck_assert(__GRInt::gridRegistration(go_).cellIndex >= 0 && __GRInt::gridRegistration(go_).cellIndex < c_worldSize*c_worldSize);
 
     m_gridObjects[__GRInt::gridRegistration(go_).cellIndex]
         .erase(__GRInt::gridRegistration(go_).object_it);
@@ -86,7 +93,14 @@ std::vector<std::list<GameObject*>*> WorldMap::registeredObjectAt(const CellRect
             if(x < 0 || y < 0 || x >= c_worldSize || y >= c_worldSize )
                 continue;
 
-            objectList.push_back(& m_gridObjects[ x + y * c_worldSize ]);
+            if(m_gridObjects[x + y * c_worldSize].size() > 0)
+            {
+                for(GameObject* obj : m_gridObjects[x + y * c_worldSize])
+                {   ck_assert(Cell(x, y) == toGridCoord(obj->position())); }
+                
+                objectList.push_back(& m_gridObjects[ x + y * c_worldSize ]);
+            }
+                
         }
     }
 

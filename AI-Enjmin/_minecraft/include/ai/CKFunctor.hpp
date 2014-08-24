@@ -179,7 +179,7 @@ namespace ck
     >
     class Functor
     {
-        FunctorImpl<_ReturnType,_Args...> *_impl;
+        FunctorImpl<_ReturnType,_Args...> *_impl = nullptr;
         
     public:
         
@@ -200,7 +200,7 @@ namespace ck
         ~Functor()
         {
             delete _impl;
-            _impl = NULL;
+            _impl = nullptr;
         }
         
         // Allow type deduction by adding an extra template
@@ -219,6 +219,15 @@ namespace ck
         inline bool operator!=(const Functor& rhs_)
         {
             return (*_impl != rhs_._impl);
+        }
+
+        inline Functor& operator=(const Functor& _func)
+        {
+            if(_impl)
+                delete _impl;
+            _impl = _func._impl->copy();
+
+            return *this;
         }
         
     };

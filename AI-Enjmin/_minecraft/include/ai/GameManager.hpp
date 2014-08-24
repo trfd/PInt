@@ -111,7 +111,7 @@ public:
     inline void unscheduleUpdate(const ScheduleTask::Callback& call_)
     {
         for(ScheduleTaskList::iterator it = m_registeredUpdates.begin() ;
-            it != m_registeredUpdates.end() ;)
+            it != m_registeredUpdates.end() ; )
         {
             if(it->callback == call_)
                 it = m_registeredUpdates.erase(it);

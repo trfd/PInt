@@ -70,6 +70,8 @@ public:
     inline void setRotation(const btQuaternion& qu_)
     {
         m_transform.setRotation(qu_);
+
+        registerOnGrid();
     }
 
     #pragma endregion

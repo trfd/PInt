@@ -27,6 +27,8 @@ public:
 
         m_dirtyCenter = false;
 
+        GameManager::instance()->scheduleUpdate(0.05f,this,&AgentCluster::update);
+
 #ifdef __DRAW_CLUSTERS__
 
         Debug::addToRender(ck::makeFunctor(this,&AgentCluster::draw));
@@ -37,7 +39,11 @@ public:
 
     ~AgentCluster()
     {
+#ifdef __DRAW_CLUSTERS__
+        Debug::removeFromRender(ck::makeFunctor(this,&AgentCluster::draw));
+#endif
         ck_assert(m_agents.size() == 0);
+        GameManager::instance()->unscheduleUpdate(ck::makeFunctor(this,&AgentCluster::update));
     }
 
     void draw()
@@ -56,6 +62,12 @@ public:
             glVertex3f(m_radius * cos(angle*(i+1)) , m_radius * sin(angle*(i+1)) , 0);
         }
 
+        glVertex3f(0,0,0);
+        glVertex3f(m_radius,0,0);
+
+        glVertex3f(0,0,0);
+        glVertex3f(0,m_radius,0);
+
         glEnd();
         glPopMatrix();
 
@@ -64,7 +76,7 @@ public:
     inline btVector3 center()
     {
         if(m_dirtyCenter)
-            update();
+            update(0.f);
 
         return m_center; 
     }
@@ -117,11 +129,8 @@ public:
         return m_agents;
     }
 
-    void update()
+    void update(float dt)
     {
-        if(!m_dirtyCenter)
-            return;
-
         btVector3 newCenter(0.f,0.f,0.f);
 
         int count = 0;

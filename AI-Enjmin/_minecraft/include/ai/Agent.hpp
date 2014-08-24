@@ -13,6 +13,8 @@
 
 using namespace ai::bt;
 
+#define __DEBUG_VISION__
+//#define __DEBUG_ACTION__
 #define _AI_FRAME_ 1.f/20.f 
 
 class Agent : public GameComponent
@@ -68,6 +70,16 @@ public:
     virtual void updateVision()
     {
         _objectSeen = WorldMap::instance()->registeredObjectAt(_gameObject->position(),_visionZone,ck::Vector2i(0,0));
+
+#ifdef __DEBUG_VISION__
+        for(ObjectList* list : _objectSeen)
+        {
+            for(GameObject* go : *list)
+            {
+                Debug::drawLine(_gameObject->position(), go->position(), NYColor(1,1,1,1) , 0.1f);
+            }
+        }
+#endif
     }
 
 
@@ -78,6 +90,8 @@ public:
         // Move straightly toward target
         if(_currMovement == MovementType::MOVE_LINE_OF_SIGHT)
         {
+            WorldMap::applyMapBoundaries(_targetPoint);
+
             rel = _targetPoint - _gameObject->transform().getOrigin();
 
             rel.normalize();
@@ -262,6 +276,8 @@ public:
 protected:
 
    #pragma region Action Management
+
+
     
     void runAction(IBehaviourAction* action_)
     {
@@ -273,7 +289,17 @@ protected:
             if(action_)
                 action_->onStart();
 
+#ifdef __DEBUG_ACTION__
+            std::cout << "Agent: 0x"<<std::hex<<this<<" Start action: " << typeid(*action_).name() << "\n";
+#endif //__DEBUG_ACTION__
+
             _currentAction = action_;
+        }
+        else
+        {
+#ifdef __DEBUG_ACTION__
+            std::cout << "Agent: 0x"<<std::hex<<this<<" Run action: " << typeid(*action_).name() << "\n";
+#endif //__DEBUG_ACTION__
         }
     }
 
