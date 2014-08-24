@@ -40,8 +40,6 @@ public:
     {
         m_dirtyCenter = false;
 
-        GameManager::instance()->scheduleUpdate(0.05f,this,&Cluster::update);
-
 #ifdef __DRAW_CLUSTERS__
 
         Debug::addToRender(ck::makeFunctor(this,&Cluster::draw));
@@ -55,7 +53,6 @@ public:
         Debug::removeFromRender(ck::makeFunctor(this,&Cluster::draw));
 #endif
         ck_assert(m_objects.size() == 0);
-        GameManager::instance()->unscheduleUpdate(ck::makeFunctor(this,&Cluster::update));
     }
 
     void draw()
@@ -93,6 +90,22 @@ public:
         return m_center; 
     }
 
+    inline void resetCenter()
+    {        
+        btVector3 newCenter(0.f,0.f,0.f);
+
+        for(IClusterObject* object : m_objects)
+        {
+            newCenter += object->position();
+        }
+
+        float av = 1.f / m_objects.size();
+        
+        m_center = newCenter * av; 
+
+        m_dirtyCenter = false;
+    }
+
     inline float radius() { return m_radius; }
 
     inline void setRadius(float rad_) 
@@ -106,7 +119,7 @@ public:
         ck_assert(object);
 
         // Check if already in
-        std::vector<IClusterObject*>::iterator it = std::find(m_objects.begin(), m_objects.end() , object);
+        auto it = std::find(m_objects.begin(), m_objects.end() , object);
 
         if(it != m_objects.end())
             return;
@@ -122,13 +135,12 @@ public:
     {
         ck_assert(object);
 
-        std::vector<IClusterObject*>::iterator it = 
-            std::find(m_objects.begin(), m_objects.end() , object);
-
-        object->setCluster(nullptr);
+        auto it = std::find(m_objects.begin(), m_objects.end(), object);
 
         if(it == m_objects.end())
             return;
+
+        (*it)->setCluster(nullptr);
 
         m_objects.erase(it);
 

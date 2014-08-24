@@ -8,8 +8,8 @@ void PreyClusterManager::createCluster(PreyAgent* ag1, PreyAgent* ag2)
     m_clusters.push_back(std::make_shared<Cluster>(__CLUSTER_RADIUS__));
     m_clusters.back()->registerObject(ag1);
     m_clusters.back()->registerObject(ag2);
-    m_clusters.back()->update(0);
 
+    m_clusters.back()->resetCenter();
 }
 
 void PreyClusterManager::addToCluster(PreyAgent* ag, const Cluster_ptr& cl)
@@ -56,6 +56,9 @@ void PreyClusterManager::update(float dt)
         if(it->first.get() && it->second.get())
             mergeClusters(it->first,it->second);
     }
+
+    for(auto cluster : m_clusters)
+        cluster->update(dt);
 }
 
 void PreyClusterManager::mergeClusters(const Cluster_ptr& cl1, const Cluster_ptr& cl2)
@@ -75,9 +78,10 @@ void PreyClusterManager::mergeClusters(const Cluster_ptr& cl1, const Cluster_ptr
 
     auto it = std::find(m_clusters.begin(), m_clusters.end(),cl2);
 
-    m_clusters.erase(it);
+    if(it != m_clusters.end())
+        m_clusters.erase(it);
 
-    cl1->update(0);
+    cl1->resetCenter();
 }
 
 void PreyClusterManager::splitClusters(const Cluster_ptr& cl)
@@ -98,7 +102,9 @@ void PreyClusterManager::splitClusters(const Cluster_ptr& cl)
         nCluster->registerObject(objs[i]);
     }
 
-    nCluster->update(0);
-
     m_clusters.push_back(nCluster);
+
+    nCluster->resetCenter();
+
+    cl->resetCenter();
 }

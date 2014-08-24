@@ -15,8 +15,11 @@ class PreyClusterManager : ck::utils::Singleton<PreyClusterManager>
     friend ck::utils::Singleton<PreyClusterManager>;
 
     PreyClusterManager()
+    {}
+
+    virtual void init() override
     {
-        GameManager::instance()->scheduleUpdate(0.05f,this,&PreyClusterManager::update);
+        GameManager::instance()->scheduleUpdate(0.05f,instance(),&PreyClusterManager::update);
     }
 
 public:
