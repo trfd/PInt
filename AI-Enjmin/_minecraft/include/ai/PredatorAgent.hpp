@@ -14,7 +14,7 @@
 #define __PREDATOR_WANDER_RADIUS__        200.f  
 #define __PREDATOR_ATTACK_HEAL__          10.f
 #define __PREDATOR_LIFE_CAP__            200.f
-#define __PREDATOR_DEFAULT_VELOCITY__     60.f
+#define __PREDATOR_DEFAULT_VELOCITY__     55.f
 #define __PREDATOR_DEFAULT_LP__          100.f
 
 class PreyAgent;
@@ -110,7 +110,7 @@ public:
         {
             _velocity = __PREDATOR_DEFAULT_VELOCITY__ * (__PREDATOR_DEFAULT_LP__/_lifepoints);
 
-            m_size = min(1.5f,_lifepoints/__PREDATOR_DEFAULT_LP__);
+            m_size = min(2.f,_lifepoints/__PREDATOR_DEFAULT_LP__);
 
             m_mesh->setScale(m_size);
 
@@ -166,6 +166,8 @@ public:
         /// Returns the angle opposite to the average of groups seen
         /// if any, otherwise returns a random angle
         float avoidGroups();
+
+        void newTarget();
     };
 
 private:

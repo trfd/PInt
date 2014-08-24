@@ -316,6 +316,7 @@ public:
     {
         _isDead = true;
         m_deadTimer = clock();
+        _velocity = 0.f;
     }
 
     virtual void respawn()

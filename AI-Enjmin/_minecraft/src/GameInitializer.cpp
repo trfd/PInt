@@ -5,8 +5,8 @@
 
 #include "ai/Entity.hpp"
 
-#define __PREY_SPAWN_COUNT__ 20
-#define __PREDATOR_SPAWN_COUNT__ 20
+#define __PREY_SPAWN_COUNT__ 40
+#define __PREDATOR_SPAWN_COUNT__ 40
 
 void GameInitializer::init()
 {

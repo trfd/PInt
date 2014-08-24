@@ -9,7 +9,7 @@
 #include "CKAssert.hpp"
 #include "Debug.hpp"
 
-#define __DRAW_CLUSTERS__
+//#define __DRAW_CLUSTERS__
 
 class Cluster;
 

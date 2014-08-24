@@ -131,10 +131,8 @@ void PredatorAgent::GotoPreyAction::run()
 
 void PredatorAgent::WanderAction::onStart()
 {
-    //holder->_path = FFPathFinder::instance()->path(WorldMap::toGridCoord(holder->_gameObject->position()),
-    //                                         Cell(rand()%c_worldSize,rand()%c_worldSize));
+    newTarget();
 }
-
 
 void  PredatorAgent::WanderAction::run()
 {
@@ -144,15 +142,13 @@ void  PredatorAgent::WanderAction::run()
     
     btVector3 sub = holder->_targetPoint - holder->_gameObject->position();
     
+    Cell c = WorldMap::toGridCoord(holder->_gameObject->position());
+
     sub.setZ(0);
     
     if(sub.length() <= 2*NYCube::CUBE_SIZE)
     { 
-        float angle = avoidGroups();
-        btVector3 vec = holder->_gameObject->position() + 
-            btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
-        WorldMap::applyMapBoundaries(vec);
-        holder->_targetPoint = vec;
+        newTarget();
     }
 }
 
@@ -195,6 +191,15 @@ float PredatorAgent::WanderAction::avoidGroups()
     btVector3 rel = holder->gameObject()->position() - sum;
 
     return atan2(rel.y(),rel.x());
+}
+
+void PredatorAgent::WanderAction::newTarget()
+{
+    float angle = avoidGroups();
+    btVector3 vec = holder->_gameObject->position() + 
+        btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
+    WorldMap::applyMapBoundaries(vec);
+    holder->_targetPoint = vec;
 }
 
 #pragma endregion

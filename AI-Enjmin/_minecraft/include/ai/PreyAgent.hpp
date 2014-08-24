@@ -33,119 +33,18 @@ class PreyAgent : public Agent, public IClusterObject
 {
 public:
  
-    virtual void init() override
-    {
-        Agent::init();
+    virtual void init() override;
 
-        _visionZone = CellSize(20,20);
+    virtual void respawn() override;
 
-        _visionForwardOffset = 15;
+    virtual void die() override;
 
-        _lifepoints = 50.f;
-
-        _velocity = __PREY_DEFAULT_VELOCITY__;
-
-        m_foodTarget = s_badFoodTarget;
-
-        m_mesh = _gameObject->findComponent<MeshRenderer>();
-
-        m_body = _gameObject->findComponent<PhysicBody>();
-    }
-
-    virtual void respawn() override
-    {
-         Agent::respawn();
-
-         _lifepoints = __PREY_DEFAULT_LP__;
-
-         _velocity = __PREY_DEFAULT_VELOCITY__;
-
-         m_size = 1.0f;
-
-         m_foodTarget = s_badFoodTarget;
-
-         m_currCluster.reset();
-    }
-
-    virtual void die() override
-    {
-        Agent::die();
-
-        if(m_currCluster.get())
-            PreyClusterManager::instance()->removeFromCluster(this);
-    }
-
-    virtual void onRender() override
-    {
-        btVector3 pos = _gameObject->transform().getOrigin() + btVector3(0,0,15);
-
-        float a = 5.f;
-
-        glPushMatrix();
-        glTranslatef(pos.x(),pos.y(),pos.z());
-        glBegin(GL_QUADS);
-
-        if(_isDead)
-            glColor3f(1.f,0.f,0.f);
-        else
-        {
-            float g = (isHungry() ? 1.f : 0.f);
-            float b = (isInGroup() ? 1.f : 0.f);
-
-            glColor3f(0.f,g,b);
-        }
-
-        glVertex3f( -a , 0 , -a);
-        glVertex3f(  a , 0 , -a);
-        glVertex3f(  a , 0 ,  a);
-        glVertex3f( -a , 0 ,  a);
-
-        glVertex3f( -a , 0 , -a);
-        glVertex3f( -a , 0 ,  a);
-        glVertex3f(  a , 0 ,  a);
-        glVertex3f(  a , 0 , -a);
-
-        glEnd();
-        glPopMatrix();
-    }
+    virtual void onRender() override;
     
 
-    virtual void onAIUpdate(float dt) override
-    {
-        updateCluster();
+    virtual void onAIUpdate(float dt) override;
 
-        Agent::onAIUpdate(dt);
-
-        m_hunger -= __HUNGER_RATE__;
-
-        m_hunger = max(0.f, m_hunger);
-
-        if(_lifepoints <= 0)
-        {
-            die();
-        }
-        else
-        {
-            float velCoef = __PREY_MAX_VELOCITY__- __PREY_DEFAULT_VELOCITY__;
-
-            _velocity = min(__PREY_MAX_VELOCITY__,-velCoef*(_lifepoints/__PREY_DEFAULT_LP__)+__PREY_DEFAULT_VELOCITY__);
-
-            m_size = max(0.5f,_lifepoints/__PREY_DEFAULT_LP__);
-
-            m_mesh->setScale(m_size);
-
-            m_body->setBoxSize(btVector3(10,10, 10 * m_size));
-        }
-    }
-
-    virtual void updateVision() override
-    {
-        Agent::updateVision();
-
-        ck::Vector2i offset = gridForward() * _visionForwardOffset;
-
-        m_foodSpotSeen = WorldMap::instance()->cellsOfType(WorldMap::MapCell::TREE,_gameObject->position(),_visionZone,ck::Vector2i(0,0));
-    }
+    virtual void updateVision() override;
 
     #pragma region IClusterObject Interface
 
@@ -160,56 +59,12 @@ public:
 
     #pragma endregion
 
-    void updateCluster()
-    {
-        if(!m_currCluster.get())
-            checkGroupCreation();
-        else
-            checkLeaveGroup();
-    }
+    void updateCluster();
+    void checkGroupCreation();
 
-    void checkGroupCreation()
-    {
-        PreyAgent* agent = findFirstObjectSeen<PreyAgent>(
-            [this](PreyAgent* agent) -> bool
-            { 
-                if(agent == this)
-                   return false;
+    void checkLeaveGroup();
 
-                if(agent->isInGroup())
-                   return false;
-                
-                btVector3 sub = agent->gameObject()->position() - _gameObject->position();
-                sub.setZ(0);
-
-                return (sub.length() <= __CLUSTER_RADIUS__);
-            });
-
-        if(!agent)
-            return;
-
-
-        PreyClusterManager::instance()->createCluster(this,agent);
-    }
-
-    void checkLeaveGroup()
-    {
-        if(!m_currCluster.get())
-            return;
-
-        if(m_currCluster->isIn(this))
-            return;
-
-        leaveGroup();
-    }
-
-    void leaveGroup()
-    {
-        if(!m_currCluster.get())
-            return;
-
-        PreyClusterManager::instance()->removeFromCluster(this);
-    }
+    void leaveGroup();
 
     #pragma region Condition
 
@@ -270,6 +125,7 @@ public:
         virtual void run() override;
 
         virtual void onTerminate() override;
+    };
 
     struct GotoGroupAction : public BehaviourAction<PreyAgent>
     {
@@ -284,13 +140,15 @@ public:
         virtual void run() override;
 
         virtual void onTerminate() override;
+
+        void newTarget();
     };
 
 private:
 
     static const Cell s_badFoodTarget;
 
-    float m_hunger      = __HUNGER_FULL__; 
+    float m_hunger = __HUNGER_FULL__; 
 
     float m_size = 1.0f;
 

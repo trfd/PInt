@@ -18,8 +18,12 @@ public:
 
     virtual void init() override
     {
+        Cell c(rand() % c_worldSize, rand()%c_worldSize);
+
+        btVector3 vworld = WorldMap::toWorldCoord(c);
+
         m_body = NYBasicPhysicEngine::getInstance()
-            ->addBoxObject(true, m_size, NYVert3Df(200, 200, 200), 10);
+            ->addBoxObject(true, m_size, NYVert3Df(vworld.x(), vworld.y(), vworld.z()), 10);
 
         m_body->setDamping(.0f,0.0f);
         m_body->setFriction(0.5f);

@@ -6,6 +6,172 @@
 const Cell PreyAgent::s_badFoodTarget =  Cell(-1,-1);
 
 
+void PreyAgent::init() 
+{
+    Agent::init();
+
+    _visionZone = CellSize(20,20);
+
+    _visionForwardOffset = 15;
+
+    _lifepoints = 50.f;
+
+    _velocity = __PREY_DEFAULT_VELOCITY__;
+
+    m_foodTarget = s_badFoodTarget;
+
+    m_mesh = _gameObject->findComponent<MeshRenderer>();
+
+    m_body = _gameObject->findComponent<PhysicBody>();
+}
+
+void PreyAgent::respawn() 
+{
+     Agent::respawn();
+
+     _lifepoints = __PREY_DEFAULT_LP__;
+
+     _velocity = __PREY_DEFAULT_VELOCITY__;
+
+     m_size = 1.0f;
+
+     m_foodTarget = s_badFoodTarget;
+
+     m_currCluster.reset();
+}
+
+void PreyAgent::die() 
+{
+    Agent::die();
+
+    if(m_currCluster.get())
+        PreyClusterManager::instance()->removeFromCluster(this);
+}
+
+void PreyAgent::onRender() 
+{
+    btVector3 pos = _gameObject->transform().getOrigin() + btVector3(0,0,15);
+
+    float a = 5.f;
+
+    glPushMatrix();
+    glTranslatef(pos.x(),pos.y(),pos.z());
+    glBegin(GL_QUADS);
+
+    if(_isDead)
+        glColor3f(1.f,0.f,0.f);
+    else
+    {
+        float g = (isHungry() ? 1.f : 0.f);
+        float b = (isInGroup() ? 1.f : 0.f);
+
+        glColor3f(0.f,g,b);
+    }
+
+    glVertex3f( -a , 0 , -a);
+    glVertex3f(  a , 0 , -a);
+    glVertex3f(  a , 0 ,  a);
+    glVertex3f( -a , 0 ,  a);
+
+    glVertex3f( -a , 0 , -a);
+    glVertex3f( -a , 0 ,  a);
+    glVertex3f(  a , 0 ,  a);
+    glVertex3f(  a , 0 , -a);
+
+    glEnd();
+    glPopMatrix();
+}
+
+
+void PreyAgent::onAIUpdate(float dt) 
+{
+    updateCluster();
+
+    Agent::onAIUpdate(dt);
+
+    m_hunger -= __HUNGER_RATE__;
+
+    m_hunger = max(0.f, m_hunger);
+
+    if(_lifepoints <= 0)
+    {
+        die();
+    }
+    else
+    {
+        float velCoef = __PREY_MAX_VELOCITY__- __PREY_DEFAULT_VELOCITY__;
+
+        _velocity = min(__PREY_MAX_VELOCITY__,-velCoef*(_lifepoints/__PREY_DEFAULT_LP__)+__PREY_DEFAULT_VELOCITY__);
+
+        m_size = max(0.5f,_lifepoints/__PREY_DEFAULT_LP__);
+
+        m_mesh->setScale(m_size);
+
+        m_body->setBoxSize(btVector3(10,10, 10 * m_size));
+    }
+}
+
+void PreyAgent::updateVision() 
+{
+    Agent::updateVision();
+
+    ck::Vector2i offset = gridForward() * _visionForwardOffset;
+
+    m_foodSpotSeen = WorldMap::instance()->cellsOfType(WorldMap::MapCell::TREE,_gameObject->position(),_visionZone,ck::Vector2i(0,0));
+}
+
+void PreyAgent::updateCluster()
+{
+    if(!m_currCluster.get())
+        checkGroupCreation();
+    else
+        checkLeaveGroup();
+}
+
+void PreyAgent::checkGroupCreation()
+{
+    PreyAgent* agent = findFirstObjectSeen<PreyAgent>(
+        [this](PreyAgent* agent) -> bool
+        { 
+            if(agent == this)
+               return false;
+
+            if(agent->isInGroup())
+               return false;
+            
+            btVector3 sub = agent->gameObject()->position() - _gameObject->position();
+            sub.setZ(0);
+
+            return (sub.length() <= __CLUSTER_RADIUS__);
+        });
+
+    if(!agent)
+        return;
+
+
+    PreyClusterManager::instance()->createCluster(this,agent);
+}
+
+void PreyAgent::checkLeaveGroup()
+{
+    if(!m_currCluster.get())
+        return;
+
+    if(m_currCluster->isIn(this))
+        return;
+
+    leaveGroup();
+}
+
+void PreyAgent::leaveGroup()
+{
+    if(!m_currCluster.get())
+        return;
+
+    PreyClusterManager::instance()->removeFromCluster(this);
+}
+
+
 #pragma region Condition
 
 bool PreyAgent::isHungry()
@@ -125,7 +291,7 @@ bool PreyAgent::seeClosePredator()
 
 #pragma region FleeAction
 
-void PreyAction::FleeAction::run()
+void PreyAgent::FleeAction::run()
 {
     holder->runAction(this);
 
@@ -136,7 +302,7 @@ void PreyAction::FleeAction::run()
     }
 
     holder->_currMovement = MovementType::MOVE_STEERING;
-    holder->_targetDirection = holder->_gameObject->position() - m_predatorTarget->gameObject()->position();
+    holder->_targetDirection = holder->_gameObject->position() - holder->m_predatorTarget->gameObject()->position();
 }
 
 #pragma endregion
@@ -344,7 +510,7 @@ void PreyAgent::GotoGroupAction::onTerminate()
 
 void PreyAgent::WanderAction::onStart()
 {
-    holder->_targetPoint = WorldMap::toWorldCoord(Cell(rand()%c_worldSize,rand()%c_worldSize));
+    newTarget();
 }
 
 void PreyAgent::WanderAction::run()
@@ -355,21 +521,28 @@ void PreyAgent::WanderAction::run()
 
     btVector3 sub = holder->_targetPoint - holder->_gameObject->position();
 
+    Cell c = WorldMap::toGridCoord(holder->_gameObject->position());
+
     sub.setZ(0);
 
-    if(sub.length() <= 2*NYCube::CUBE_SIZE)
+    if(sub.length() <= 2*NYCube::CUBE_SIZE || WorldMap::onEdge(c))
     { 
-        float angle = ((float)rand())/RAND_MAX * 2 * M_PI;
-        holder->_targetDirection = btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
-        btVector3 vec = holder->_gameObject->position() + holder->_targetDirection;
-        WorldMap::applyMapBoundaries(vec);
-        holder->_targetPoint = vec;
+        newTarget();
     }
 }
 
-void  PreyAgent::WanderAction::onTerminate()
+void PreyAgent::WanderAction::onTerminate()
 {
     holder->_currMovement = MovementType::STAND_STILL;
+}
+
+void PreyAgent::WanderAction::newTarget()
+{
+    float angle = ((float)rand())/RAND_MAX * 2 * M_PI;
+    holder->_targetDirection = btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
+    btVector3 vec = holder->_gameObject->position() + holder->_targetDirection;
+    WorldMap::applyMapBoundaries(vec);
+    holder->_targetPoint = vec;
 }
 
 #pragma endregion

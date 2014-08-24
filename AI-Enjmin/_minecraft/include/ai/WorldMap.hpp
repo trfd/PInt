@@ -432,15 +432,15 @@ public:
 
     inline static void applyMapBoundaries(btVector3& vec_)
     {
-        vec_.setX(max(0.f, min(NYCube::CUBE_SIZE*c_worldSize, vec_.x())));
-        vec_.setY(max(0.f, min(NYCube::CUBE_SIZE*c_worldSize, vec_.y())));
+        vec_.setX(max(NYCube::CUBE_SIZE, min(NYCube::CUBE_SIZE*(c_worldSize-1), vec_.x())));
+        vec_.setY(max(NYCube::CUBE_SIZE, min(NYCube::CUBE_SIZE*(c_worldSize-1), vec_.y())));
         vec_.setZ(max(worldHeight(vec_.x(),vec_.y()) , min(NYCube::CUBE_SIZE*MAT_HEIGHT_CUBES, vec_.z())));
     }
 
     inline static void applyMapBoundaries(Cell& cell_)
     {
-        cell_.x = max(0.f, min(c_worldSize, cell_.x));
-        cell_.y = max(0.f, min(c_worldSize, cell_.y));
+        cell_.x = max(1, min(c_worldSize-1, cell_.x));
+        cell_.y = max(1, min(c_worldSize-1, cell_.y));
     }
 
     /// Returns the index of grid's cell of world coordinates location
@@ -452,6 +452,11 @@ public:
            return -1;
 
         return ((int)vec_.x() / NYCube::CUBE_SIZE) + ((int)vec_.y() / NYCube::CUBE_SIZE) * c_worldSize;
+    }
+
+    inline static bool onEdge(const Cell& c)
+    {
+        return (c.x <= 0 || c.y<= 0 || c.x >= c_worldSize-1 || c.y >= c_worldSize );
     }
 
     /// Grid registration reduces complexity of spatial tests

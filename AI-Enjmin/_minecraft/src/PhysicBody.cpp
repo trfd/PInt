@@ -14,8 +14,8 @@ void PhysicBody::onUpdate(float dt)
 
     btVector3 pos = tr.getOrigin();
 
-    pos.setX(max(0,min(c_worldSize * NYCube::CUBE_SIZE, pos.x())));
-    pos.setY(max(0,min(c_worldSize * NYCube::CUBE_SIZE, pos.y())));
+    pos.setX(max(5,min(c_worldSize * NYCube::CUBE_SIZE-5, pos.x())));
+    pos.setY(max(5,min(c_worldSize * NYCube::CUBE_SIZE-5, pos.y())));
     pos.setZ(WorldMap::worldHeight(pos.x(), pos.y())+m_size.Z);
 
     tr.setOrigin(pos);
