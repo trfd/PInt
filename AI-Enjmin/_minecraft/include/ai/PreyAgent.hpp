@@ -20,6 +20,8 @@
 #define __FLOCK_SEPARATION_COEF__   1.5f
 #define __FLOCK_SEPARATION_RADIUS__ 10.f
 
+#define __PREY_PREDATOR_CLOSE__     7.f
+
 
 
 class PreyAgent : public Agent, public IClusterObject
