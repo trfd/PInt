@@ -28,6 +28,8 @@ public:
 
         _lifepoints = 100.f;
 
+        _velocity = 60.f;
+
         m_preyTarget = nullptr;
     }
 
@@ -41,7 +43,13 @@ public:
         glTranslatef(pos.x(),pos.y(),pos.z());
         glBegin(GL_QUADS);
 
-        float g = (isHungry() ? 1.f : 0.f);
+        float g;
+
+        if(!isHungry()) g = 0.f;
+        else if(isVeryHungry()) g = 1.f;
+        else g = 0.5f;
+
+        
 
         glColor3f(0.f,g,0.f);
 
@@ -121,6 +129,10 @@ public:
     struct WanderAction : public BehaviourAction<PredatorAgent>
     {
         virtual void run() override;
+
+        /// Returns the angle opposite to the average of groups seen
+        /// if any, otherwise returns a random angle
+        float avoidGroups();
     };
 
 private:

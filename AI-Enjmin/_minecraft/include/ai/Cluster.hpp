@@ -52,7 +52,6 @@ public:
 #ifdef __DRAW_CLUSTERS__
         Debug::removeFromRender(ck::makeFunctor(this,&Cluster::draw));
 #endif
-        ck_assert(m_objects.size() == 0);
     }
 
     void draw()

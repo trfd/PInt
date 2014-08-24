@@ -17,7 +17,7 @@
 
 using namespace ai::bt;
 
-#define __DEBUG_VISION__
+//#define __DEBUG_VISION__
 //#define __DEBUG_ACTION__
 #define _AI_FRAME_ 1.f/20.f 
 
@@ -319,7 +319,7 @@ protected:
 
     MovementType _currMovement;
 
-    btVector3 _targetPoint = btVector3(100,100,300);
+    btVector3 _targetPoint = btVector3(800,800,300);
 
     FFPath_ptr _path;
 
@@ -329,7 +329,7 @@ protected:
     /// Offset of vision rectangle 
     int _visionForwardOffset; 
 
-    float _velocity = 50.f;
+    float _velocity ;
 
     float _lifepoints;
 

@@ -31,7 +31,7 @@ bool PredatorAgent::isCloseTo(PreyAgent* ag)
 
 bool PredatorAgent::targetPreyIsAlone()
 {
-    return (m_preyTarget->cluster().get() != NULL);
+    return (m_preyTarget->cluster().get() == NULL);
 }
 
 bool PredatorAgent::seePrey()
@@ -97,6 +97,9 @@ void  PredatorAgent::FollowPreyGroupAction::run()
 
     holder->_currMovement = MovementType::MOVE_LINE_OF_SIGHT;
 
+    if(!holder->m_preyTarget->cluster().get())
+        return;
+
     btVector3 rel = holder->gameObject()->position() - holder->m_preyTarget->cluster()->center();
 
     rel.normalize();
@@ -135,11 +138,52 @@ void  PredatorAgent::WanderAction::run()
     
     if(sub.length() <= 2*NYCube::CUBE_SIZE)
     { 
-        float angle = ((float)rand())/RAND_MAX * 2 * M_PI;
+        float angle = avoidGroups();
         btVector3 vec = holder->_gameObject->position() + btVector3(__WANDER_RADIUS__ * cos(angle), __WANDER_RADIUS__ * sin(angle) , 0.f);
         WorldMap::applyMapBoundaries(vec);
         holder->_targetPoint = vec;
     }
+}
+
+float PredatorAgent::WanderAction::avoidGroups()
+{
+    std::vector<PreyAgent*> agents = holder->findAllObjectsSeen<PreyAgent>();
+
+    std::vector<Cluster_ptr> clusters;
+
+    // Find all clusters
+    for(PreyAgent* ag : agents)
+    {
+        if(!ag->cluster().get())
+            continue;
+
+        auto it = std::find(clusters.begin(), clusters.end(), ag->cluster());
+
+        // distance to cluster center
+        float dist = ag->cluster()->center().distance(holder->gameObject()->position());
+        
+        if(it == clusters.end() && dist < __PREY_PREDATOR_CLOSE__ * 1.5)
+            clusters.push_back(ag->cluster());
+    }
+
+    // If no group around return random
+    if(clusters.size() == 0)
+    {
+        return ((float)rand())/RAND_MAX * M_PI * 2.f;
+    }
+
+    btVector3 sum(0,0,0);
+
+    for(Cluster_ptr cl : clusters)
+    {
+        sum += cl->center();
+    }
+
+    sum *= 1.f / clusters.size();
+
+    btVector3 rel = holder->gameObject()->position() - sum;
+
+    return atan2(rel.y(),rel.x());
 }
 
 #pragma endregion

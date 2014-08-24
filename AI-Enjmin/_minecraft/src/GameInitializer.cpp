@@ -5,8 +5,8 @@
 
 #include "ai/Entity.hpp"
 
-#define __PREY_SPAWN_COUNT__ 10
-#define __PREDATOR_SPAWN_COUNT__ 1
+#define __PREY_SPAWN_COUNT__ 20
+#define __PREDATOR_SPAWN_COUNT__ 20
 
 void GameInitializer::init()
 {
@@ -21,7 +21,7 @@ void GameInitializer::init()
         createPrey(btVector3(c.x * NYCube::CUBE_SIZE,c.y * NYCube::CUBE_SIZE,height));
     }
 
-    for(int i = 0 ; i<__PREY_SPAWN_COUNT__ ; i++)
+    for(int i = 0 ; i<__PREDATOR_SPAWN_COUNT__ ; i++)
     { 
         Cell c(rand()%c_worldSize,rand()%c_worldSize);
 

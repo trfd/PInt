@@ -36,6 +36,8 @@ public:
 
         _lifepoints = 50.f;
 
+        _velocity = 50.f;
+
         m_foodTarget = s_badFoodTarget;
     }
 

@@ -137,7 +137,7 @@ void createPredator(btVector3 const& loc_)
         /**/    .parent()
         /**/    .add<Sequence>()
         /**/        .add<Condition>(ck::makeFunctor(predatorAgent, &PredatorAgent::seePrey))                    // If see to prey AND
-        /**/        .add<Selector>()
+        /**/        .add<Sequence>()
         /**/            .add<Selector>()
         /**/                .add<Condition>(ck::makeFunctor(predatorAgent,&PredatorAgent::targetPreyIsAlone))     // If prey is alone
         /**/                .add<Condition>(ck::makeFunctor(predatorAgent,&PredatorAgent::isVeryHungry))         // OR is very hungry

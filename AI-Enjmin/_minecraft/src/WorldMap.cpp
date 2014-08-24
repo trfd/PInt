@@ -53,6 +53,7 @@ void WorldMap::registerOnGrid(GameObject* go_)
     if(idx < 0)
     {
         Log::log(Log::USER_ERROR, "GameObject out of grid");
+        go_->setPosition(toWorldCoord(Cell(c_worldSize>>1,c_worldSize>>1)));
         return;
     }
 
