@@ -47,7 +47,7 @@ bool PredatorAgent::seePrey()
     float tmp;
     for(PreyAgent* ag : preys)
     {
-        if((tmp = ag->position().distance(_gameObject->position)) < minDist)
+        if((tmp = ag->position().distance(_gameObject->position())) < minDist)
         {
             minDist = tmp;
             m_preyTarget = ag;

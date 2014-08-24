@@ -3,7 +3,7 @@
 
 #include "Agent.hpp"
 
-#define __PREDATOR_DAMAGES__
+#define __PREDATOR_DAMAGES__             5.f
 #define __PREDATOR_HUNGER_LOW_THRESHOLD__  50.f
 #define __PREDATOR_HUNGER_HIGH_THRESHOLD__ 20.f
 #define __PREDATOR_HUNGER_RATE__          0.05f
@@ -25,6 +25,8 @@ public:
         _visionZone = CellSize(30,30);
 
         _visionForwardOffset = 15;
+
+        _lifepoints = 100.f;
 
         m_preyTarget = nullptr;
     }

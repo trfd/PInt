@@ -22,8 +22,6 @@
 
 #define __PREY_PREDATOR_CLOSE__     7.f
 
-
-
 class PreyAgent : public Agent, public IClusterObject
 {
 public:
@@ -35,6 +33,8 @@ public:
         _visionZone = CellSize(20,20);
 
         _visionForwardOffset = 15;
+
+        _lifepoints = 50.f;
 
         m_foodTarget = s_badFoodTarget;
     }
@@ -81,9 +81,9 @@ public:
 
         if(m_hunger == 0.f)
         {
-            m_lifepoints -= __HUNGER_KILL_RATE__;
+            _lifepoints -= __HUNGER_KILL_RATE__;
 
-            if(m_lifepoints <= 0)
+            if(_lifepoints <= 0)
             {
                // std::cout << "Prey is died \n";
             }
@@ -498,7 +498,6 @@ private:
     static const Cell s_badFoodTarget;
 
     float m_hunger      = __HUNGER_FULL__; 
-    float m_lifepoints  = 10.f; 
 
     Cell m_foodTarget;
     Cluster_ptr m_targetCluster;

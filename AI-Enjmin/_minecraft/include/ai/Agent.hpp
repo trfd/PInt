@@ -277,12 +277,15 @@ public:
         return gObjs;
     }
 
+    virtual void hit(float damages)
+    {
+        _lifepoints = max(0.f, _lifepoints-damages);
+    }
+
 protected:
 
    #pragma region Action Management
 
-
-    
     void runAction(IBehaviourAction* action_)
     {
         if(action_ != _currentAction)
@@ -327,6 +330,8 @@ protected:
     int _visionForwardOffset; 
 
     float _velocity = 50.f;
+
+    float _lifepoints;
 
     IBehaviourAction* _currentAction = nullptr;
 
