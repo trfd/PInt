@@ -26,6 +26,7 @@ public:
     {
         bool isValid = false;
         ObjectList_it object_it;
+        int cellIndex;
     };
 
     enum
@@ -118,8 +119,8 @@ public:
         inline static void setGridRegistration(GameObject* go,const GridRegistration& grd) 
         { go->setGridRegistration(grd); }
 
-        inline static void setGridRegistrationIterator(GameObject* go,const ObjectList_it& it) 
-        { go->setGridRegistrationIterator(it); }
+        inline static void setGridRegistrationIterator(GameObject* go,const ObjectList_it& it, int idx) 
+        { go->setGridRegistrationIterator(it,idx); }
 
         inline static void unsetGridRegistrationIterator(GameObject* go) 
         { go->unsetGridRegistrationIterator(); }
@@ -139,10 +140,11 @@ private:
 
     /// Stores new value of grid registration
     /// see WorldMap for details about grid registration
-    inline void setGridRegistrationIterator(const ObjectList_it& it_)
+    inline void setGridRegistrationIterator(const ObjectList_it& it_ , int idx_)
     {
         m_gridReg.isValid = true;
         m_gridReg.object_it = it_;
+        m_gridReg.cellIndex = idx_;
     }
 
     /// Remove value of grid registration

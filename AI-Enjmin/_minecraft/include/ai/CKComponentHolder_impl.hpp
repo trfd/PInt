@@ -152,7 +152,7 @@ namespace ck
         for(ComponentList_it it = _components.begin() ;
             it != _components.end() ; ++it)
         {
-            if((tmpR = dynamic_cast<_Type*>(it->second)))
+            if((tmpR = dynamic_cast<_Type*>(it->second))) //// Inefficient without typeid map
                 tmpList.push_back(tmpR);
         }
         

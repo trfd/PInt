@@ -43,7 +43,7 @@ public:
         DIRT        = 2, // CUBE_TERRE
         AIR         = 3, // CUBE_AIR
         TALL_GRASS  = 4,
-        BUSH        = 5,
+        TREE        = 5,
         MUSHROOM    = 6
     };
 
@@ -238,7 +238,7 @@ public:
 
             addBushMesh(nx,ny);
 
-            m_cells[nx+ny*c_worldSize] = MapCell::BUSH;
+            m_cells[nx+ny*c_worldSize] = MapCell::TREE;
         }
         
     }
@@ -353,7 +353,7 @@ public:
 
     inline static float worldHeight(float x_, float y_)
     {
-        return cellHeight((int)(x_ / NYCube::CUBE_SIZE), (int)(y_/NYCube::CUBE_SIZE))*NYCube::CUBE_SIZE;
+        return cellHeight(x_ / NYCube::CUBE_SIZE, y_/NYCube::CUBE_SIZE ) * NYCube::CUBE_SIZE;
     }
 
     #pragma endregion
@@ -398,7 +398,7 @@ public:
         case MapCell::GROUND:
             return 0x00;
 
-        case MapCell::BUSH:
+        case MapCell::TREE:
         case MapCell::MUSHROOM:
             return 0x01;
 
@@ -413,17 +413,32 @@ public:
         }
     }
 
+    std::vector<Cell> cellsOfType(const MapCell& mc_, const btVector3& loc, const CellSize& size, const ck::Vector2i& offset);
+    std::vector<Cell> cellsOfType(const MapCell& mc_, const CellRect& rect);
+
     #pragma endregion
 
-    /// Returns the index of grid's cell of world coordinates location
-    inline int indexForLocation(const btVector3& vec_)
+    #pragma region Utils
+    
+    inline static btVector3 toWorldCoord(const Cell& cell_)
     {
-        ck_assert(vec_.x() >= 0 && vec_.y() >= 0 && vec_.x() < c_worldSize && vec_.y() < c_worldSize);
+        return btVector3(cell_.x * NYCube::CUBE_SIZE , cell_.y * NYCube::CUBE_SIZE, 0.f);
+    }
 
-        int x = vec_.x() / NYCube::CUBE_SIZE;
-        int y = vec_.y() / NYCube::CUBE_SIZE;
-        
-        return x + y * c_worldSize;
+    inline static Cell toGridCoord(const btVector3& vec_)
+    {
+        return Cell(vec_.x() / NYCube::CUBE_SIZE, vec_.y() / NYCube::CUBE_SIZE);
+    }
+
+    /// Returns the index of grid's cell of world coordinates location
+    inline static int indexForLocation(const btVector3& vec_)
+    {
+        if(vec_.x() < 0.f || vec_.y() < 0.f || 
+           vec_.x() >= c_worldSize*NYCube::CUBE_SIZE || 
+           vec_.y() >= c_worldSize*NYCube::CUBE_SIZE)
+           return -1;
+
+        return (vec_.x() / NYCube::CUBE_SIZE) + (vec_.y() / NYCube::CUBE_SIZE) * c_worldSize;
     }
 
     /// Grid registration reduces complexity of spatial tests
@@ -443,17 +458,17 @@ public:
     /// around location in world coordinate
     /// rad_ is the number of cell to look around
     /// the lookup zone is actually a square
-    std::list<GameObject*> registeredObjectAt(const btVector3& loc_,int rad_ = 1);
+    std::vector<std::list<GameObject*>*> registeredObjectAt(const btVector3& loc_,int rad_ = 1);
 
     /// Return the list of object registered on the grid
     /// around location in world coordinate
     /// size_ defines the size of lookup zone around loc_ (loc_ is the center of rectangle)
     /// offset_ is the offset between location and the actual center of lookup zone
-    std::list<GameObject*> registeredObjectAt(const btVector3& loc_,const CellSize& size_ , const ck::Vector2i& offset_ = Cell(0,0));
+    std::vector<std::list<GameObject*>*> registeredObjectAt(const btVector3& loc_,const CellSize& size_ , const ck::Vector2i& offset_ = Cell(0,0));
 
     /// Return the list of object registered on the grid
     /// for cell in the (top-left) rectangle (grid coordinates)
-    std::list<GameObject*> registeredObjectAt(const CellRect& rect);
+    std::vector<std::list<GameObject*>*> registeredObjectAt(const CellRect& rect);
 
     #pragma endregion
 
@@ -471,6 +486,7 @@ private:
 
     NYWorld* m_nyworld;
 };
+
 
 
 #endif //__WorldMap_hpp__

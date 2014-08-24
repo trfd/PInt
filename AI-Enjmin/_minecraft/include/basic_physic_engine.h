@@ -11,6 +11,14 @@
 #include "engine/utils/ny_utils.h"
 #include "engine/log/log.h"
 
+#define BIT(x) (1<<(x))
+enum collisiontypes {
+    COL_NOTHING = 0, 
+    COL_WORLD = BIT(0), 
+    COL_AGENTS = BIT(1),
+};
+
+
 class NYBasicPhysicEngine
 {
 	public:
@@ -72,11 +80,16 @@ class NYBasicPhysicEngine
 			return addObject(dynamic,colShape,position,fMass);
 		}
 
+        btRigidBody * addBoxObject(bool dynamic, collisiontypes collType, collisiontypes collWith, const NYVert3Df & size, const NYVert3Df & position, float fMass)
+        {
+            //On crée une box shape
+			btCollisionShape* colShape = new btBoxShape(btVector3(size.X,size.Y,size.Z));
+			return addObject(dynamic,collType,collWith,colShape,position,fMass);
+        }
+
 		btRigidBody * addBoxObject(bool dynamic, const NYVert3Df & size, const NYVert3Df & position, float fMass)
 		{
-			//On crée une box shape
-			btCollisionShape* colShape = new btBoxShape(btVector3(size.X,size.Y,size.Z));
-			return addObject(dynamic,colShape,position,fMass);
+			return addBoxObject(dynamic,COL_AGENTS,COL_WORLD,size,position,fMass);
 		}
 
 		///Stride : taille en octets d'un point
@@ -153,7 +166,12 @@ class NYBasicPhysicEngine
 
 	private:
 
-		btRigidBody * addObject(bool dynamic, btCollisionShape* colShape, const NYVert3Df & position, float fMass)
+        btRigidBody * addObject(bool dynamic, btCollisionShape* colShape, const NYVert3Df & position, float fMass)
+		{
+            return addObject(dynamic,COL_WORLD, COL_WORLD,colShape,position,fMass);
+        }
+
+		btRigidBody * addObject(bool dynamic, collisiontypes collType, collisiontypes collWith, btCollisionShape* colShape, const NYVert3Df & position, float fMass)
 		{
 			//On lui donne sa position initiale
 			btTransform startTransform;
@@ -183,7 +201,7 @@ class NYBasicPhysicEngine
 				body->setActivationState(ACTIVE_TAG);
 
 			//On l'ajoute au monde
-			DynamicsWorld->addRigidBody(body);
+			DynamicsWorld->addRigidBody(body,collType,collWith);
 
 			//Log::log(Log::ENGINE_INFO,("Adding body 0x" + toString(body)).c_str());
 

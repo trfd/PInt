@@ -21,6 +21,12 @@ void PhysicBody::onUpdate(float dt)
         tr.setOrigin(pos);
     }
 
+    pos.setX(max(0,min(c_worldSize * NYCube::CUBE_SIZE, pos.x())));
+    pos.setY(max(0,min(c_worldSize * NYCube::CUBE_SIZE, pos.y())));
+    pos.setZ(min(MAT_HEIGHT_CUBES * NYCube::CUBE_SIZE, pos.z()));
+
+    tr.setOrigin(pos);
+
     // Update game object transform;
 
     _gameObject->setTransform(tr);

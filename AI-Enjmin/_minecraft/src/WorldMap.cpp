@@ -3,7 +3,43 @@
 
 #include "ai/GameObject.hpp"
 
+#include "ai/Debug.hpp"
+
 typedef GameObject::GridRegistrationInterface<WorldMap> __GRInt;
+
+std::vector<Cell> WorldMap::cellsOfType(const MapCell& mc_, const btVector3& loc_, const CellSize& size_, const ck::Vector2i& offset_)
+{
+    if(size_.width == 0 || size_.height == 0)
+        return std::vector<Cell>();
+
+    Cell c = toGridCoord(loc_);
+
+    c += offset_;
+
+    c.x -= size_.width >> 1;
+    c.y -= size_.height >> 1;
+
+    return cellsOfType(mc_,CellRect(c,size_));
+}
+
+std::vector<Cell> WorldMap::cellsOfType(const MapCell& mc_, const CellRect& rect)
+{
+    std::vector<Cell> cells;
+
+    for(int x = rect.left() ; x <= rect.right() ; x++)
+    {
+        for(int y = rect.top() ; y <= rect.bottom() ; y++)
+        {
+            if(x < 0 || y < 0 || x >= c_worldSize || y >= c_worldSize )
+                continue;
+
+            if(m_cells[ x + y * c_worldSize] == mc_)
+                cells.emplace_back(x,y);
+        }
+    }
+
+    return cells;
+}
 
 void WorldMap::registerOnGrid(GameObject* go_)
 {
@@ -11,41 +47,64 @@ void WorldMap::registerOnGrid(GameObject* go_)
 
     int idx = indexForLocation(go_->transform().getOrigin());
 
+    if(idx < 0)
+    {
+        Log::log(Log::USER_ERROR, "GameObject out of grid");
+        return;
+    }
+
     m_gridObjects[idx].push_front(go_);
 
-    __GRInt::setGridRegistrationIterator(go_,m_gridObjects[idx].begin());
+    __GRInt::setGridRegistrationIterator(go_,m_gridObjects[idx].begin(),idx);
 }
 
 void WorldMap::unregisterFromGrid(GameObject* go_)
 {
+    ck_assert(go_);
+
     if(!__GRInt::gridRegistration(go_).isValid)
         return;
-
-    int idx = indexForLocation(go_->transform().getOrigin());
     
     // Insure is valid (not end of list or incorrect pointer)
     ck_assert(*(__GRInt::gridRegistration(go_).object_it) == go_); 
 
-    // The nifty thing is that even if the ObjectList_it (aka list iterator)
-    // stored does NOT belong to this list (m_gridObjects[idx])
-    // the correct list node is remove from the correct list (the one to which it belongs)
-    m_gridObjects[idx].erase(__GRInt::gridRegistration(go_).object_it);
+    m_gridObjects[__GRInt::gridRegistration(go_).cellIndex]
+        .erase(__GRInt::gridRegistration(go_).object_it);
 
     __GRInt::gridRegistration(go_).isValid = false;
 }
 
-std::list<GameObject*> WorldMap::registeredObjectAt(const btVector3& loc_, int rad_ = 0)
+
+std::vector<std::list<GameObject*>*> WorldMap::registeredObjectAt(const CellRect& rect)
+{
+    std::vector<std::list<GameObject*>*> objectList;
+
+    for(int x = rect.left() ; x <= rect.right() ; x++)
+    {
+        for(int y = rect.top() ; y <= rect.bottom() ; y++)
+        {
+            if(x < 0 || y < 0 || x >= c_worldSize || y >= c_worldSize )
+                continue;
+
+            objectList.push_back(& m_gridObjects[ x + y * c_worldSize ]);
+        }
+    }
+
+    return objectList;
+}
+
+std::vector<std::list<GameObject*>*> WorldMap::registeredObjectAt(const btVector3& loc_, int rad_ )
 {
     return registeredObjectAt(loc_,CellSize(2*rad_+1,2*rad_+1));
 }
 
 
-std::list<GameObject*> registeredObjectAt(const btVector3& loc_,const CellSize& size_ , const ck::Vector2i& offset_);
+std::vector<std::list<GameObject*>*> WorldMap::registeredObjectAt(const btVector3& loc_,const CellSize& size_ , const ck::Vector2i& offset_)
 {
     if(size_.width == 0 || size_.height == 0)
-        return std::list<GameObject*>();
+        return std::vector<std::list<GameObject*>*>();
 
-    Cell c(loc_.x() / NYCube::CUBE_SIZE , loc_.y() / NYCube::CUBE_SIZE);
+    Cell c = toGridCoord(loc_);
 
     c += offset_;
 
@@ -55,23 +114,3 @@ std::list<GameObject*> registeredObjectAt(const btVector3& loc_,const CellSize& 
     return registeredObjectAt(CellRect(c,size_));
 }
 
-
-std::list<GameObject*> WorldMap::registeredObjectAt(const CellRect& rect)
-{
-    std::list<GameObject*> objectList;
-
-    for(int x = rect.left ; x <= rect.right ; x++)
-    {
-        for(int y = rect.top ; y <= rect.bottom ; y++)
-        {
-            if(x < 0 || y < 0 || x >= c_worldSize || y >= c_worldSize )
-                continue;
-
-            objectList.insert(objectList.end(),
-                            m_gridObjects[ x + y * c_worldSize ].begin(),
-                            m_gridObjects[ x + y * c_worldSize ].end());
-        }
-    }
-
-    return objectList;
-}

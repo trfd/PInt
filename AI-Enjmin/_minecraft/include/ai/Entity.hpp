@@ -7,23 +7,12 @@
 #include "ai/PhysicBody.hpp"
 #include "ai/Agent.hpp"
 
+#include "ai/PreyAgent.hpp"
+
 using namespace ai::bt;
 
-int hungryGauge = 1000;
-bool isHungry()
-{
-    --hungryGauge;
-    std::cout << "Is Hungry: (" << hungryGauge << "); " << std::boolalpha <<  (hungryGauge<0)<<"\n";
-    return (hungryGauge<0);
-}
 
-void moveToFood()
-{
-    std::cout << "Move to food: \n";
-    hungryGauge = 1000;
-}
-
-void createMesh(MeshRenderer* rd)
+void createPreyMesh(MeshRenderer* rd)
 {
     // Body
     rd->mesh().addCube(btVector3(0, 0, -5), btVector3(8,7,10) , NYColor(123.f/255.f,79.f/255.f,247.f/255.f,1.f));
@@ -43,40 +32,51 @@ void createMesh(MeshRenderer* rd)
     rd->mesh().toVbo();
 }
 
-void createEntity(btVector3 const& loc_)
+void createPrey(btVector3 const& loc_)
 {
-    GameObject_sptr test = GameManager::instance()->create<GameObject>();
+    GameObject_sptr obj = GameManager::instance()->create<GameObject>();
 
-    test->emplaceComponent<PhysicBody>(GameObject::PHYSIC_UPDATE_PRIORITY,NYVert3Df(10,10,10));
+    PhysicBody* body = obj->emplaceComponent<PhysicBody>(GameObject::PHYSIC_UPDATE_PRIORITY,NYVert3Df(10,10,10));
 
-    MeshRenderer* renderer = test->emplaceComponent<MeshRenderer>(GameObject::DEFAULT_UPDATE_PRIORITY);
+    MeshRenderer* renderer = obj->emplaceComponent<MeshRenderer>(GameObject::DEFAULT_UPDATE_PRIORITY);
 
-    createMesh(renderer);
+    createPreyMesh(renderer);
 
-    test->setPosition(loc_);
+    obj->setPosition(loc_);
 
-    Agent* testAgent = test->emplaceComponent<Agent>(GameObject::DEFAULT_UPDATE_PRIORITY);
+    body->setTransform();
 
-    /*
-    Sequence* seq = new Sequence();
+    PreyAgent* preyAgent = obj->emplaceComponent<PreyAgent>(GameObject::DEFAULT_UPDATE_PRIORITY);
 
-    seq->addChild(new Condition(ck::makeFunctor(&isHungry)));
-    seq->addChild(new Action(ck::makeFunctor(&moveToFood)));
-
-
-    testAgent->setBehaviours(BehaviourTree(seq));
-    */
-
-    BehaviourTreeBuilder btb;
-    btb = btb.add<Sequence>()
-                .add<Condition>(ck::makeFunctor(&isHungry))
-                .add<Action>(ck::makeFunctor(&moveToFood));
-        
-
-    testAgent->setBehaviours(BehaviourTreeBuilder()
-    .add<Sequence>()
-        .add<Condition>(ck::makeFunctor(&isHungry))
-        .add<Action>(ck::makeFunctor(&moveToFood))
+    preyAgent->setBehaviours(BehaviourTreeBuilder()
+    .add<Selector>()
+        .add<Sequence>()
+            .add<Condition>(ck::makeFunctor(preyAgent,&PreyAgent::isHungry))
+            .add<Selector>()
+            /**/.add<Sequence>()
+            /**/    .add<Condition>(ck::makeFunctor(preyAgent,&PreyAgent::isCloseToFood))
+            /**/    .add<Action>(preyAgent, new PreyAgent::EatAction())
+            /**/.parent()
+            /**/.add<Sequence>()
+            /**/    .add<Condition>(ck::makeFunctor(preyAgent,&PreyAgent::seeFood))
+            /**/    .add<Action>(preyAgent, new PreyAgent::GotoFoodAction())
+            /**/.parent()
+            /**/.add<Action>(preyAgent, new PreyAgent::WanderAction())
+           .parent()
+       .parent()
+       .add<Sequence>()
+            .add<Condition>(ck::makeFunctor(preyAgent,&PreyAgent::isInGroup))
+            .add<Action>(preyAgent, new PreyAgent::FlockAction())
+        .parent()
+        .add<Sequence>()
+            .add<Condition>(ck::makeFunctor(preyAgent,&PreyAgent::isCloseToGroup))
+            .add<Action>(preyAgent, new PreyAgent::JoinGroupAction())
+        .parent()
+        .add<Sequence>()
+            .add<Condition>(ck::makeFunctor(preyAgent,&PreyAgent::seeGroup))
+            .add<Action>(preyAgent, new PreyAgent::GotoGroupAction())
+        .parent()
+        .add<Action>(preyAgent, new PreyAgent::WanderAction())
     .end());
 }
 

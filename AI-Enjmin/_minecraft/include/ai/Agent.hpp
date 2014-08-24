@@ -13,9 +13,18 @@
 
 using namespace ai::bt;
 
+#define _AI_FRAME_ 1.f/20.f 
+
 class Agent : public GameComponent
 {
 public:
+
+    enum MovementType
+    {
+        STAND_STILL,
+        MOVE_LINE_OF_SIGHT,
+        MOVE_FOLLOW_FLOW_PATH
+    };
 
     virtual void init() override
     {
@@ -28,9 +37,28 @@ public:
     void goTo(const btVector3& targ_)
     {
         _targetPoint = targ_;
+
+        // should check line of sight in world map
     }
 
     virtual void onUpdate(float dt) override
+    {
+        // Check if need to update AI
+        clock_t time = clock();
+
+        if(((float)(time - lastUpdate)) / CLOCKS_PER_SEC >= _AI_FRAME_)
+        {
+            onAIUpdate((time - lastUpdate) / CLOCKS_PER_SEC);
+
+            lastUpdate = clock();
+        }
+
+        // Update movement
+
+        moveTowardTarget();
+    }
+
+    virtual void onAIUpdate(float dt)
     {
         updateVision();
 
@@ -39,19 +67,23 @@ public:
 
     virtual void updateVision()
     {
-        ck::Vector2i offset = gridForward() * _visionForwardOffset;
-        
-        _objectSeen = WorldMap::instance()->registeredObjectAt(_gameObject->position(),_visionZone,offset);
+        _objectSeen = WorldMap::instance()->registeredObjectAt(_gameObject->position(),_visionZone,ck::Vector2i(0,0));
     }
 
 
     void moveTowardTarget()
     {
-        btVector3 rel = _targetPoint - _gameObject->transform().getOrigin();
+        btVector3 rel(0,0,0);
 
-        rel.normalize();
+        // Move straightly toward target
+        if(_currMovement == MovementType::MOVE_LINE_OF_SIGHT)
+        {
+            rel = _targetPoint - _gameObject->transform().getOrigin();
 
-        rel = _velocity*rel;
+            rel.normalize();
+
+            rel = _velocity*rel;
+        }
 
         rel.setZ(-m_mass);
 
@@ -81,8 +113,6 @@ public:
 
         x += round(cos(angle));
         y += round(sin(angle));
-        
-        Debug::drawLine(pos,btVector3(x+0.5f,y+0.5f,z+1.f) * NYCube::CUBE_SIZE);
 
         NYCubeType cube = WorldMap::instance()->nyworld()->getCube(x,y,z)->_Type;
 
@@ -153,12 +183,110 @@ public:
     inline BehaviourTree& behaviours(){ return m_behaviours; }
     inline void setBehaviours(const BehaviourTree& bt_){ m_behaviours = bt_; }
 
+    /// Find and return the first object seen with component of type _Type
+    template<typename _Type>
+    _Type* findFirstObjectSeen()
+    {
+        _Type* comp;
+
+        for(ObjectList* list : _objectSeen)
+        {
+            for(GameObject* go : *list)
+            {
+                if((comp = go->findComponent<_Type>()))
+                    return comp;
+            }
+        }
+
+        return nullptr;
+    }
+
+    /// Find and return the first object seen 
+    /// with component of type _Type that satisfies condition_
+    template<typename _Type>
+    _Type* findFirstObjectSeen(std::function<bool(_Type*)> condition_)
+    {
+        _Type* comp;
+
+        for(ObjectList* list : _objectSeen)
+        {
+            for(GameObject* go : *list)
+            {
+                if( (comp = go->findComponent<_Type>()) && condition_(comp) )
+                    return comp;
+            }
+        }
+
+        return nullptr;
+    }
+
+    /// Find and return the all objects seen with component of type _Type
+    template<typename _Type>
+    std::vector<_Type*> findAllObjectsSeen()
+    {
+        _Type* comp;
+        std::vector<_Type*> gObjs;
+
+        for(ObjectList* list : _objectSeen)
+        {
+            for(GameObject* go : *list)
+            {
+                if( (comp = go->findComponent<_Type>()) )
+                    gObjs.push_back(comp);
+            }
+        }
+
+        return gObjs;
+    }
+
+    /// Find and return the all objects seen 
+    /// with component of type _Type that satisfies condition_
+    template<typename _Type>
+    std::vector<_Type*> findAllObjectsSeen(std::function<bool(_Type*)> condition_)
+    {
+        _Type* comp;
+        std::vector<_Type*> gObjs;
+
+        for(ObjectList* list : _objectSeen)
+        {
+            for(GameObject* go : *list)
+            {
+                if( (comp = go->findComponent<_Type>()) &&  condition_(comp) )
+                    gObjs.push_back(comp);
+            }
+        }
+
+        return gObjs;
+    }
 
 protected:
 
-    std::list<GameObject*> _objectSeen;
+   #pragma region Action Management
+    
+    void runAction(IBehaviourAction* action_)
+    {
+        if(action_ != _currentAction)
+        { 
+            if(_currentAction)
+                _currentAction->onTerminate();
 
-    btVector3 _targetPoint;
+            if(action_)
+                action_->onStart();
+
+            _currentAction = action_;
+        }
+    }
+
+    #pragma endregion
+
+    typedef std::vector<std::list<GameObject*>*> ObjectListArray;
+    typedef std::list<GameObject*> ObjectList;
+
+    ObjectListArray _objectSeen;
+
+    MovementType _currMovement;
+
+    btVector3 _targetPoint = btVector3(100,100,300);
 
     FFPath_ptr _path;
 
@@ -168,8 +296,9 @@ protected:
     /// Offset of vision rectangle 
     int _visionForwardOffset; 
 
-    
     float _velocity = 50.f;
+
+    IBehaviourAction* _currentAction = nullptr;
 
 private:
 
@@ -180,6 +309,8 @@ private:
     float m_mass = 50.f;
 
     float m_jumpForce = 20.f;
+
+    clock_t lastUpdate = 0.f;
 
 };
 

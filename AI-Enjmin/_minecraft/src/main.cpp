@@ -791,6 +791,9 @@ int main(int argc, char* argv[])
 
     WorldMap::instance()->fillPathfinderWorld(&world);
 
+
+    GameManager::startGame();
+
 	glutMainLoop(); 
 
 	return 0;

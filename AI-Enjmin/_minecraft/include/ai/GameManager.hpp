@@ -59,7 +59,12 @@ public:
     // Initialization callback from singleton
     inline virtual void init() override
     {
-        GameInitializer::init();
+       
+    }
+
+    static void startGame()
+    {
+         GameInitializer::init();
     }
 
     template<typename _T,typename... _Args>

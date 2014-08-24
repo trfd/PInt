@@ -1,5 +1,5 @@
 ///
-///  BTAction.hpp
+///  BTBehaviourAction.hpp
 ///
 ///  Created by Baptiste Dupy on 10/08/2014.
 ///  Contact:
@@ -25,46 +25,45 @@
 ///
 ///
 
-#ifndef AI_BT_Action_hpp
-#define AI_BT_Action_hpp
+#ifndef AI_BT_BehaviourAction_hpp
+#define AI_BT_BehaviourAction_hpp
 
 #include "../CKFunctor.hpp"
 #include "BTBehaviour.hpp"
-#include "BTBehaviourAction.hpp"
 
 namespace ai
 {
 	namespace bt
 	{
-		#pragma region Action
+		#pragma region BehaviourAction
 
-		class Action
-		: public Behaviour
+        struct IBehaviourAction
+        {
+            /// Called at each bt::Action 
+            /// behaviour's steps
+            virtual void run() = 0;
+
+            /// Convenience interface
+            /// This methods are not called by 
+            /// the behaviour tree itself since
+            /// action management can differt a lot.
+            /// In this way, action manager
+            /// can store IBehaviourAction pointer
+            /// without regards of _Holder type
+            /// and manage start/stop actions
+
+            virtual void onStart(){}
+            virtual void onTerminate(){}
+        };
+
+        template<typename _Holder>
+		struct BehaviourAction : public IBehaviourAction
 		{
-		public:
-			
-            Action(IBehaviourAction* action);
-
-            template<typename _HolderType>
-            Action(_HolderType* hold_ptr, BehaviourAction<_HolderType>* action)
-            {
-                action->holder = hold_ptr;
-                m_action = action;
-            }
-
-            ~Action();
-
-		protected:
-
-			virtual BehaviourState doStep() override;
-
-		private:
-
-			IBehaviourAction* m_action;
+            _Holder* holder = nullptr;
 		};
 
 		#pragma endregion
 	}
 }
 
-#endif //AI_BT_Action_hpp
+#endif //AI_BT_BehaviourAction_hpp

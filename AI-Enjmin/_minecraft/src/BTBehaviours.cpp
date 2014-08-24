@@ -218,14 +218,20 @@ namespace ai
 
         #pragma region Action
 
-        Action::Action(const ActionFunctor& cond_)
-		: m_func(cond_)
-		{}
+        Action::Action(IBehaviourAction* action)
+        {
+            m_action = action;
+        }
+
+        Action::~Action()
+        {
+            delete m_action;
+        }
 
 		BehaviourState 
 		Action::doStep()
 		{
-            m_func();
+            m_action->run();
             return BehaviourState::SUCCESS;
 		}
         #pragma endregion

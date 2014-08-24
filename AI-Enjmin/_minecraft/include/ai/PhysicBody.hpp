@@ -7,6 +7,7 @@
 
 #include "basic_physic_engine.h"
 
+
 class  PhysicBody : public GameComponent
 {
 public:
@@ -23,7 +24,6 @@ public:
         m_body->setDamping(.0f,0.0f);
         m_body->setFriction(0.5f);
         setTransform();
-        
     }
 
     /// Sets rigid body transform to _gameObject's transform 
@@ -38,11 +38,6 @@ public:
 private:
 
     btRigidBody* m_body;
-
-    
-    //btVector3 m_force;
-    //btVector3 m_acceleration;
-    //btVector3 m_velocity;
 
     float m_mass;
 

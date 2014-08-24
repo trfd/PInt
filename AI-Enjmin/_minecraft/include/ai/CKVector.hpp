@@ -52,7 +52,23 @@ namespace ck
         };
         
         static const Vector2 zero;
-        
+
+        inline static float distance(const Vector2& v1, const Vector2& v2)
+        {
+            float x = v1.x-v2.x;
+            float y = v1.y-v2.y;
+
+            return sqrtf(x*x+y*y);
+        }
+
+        inline static _T distance2(const Vector2& v1, const Vector2& v2)
+        {
+             _T x = v1.x-v2.x;
+             _T y = v1.y-v2.y;
+
+            return (x*x+y*y);
+        }
+
         Vector2()
         : x(0) , y(0)
         {}

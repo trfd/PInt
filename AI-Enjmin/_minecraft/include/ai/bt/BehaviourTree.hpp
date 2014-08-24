@@ -41,6 +41,7 @@
 #include "BTMonitor.hpp"
 #include "BTFilter.hpp"
 #include "BTDecorator.hpp"
+#include "BTBehaviourAction.hpp"
 #include "BTAction.hpp"
 
 #endif // AI_BehaviourTree_hpp
