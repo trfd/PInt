@@ -1,29 +1,21 @@
-*.lib
-AI-Enjmin/_engine/
+# Compiled Object files
+*.slo
+*.lo
+*.o
 *.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
 *.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
 *.exe
-*.ilk
-*.pdb
-*.log
-*.tlog
-*.filters
-*.user
-*.vcxproj
-*.bat
-*.idb
-*.txt
-GridGenerator/
-*.sdf
-*.sln
-*.suo
-AI-Enjmin/_minecraft/minecraft.opensdf
-*.lastcodeanalysissucceeded
-*.xml
-AI-Enjmin/_minecraft/base.psess
-AI-Enjmin/_minecraft/base1.psess
-AI-Enjmin/_minecraft/base140823(1).vsp
-AI-Enjmin/_minecraft/base140823(2).vsp
-AI-Enjmin/_minecraft/base140823.vsp
-AI-Enjmin/_minecraft/base2.psess
-*.cache
+*.out
+*.app
