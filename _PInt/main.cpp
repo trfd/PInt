@@ -26,7 +26,6 @@
 
 int main(int argc, const char * argv[])
 {
-   
     AMutator<void> mutA;
     
     mutA.applyMutation();

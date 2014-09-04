@@ -27,7 +27,6 @@
 template<typename _DeriveType>
 class AMutator;
 
-
 ///
 /// Base Class implementating a PInt
 ///
