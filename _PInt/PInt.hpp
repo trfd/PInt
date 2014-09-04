@@ -103,6 +103,7 @@ public:
 /// Enhanced Mutator
 /// Can access to the PInt the same way
 /// as its base class does.
+///
 class EnhAMutator
 : public AMutator<EnhAMutator>
 {
